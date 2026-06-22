@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent Passport - Merchant Integration Example</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0a0a; color: #e0e0e0; padding: 2rem; }
+    .container { max-width: 800px; margin: 0 auto; }
+    h1 { color: #00ff88; margin-bottom: 0.5rem; }
+    .subtitle { color: #888; margin-bottom: 2rem; }
+    .card { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; }
+    .card h2 { color: #00ccff; font-size: 1rem; margin-bottom: 1rem; }
+    label { display: block; color: #aaa; font-size: 0.85rem; margin-bottom: 0.3rem; }
+    input, select { width: 100%; padding: 0.6rem; background: #0a0a0a; border: 1px solid #444; border-radius: 4px; color: #fff; font-size: 0.9rem; margin-bottom: 0.8rem; }
+    button { padding: 0.6rem 1.5rem; background: #00ff88; color: #000; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.9rem; }
+    button:hover { background: #00cc66; }
+    button:disabled { background: #333; color: #666; cursor: not-allowed; }
+    .result { background: #0a0a0a; border: 1px solid #333; border-radius: 4px; padding: 1rem; margin-top: 1rem; font-family: monospace; font-size: 0.85rem; white-space: pre-wrap; max-height: 400px; overflow-y: auto; }
+    .trust-badge { display: inline-block; padding: 0.3rem 0.8rem; border-radius: 4px; font-weight: bold; font-size: 0.85rem; }
+    .trust-low { background: #00ff8822; color: #00ff88; border: 1px solid #00ff88; }
+    .trust-medium { background: #ffaa0022; color: #ffaa00; border: 1px solid #ffaa00; }
+    .trust-high { background: #ff660022; color: #ff6600; border: 1px solid #ff6600; }
+    .trust-critical { background: #ff000022; color: #ff4444; border: 1px solid #ff4444; }
+    .status-ok { color: #00ff88; }
+    .status-fail { color: #ff4444; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Agent Passport - Merchant Check</h1>
+    <p class="subtitle">Example integration for checking agent trust before accepting a transaction</p>
+
+    <div class="card">
+      <h2>Configuration</h2>
+      <label>Passport API URL</label>
+      <input type="text" id="apiUrl" value="http://localhost:3000" placeholder="http://localhost:3000">
+      <div class="grid">
+        <div>
+          <label>Agent Wallet Address</label>
+          <input type="text" id="agentWallet" placeholder="Agent's Algorand address">
+        </div>
+        <div>
+          <label>Your Merchant Wallet</label>
+          <input type="text" id="merchantWallet" placeholder="Your Algorand address">
+        </div>
+      </div>
+      <button onclick="runCheck()">Check Agent Trust</button>
+    </div>
+
+    <div class="card" id="resultCard" style="display:none;">
+      <h2>Result</h2>
+      <div id="trustBadge"></div>
+      <div class="result" id="resultOutput"></div>
+    </div>
+
+    <div class="card">
+      <h2>Quick Verify (Free - No Payment)</h2>
+      <label>Wallet Address</label>
+      <input type="text" id="verifyWallet" placeholder="Enter wallet address to verify">
+      <button onclick="runVerify()">Verify Wallet</button>
+      <div class="result" id="verifyOutput" style="display:none;"></div>
+    </div>
+  </div>
+
+  <script>
+    async function runCheck() {
+      const apiUrl = document.getElementById('apiUrl').value;
+      const agentWallet = document.getElementById('agentWallet').value;
+      const merchantWallet = document.getElementById('merchantWallet').value;
+      const output = document.getElementById('resultOutput');
+      const card = document.getElementById('resultCard');
+      const badge = document.getElementById('trustBadge');
+
+      if (!agentWallet) { alert('Enter agent wallet'); return; }
+
+      card.style.display = 'block';
+      output.textContent = 'Checking...';
+
+      try {
+        const res = await fetch(`${apiUrl}/counterparty-check`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ wallet: agentWallet, merchantWallet: merchantWallet || undefined }),
+        });
+        const data = await res.json();
+
+        const levelClass = `trust-${data.riskLevel}`;
+        badge.innerHTML = `<span class="trust-badge ${levelClass}">${data.riskLevel.toUpperCase()} - Score: ${data.trustScore}</span>`;
+
+        output.textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        output.textContent = `Error: ${err.message}`;
+      }
+    }
+
+    async function runVerify() {
+      const apiUrl = document.getElementById('apiUrl').value;
+      const wallet = document.getElementById('verifyWallet').value;
+      const output = document.getElementById('verifyOutput');
+
+      if (!wallet) { alert('Enter wallet address'); return; }
+
+      output.style.display = 'block';
+      output.textContent = 'Verifying...';
+
+      try {
+        const res = await fetch(`${apiUrl}/verify?wallet=${encodeURIComponent(wallet)}`);
+        const data = await res.json();
+        output.textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        output.textContent = `Error: ${err.message}`;
+      }
+    }
+  </script>
+</body>
+</html>

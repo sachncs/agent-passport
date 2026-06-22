@@ -1,0 +1,364 @@
+// Agent Passport — Delegation Registry
+// Stateful Algorand smart contract for tracking trust delegation relationships.
+//
+// Global State:
+//   admin — address of the contract admin (set on creation)
+//   total_delegations — count of active delegations
+//
+// Box Storage:
+//   Key: "del:" + delegator_address (32 bytes) + delegatee_address (32 bytes)
+//   Value: amount (8 bytes, uint64) + timestamp (8 bytes, uint64)
+//
+// Methods:
+//   add_delegation(delegatee, amount) — sender delegates trust to delegatee
+//   revoke_delegation(delegatee) — sender revokes delegation
+//   check_delegation(delegator, delegatee) — check if delegation exists
+//   get_delegations(wallet) — return count of outgoing delegations
+//   update_admin(new_admin) — admin only
+
+#pragma version 10
+
+// Route method calls
+txn ApplicationID
+int 0
+==
+bnz handle_create
+
+txn OnCompletion
+int NoOp
+==
+bnz handle_noop
+
+txn OnCompletion
+int DeleteApplication
+==
+bnz handle_delete
+
+txn OnCompletion
+int UpdateApplication
+==
+bnz handle_update
+
+txn OnCompletion
+int OptIn
+==
+bnz handle_optin
+
+txn OnCompletion
+int CloseOut
+==
+bnz handle_closeout
+
+err
+
+// ─── CREATE ────────────────────────────────────────────────────
+handle_create:
+  // Store admin = sender
+  byte "admin"
+  txn Sender
+  app_global_put
+
+  // Initialize delegation count
+  byte "total_delegations"
+  int 0
+  app_global_put
+
+  int 1
+  return
+
+// ─── DELETE ────────────────────────────────────────────────────
+handle_delete:
+  // Only admin can delete
+  byte "admin"
+  app_global_get
+  txn Sender
+  ==
+  assert
+  int 1
+  return
+
+// ─── UPDATE ────────────────────────────────────────────────────
+handle_update:
+  byte "admin"
+  app_global_get
+  txn Sender
+  ==
+  assert
+  int 1
+  return
+
+// ─── OPTIN / CLOSEOUT ─────────────────────────────────────────
+handle_optin:
+  int 1
+  return
+
+handle_closeout:
+  int 1
+  return
+
+// ─── NOOP (Method Calls) ──────────────────────────────────────
+handle_noop:
+  // Route by application args[0]
+  txn NumAppArgs
+  int 0
+  >
+  bnz route_method
+  err
+
+route_method:
+  byte "add_delegation"
+  txna ApplicationArgs 0
+  ==
+  bnz method_add_delegation
+
+  byte "revoke_delegation"
+  txna ApplicationArgs 0
+  ==
+  bnz method_revoke_delegation
+
+  byte "check_delegation"
+  txna ApplicationArgs 0
+  ==
+  bnz method_check_delegation
+
+  byte "get_delegations"
+  txna ApplicationArgs 0
+  ==
+  bnz method_get_delegations
+
+  byte "update_admin"
+  txna ApplicationArgs 0
+  ==
+  bnz method_update_admin
+
+  err
+
+// ─── add_delegation(delegatee_address, amount) ─────────────────
+// Sender delegates `amount` microUSDC to delegatee.
+// Creates or updates a delegation box.
+method_add_delegation:
+  // Validate 2 application args
+  txn NumAppArgs
+  int 2
+  ==
+  assert
+
+  // Validate 1 account arg (delegatee)
+  txn NumAccounts
+  int 1
+  ==
+  assert
+
+  // Sender cannot delegate to self
+  txna Accounts 0
+  txn Sender
+  !=
+  assert
+
+  // Amount must be > 0
+  txna ApplicationArgs 1
+  btoi
+  int 0
+  >
+  assert
+
+  // Build box key: "del:" + sender(32) + delegatee(32)
+  byte "del:"
+  txn Sender
+  txna Accounts 0
+  concat
+  concat
+
+  // Check if delegation already exists
+  dup
+  box_len
+  int 0
+  >
+  bnz add_delegation_update
+
+  // ── New delegation ──
+  // Store: amount(8 bytes) + timestamp(8 bytes)
+  txna ApplicationArgs 1
+  btoi
+  itob
+  global LatestTimestamp
+  itob
+  concat
+  box_put
+
+  // Increment total_delegations
+  byte "total_delegations"
+  byte "total_delegations"
+  app_global_get
+  int 1
+  +
+  app_global_put
+
+  int 1
+  return
+
+add_delegation_update:
+  // ── Update existing delegation ──
+  // Check if old amount == new amount (no-op)
+  load 0
+  box_get
+  swap
+  pop
+  // stack: old_value
+  int 8
+  substring3  // extract amount (first 8 bytes)
+  btoi
+
+  txna ApplicationArgs 1
+  btoi
+  ==
+
+  bnz add_delegation_noop
+
+  // Update box
+  load 0
+  txna ApplicationArgs 1
+  btoi
+  itob
+  global LatestTimestamp
+  itob
+  concat
+  box_put
+
+  int 1
+  return
+
+add_delegation_noop:
+  pop  // drop box key
+  int 1
+  return
+
+// ─── revoke_delegation(delegatee_address) ──────────────────────
+// Sender revokes delegation to delegatee.
+method_revoke_delegation:
+  txn NumAppArgs
+  int 1
+  ==
+  assert
+
+  txn NumAccounts
+  int 1
+  ==
+  assert
+
+  // Build box key
+  byte "del:"
+  txn Sender
+  txna Accounts 0
+  concat
+  concat
+
+  // Check delegation exists
+  dup
+  box_len
+  int 0
+  >
+  assert
+
+  // Delete box
+  box_del
+  pop
+
+  // Decrement total_delegations
+  byte "total_delegations"
+  byte "total_delegations"
+  app_global_get
+  int 1
+  -
+  app_global_put
+
+  int 1
+  return
+
+// ─── check_delegation(delegator, delegatee) ────────────────────
+// Returns 1 if delegation exists, 0 otherwise.
+method_check_delegation:
+  txn NumAppArgs
+  int 1
+  ==
+  assert
+
+  txn NumAccounts
+  int 2
+  ==
+  assert
+
+  // Build box key: "del:" + accounts[0] + accounts[1]
+  byte "del:"
+  txna Accounts 0
+  txna Accounts 1
+  concat
+  concat
+
+  // Check box_len > 0
+  box_len
+  int 0
+  >
+  itob
+
+  // Log result
+  log
+  itxn_begin
+    int Logit
+    itxn_field OpCode
+    txna ApplicationArgs 0
+    itxn_field ApplicationArg
+  itxn_submit
+
+  int 1
+  return
+
+// ─── get_delegations(wallet) ───────────────────────────────────
+// Returns total_delegations count via log.
+method_get_delegations:
+  txn NumAppArgs
+  int 1
+  ==
+  assert
+
+  byte "total_delegations"
+  app_global_get
+  itob
+
+  log
+  itxn_begin
+    int Logit
+    itxn_field OpCode
+    byte "total_delegations"
+    itxn_field ApplicationArg
+  itxn_submit
+
+  int 1
+  return
+
+// ─── update_admin(new_admin) ───────────────────────────────────
+method_update_admin:
+  txn NumAppArgs
+  int 1
+  ==
+  assert
+
+  txn NumAccounts
+  int 1
+  ==
+  assert
+
+  // Only current admin
+  byte "admin"
+  app_global_get
+  txn Sender
+  ==
+  assert
+
+  // Set new admin
+  byte "admin"
+  txna Accounts 0
+  app_global_put
+
+  int 1
+  return

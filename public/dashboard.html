@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent Passport Dashboard</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: #f8f9fa; color: #1a1a2e; }
+    .header { background: #1a1a2e; color: white; padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; }
+    .header h1 { font-size: 1.4rem; }
+    .header .network { background: #16213e; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.85rem; }
+    .container { max-width: 1000px; margin: 0 auto; padding: 1.5rem; }
+    .search-bar { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+    .search-bar input { flex: 1; padding: 0.6rem 1rem; border: 1px solid #ddd; border-radius: 6px; font-size: 0.95rem; }
+    .search-bar button { padding: 0.6rem 1.5rem; background: #1a1a2e; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.95rem; }
+    .search-bar button:hover { background: #16213e; }
+    .panel { background: white; border-radius: 8px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 1.5rem; }
+    .panel h2 { margin: 0 0 1rem; font-size: 1.1rem; color: #1a1a2e; border-bottom: 2px solid #eee; padding-bottom: 0.5rem; }
+    .badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+    .badge-low { background: #d4edda; color: #155724; }
+    .badge-medium { background: #fff3cd; color: #856404; }
+    .badge-high { background: #f8d7da; color: #721c24; }
+    .badge-critical { background: #721c24; color: white; }
+    .score-big { font-size: 3rem; font-weight: 700; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem; margin-top: 0.75rem; }
+    .sub-score { text-align: center; padding: 0.75rem; background: #f8f9fa; border-radius: 6px; }
+    .sub-score .label { font-size: 0.7rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
+    .sub-score .val { font-size: 1.3rem; font-weight: 700; margin-top: 0.25rem; }
+    .onchain-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-top: 0.75rem; }
+    .onchain-item { padding: 0.6rem; background: #f8f9fa; border-radius: 6px; text-align: center; }
+    .onchain-item .label { font-size: 0.7rem; color: #666; text-transform: uppercase; }
+    .onchain-item .val { font-size: 1.1rem; font-weight: 600; margin-top: 0.15rem; }
+    .explanation-list { list-style: none; padding: 0; }
+    .explanation-list li { padding: 0.5rem 0; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+    .explanation-list li:last-child { border: none; }
+    .hidden { display: none; }
+    .flash { padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.9rem; }
+    .flash-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    .health-status { display: flex; align-items: center; gap: 0.5rem; }
+    .health-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .health-dot.ok { background: #28a745; }
+    .health-dot.err { background: #dc3545; }
+    .health-dot.unk { background: #999; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Agent Passport Dashboard</h1>
+    <span class="network" id="network-badge">Loading...</span>
+  </div>
+
+  <div class="container">
+    <div id="flash-area"></div>
+
+    <div class="search-bar">
+      <input type="text" id="search-input" placeholder="Enter Algorand wallet address (58 chars)">
+      <button onclick="lookupWallet()">Search</button>
+    </div>
+
+    <div id="score-section" class="hidden">
+      <div class="panel" style="display:flex;gap:2rem;align-items:center;flex-wrap:wrap;">
+        <div style="min-width:140px;text-align:center;">
+          <div class="score-big" id="trust-score">—</div>
+          <div style="font-size:0.85rem;color:#666;">Trust Score</div>
+        </div>
+        <div>
+          <div style="margin-bottom:0.5rem;">
+            <strong>Risk Level:</strong> <span id="risk-badge">—</span>
+          </div>
+          <div style="margin-bottom:0.5rem;">
+            <strong>Approved:</strong> <span id="approved-val">—</span>
+          </div>
+          <div>
+            <strong>Recommended Limit:</strong> <span id="limit-val">—</span> ALGO
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Score Breakdown</h2>
+        <div class="grid-5">
+          <div class="sub-score"><div class="label">Age</div><div class="val" id="b-age">—</div></div>
+          <div class="sub-score"><div class="label">Activity</div><div class="val" id="b-activity">—</div></div>
+          <div class="sub-score"><div class="label">Volume</div><div class="val" id="b-volume">—</div></div>
+          <div class="sub-score"><div class="label">Velocity</div><div class="val" id="b-velocity">—</div></div>
+          <div class="sub-score"><div class="label">Compliance</div><div class="val" id="b-compliance">—</div></div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="panel">
+          <h2>On-Chain Data</h2>
+          <div class="onchain-grid">
+            <div class="onchain-item"><div class="label">Balance</div><div class="val" id="oc-balance">—</div></div>
+            <div class="onchain-item"><div class="label">Transactions</div><div class="val" id="oc-txns">—</div></div>
+            <div class="onchain-item"><div class="label">Assets</div><div class="val" id="oc-assets">—</div></div>
+            <div class="onchain-item"><div class="label">Apps</div><div class="val" id="oc-apps">—</div></div>
+            <div class="onchain-item"><div class="label">Account Age</div><div class="val" id="oc-age">—</div></div>
+            <div class="onchain-item"><div class="label">Last Round</div><div class="val" id="oc-round">—</div></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Explanation</h2>
+          <ul class="explanation-list" id="explanation-list"></ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>API Health</h2>
+      <div class="health-status">
+        <div class="health-dot unk" id="health-dot"></div>
+        <span id="health-text">Checking...</span>
+      </div>
+      <div style="margin-top:0.5rem;font-size:0.85rem;color:#666;" id="health-details"></div>
+    </div>
+  </div>
+
+  <script>
+    const API = '';
+
+    document.getElementById('search-input').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') lookupWallet();
+    });
+
+    async function lookupWallet() {
+      const wallet = document.getElementById('search-input').value.trim();
+      if (!wallet) return;
+
+      try {
+        const res = await fetch(`${API}/score?wallet=${wallet}`);
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          flash(err.error || 'Wallet lookup failed', 'error');
+          document.getElementById('score-section').classList.add('hidden');
+          return;
+        }
+        const data = await res.json();
+        showScore(data);
+      } catch (e) {
+        flash('Request failed: ' + e.message, 'error');
+      }
+    }
+
+    function showScore(d) {
+      document.getElementById('score-section').classList.remove('hidden');
+
+      document.getElementById('trust-score').textContent = d.trustScore;
+      const colors = { low: '#28a745', medium: '#ffc107', high: '#fd7e14', critical: '#dc3545' };
+      document.getElementById('trust-score').style.color = colors[d.riskLevel] || '#1a1a2e';
+
+      document.getElementById('risk-badge').innerHTML =
+        `<span class="badge badge-${d.riskLevel}">${d.riskLevel}</span>`;
+      document.getElementById('approved-val').textContent = d.approved ? 'Yes' : 'No';
+      document.getElementById('limit-val').textContent = d.recommendedLimit;
+
+      if (d.breakdown) {
+        document.getElementById('b-age').textContent = d.breakdown.ageScore;
+        document.getElementById('b-activity').textContent = d.breakdown.activityScore;
+        document.getElementById('b-volume').textContent = d.breakdown.volumeScore;
+        document.getElementById('b-velocity').textContent = d.breakdown.velocityScore;
+        document.getElementById('b-compliance').textContent = d.breakdown.complianceScore;
+      }
+
+      if (d.onChain) {
+        document.getElementById('oc-balance').textContent = d.onChain.balanceAlgo.toFixed(2);
+        document.getElementById('oc-txns').textContent = d.onChain.totalTxns;
+        document.getElementById('oc-assets').textContent = d.onChain.assetCount;
+        document.getElementById('oc-apps').textContent = d.onChain.appCount;
+        document.getElementById('oc-age').textContent = d.onChain.accountAgeDays + 'd';
+        document.getElementById('oc-round').textContent = d.onChain.lastSeenRound;
+      }
+
+      const list = document.getElementById('explanation-list');
+      list.innerHTML = '';
+      for (const line of (d.explanation || [])) {
+        const li = document.createElement('li');
+        li.textContent = line;
+        list.appendChild(li);
+      }
+    }
+
+    async function loadHealth() {
+      try {
+        const res = await fetch(`${API}/health`);
+        const data = await res.json();
+        const dot = document.getElementById('health-dot');
+        const text = document.getElementById('health-text');
+        const details = document.getElementById('health-details');
+
+        if (data.status === 'ok') {
+          dot.className = 'health-dot ok';
+          text.textContent = `Healthy — ${data.service} v${data.version}`;
+        } else {
+          dot.className = 'health-dot err';
+          text.textContent = `Unhealthy: ${data.status}`;
+        }
+        details.textContent = `Network: ${data.network} | Timestamp: ${data.timestamp}`;
+      } catch (e) {
+        const dot = document.getElementById('health-dot');
+        dot.className = 'health-dot err';
+        document.getElementById('health-text').textContent = 'Could not reach API';
+      }
+    }
+
+    function flash(msg, type) {
+      const area = document.getElementById('flash-area');
+      area.innerHTML = `<div class="flash flash-${type}">${msg}</div>`;
+      setTimeout(() => area.innerHTML = '', 5000);
+    }
+
+    loadHealth();
+  </script>
+</body>
+</html>

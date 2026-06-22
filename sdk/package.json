@@ -1,0 +1,35 @@
+{
+  "name": "@agent-passport/sdk",
+  "version": "0.1.0",
+  "description": "Agent Passport JavaScript SDK - Trust and credit delegation for AI agents on Algorand",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "keywords": [
+    "algorand",
+    "agent",
+    "trust",
+    "x402",
+    "micropayments",
+    "credit",
+    "delegation",
+    "fraud",
+    "risk"
+  ],
+  "license": "MIT"
+}

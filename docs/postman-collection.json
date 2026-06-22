@@ -1,0 +1,43 @@
+{
+  "info": {
+    "name": "Trust Scoring Service",
+    "description": "Stateless trust scoring API for Algorand wallets. No authentication required.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "wallet1", "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ" }
+  ],
+  "item": [
+    {
+      "name": "Trust Scoring",
+      "item": [
+        {
+          "name": "Get Trust Score",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/score?wallet={{wallet1}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["score"],
+              "query": [
+                { "key": "wallet", "value": "{{wallet1}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

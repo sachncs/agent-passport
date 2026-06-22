@@ -1,0 +1,153 @@
+openapi: 3.0.3
+info:
+  title: Trust Scoring Service
+  description: |
+    Stateless trust scoring API for Algorand wallets.
+
+    Fetches on-chain data from Algorand testnet and computes composite trust scores.
+    No database, no payments, no authentication required.
+  version: 0.1.0
+  contact:
+    name: Agent Passport
+    url: https://github.com/algorand/agent-passport
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:3000
+    description: Local development
+
+paths:
+  /score:
+    get:
+      summary: Compute trust score for a wallet
+      description: |
+        Returns a comprehensive trust report for the specified wallet address.
+        Fetches account info and transaction history from Algorand testnet,
+        then computes a composite trust score (0-100).
+      operationId: getScore
+      tags: [Trust]
+      parameters:
+        - name: wallet
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: '^[A-Z2-7]{58}$'
+          description: Algorand wallet address (58-char base32)
+          example: SEED_A_001
+      responses:
+        '200':
+          description: Trust score
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrustScoreResponse'
+        '400':
+          description: Invalid wallet address
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /health:
+    get:
+      summary: Health check
+      operationId: healthCheck
+      tags: [System]
+      responses:
+        '200':
+          description: Service status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+components:
+  schemas:
+    TrustScoreResponse:
+      type: object
+      properties:
+        wallet:
+          type: string
+          description: Algorand wallet address
+        trustScore:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: Composite trust score
+        riskLevel:
+          type: string
+          enum: [low, medium, high, critical]
+        approved:
+          type: boolean
+          description: Whether wallet meets minimum threshold (>= 40)
+        recommendedLimit:
+          type: number
+          description: Recommended credit limit in USD
+        breakdown:
+          type: object
+          properties:
+            ageScore:
+              type: number
+            activityScore:
+              type: number
+            volumeScore:
+              type: number
+            velocityScore:
+              type: number
+            complianceScore:
+              type: number
+        onChain:
+          type: object
+          properties:
+            balanceAlgo:
+              type: number
+            totalTxns:
+              type: integer
+            assetCount:
+              type: integer
+            appCount:
+              type: integer
+            accountAgeDays:
+              type: integer
+            firstSeenRound:
+              type: integer
+            lastSeenRound:
+              type: integer
+        explanation:
+          type: array
+          items:
+            type: string
+          description: Human-readable reasons
+
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        service:
+          type: string
+        version:
+          type: string
+        network:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        statusCode:
+          type: integer
