@@ -4,6 +4,13 @@ export function isValidWallet(wallet: string): boolean {
   return typeof wallet === 'string' && WALLET_REGEX.test(wallet);
 }
 
+export const MICRO_ALGO = 1_000_000;
+export const ALGO_DECIMALS = 6;
+export const SECONDS_PER_BLOCK = 3.3;
+export const SECONDS_PER_DAY = 86_400;
+export const TESTNET_GENESIS_ROUND = 64_600_000;
+export const MAX_ROUNDS_LOOKBACK = 1_000_000;
+
 export const X402_PRICING = {
   '/score': { price: 0.001, description: 'Trust Score' },
   '/delegation': { price: 0.001, description: 'Delegation Trust' },
@@ -16,5 +23,3 @@ export const X402_PRICING = {
   '/trust-graph': { price: 0.005, description: 'Trust Graph Analytics' },
   '/passport': { price: 0.005, description: 'Agent Passport Document' },
 } as const;
-
-export type X402Endpoint = keyof typeof X402_PRICING;

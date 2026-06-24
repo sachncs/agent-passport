@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { config } from '../config';
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
@@ -22,9 +23,9 @@ const LOG_LEVEL_PRIORITY: Record<LogLevel, number> = {
   error: 3,
 };
 
-const configuredLevel: LogLevel = (process.env.LOG_LEVEL as LogLevel) || 'info';
-const LOG_FILE = process.env.LOG_FILE;
-const LOG_ERROR_FILE = process.env.LOG_ERROR_FILE;
+const configuredLevel: LogLevel = config.logLevel;
+const LOG_FILE = config.logFile;
+const LOG_ERROR_FILE = config.logErrorFile;
 
 let logStream: fs.WriteStream | null = null;
 let errorStream: fs.WriteStream | null = null;
