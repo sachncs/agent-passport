@@ -1,31 +1,35 @@
-import algosdk from 'algosdk';
+import { config } from './config';
+import { withTimeout, fetchWithTimeout } from './lib/timeout';
+import { algod } from './lib/algorand-client';
+import { MICRO_ALGO, isValidWallet } from './lib/constants';
+import { LRUCache } from './lib/cache';
+import { logger } from './lib/logger';
+import { scoreWallet } from './trust-score';
 
-const ALGOD_URL = process.env.ALGOD_URL || 'https://testnet-api.algonode.cloud:443';
-const INDEXER_URL = process.env.INDEXER_URL || 'https://testnet-idx.algonode.cloud:443';
-const ALGOD_TOKEN = process.env.ALGOD_TOKEN || '';
+const INDEXER_URL = config.indexerUrl;
 
-export interface GraphEdge {
+interface GraphEdge {
   from: string;
   to: string;
   amount: number;
   round: number;
 }
 
-export interface GraphNode {
+interface GraphNode {
   address: string;
   trustScore: number;
   balanceAlgo: number;
   depth: number;
 }
 
-export interface TrustPath {
+interface TrustPath {
   path: string[];
   depth: number;
   totalDelegated: number;
   weakestLink: number;
 }
 
-export interface ExposureAnalysis {
+interface ExposureAnalysis {
   totalExposure: number;
   directExposure: number;
   indirectExposure: number;
@@ -33,7 +37,7 @@ export interface ExposureAnalysis {
   maxLossIfSponsorFails: number;
 }
 
-export interface WhatIfResult {
+interface WhatIfResult {
   sponsorRemoved: string;
   originalScore: number;
   newScore: number;
@@ -93,27 +97,35 @@ export function computeExposure(
 
 // ── On-chain data fetching ─────────────────────────────────────
 
-async function fetchAccountInfo(wallet: string): Promise<{
-  balance: number;
-  trustScore: number;
-} | null> {
-  const algod = new algosdk.Algodv2(ALGOD_TOKEN, ALGOD_URL);
+type GraphAccountInfo = { balance: number; trustScore: number };
+
+const graphAccountInfoCache = new LRUCache<GraphAccountInfo>(200, 60_000);
+
+async function fetchAccountInfo(wallet: string, fresh: boolean = false): Promise<GraphAccountInfo | null> {
+  if (!fresh) {
+    const cached = graphAccountInfoCache.get(wallet);
+    if (cached) return cached;
+  }
+
   try {
-    const info = await algod.accountInformation(wallet).do();
+    const info = await withTimeout(algod.accountInformation(wallet).do(), 10_000, 'accountInformation');
     const data = info as any;
-    return {
+    const result: GraphAccountInfo = {
       balance: Number(data.amount || 0),
-      trustScore: 0, // Will be computed separately if needed
+      trustScore: 0,
     };
-  } catch {
+    if (!fresh) graphAccountInfoCache.set(wallet, result);
+    return result;
+  } catch (e) {
+    logger.warn('fetchAccountInfo failed', { wallet, error: String(e) });
     return null;
   }
 }
 
-async function fetchDelegationEdges(wallet: string): Promise<GraphEdge[]> {
+async function fetchDelegationEdges(wallet: string, limit: number = 100): Promise<GraphEdge[]> {
   try {
-    const url = `${INDEXER_URL}/v2/accounts/${wallet}/transactions?limit=500&tx-type=pay`;
-    const res = await fetch(url);
+    const url = `${INDEXER_URL}/v2/accounts/${wallet}/transactions?limit=${limit}&tx-type=pay`;
+    const res = await fetchWithTimeout(url, { timeoutMs: 10_000 });
     if (!res.ok) return [];
 
     const data = await res.json() as any;
@@ -122,7 +134,7 @@ async function fetchDelegationEdges(wallet: string): Promise<GraphEdge[]> {
     return txns
       .filter((t: any) => {
         const receiver = t['payment-transaction']?.receiver;
-        return receiver && receiver !== wallet && /^[A-Z2-7]{58}$/.test(receiver);
+        return receiver && receiver !== wallet && isValidWallet(receiver);
       })
       .map((t: any) => ({
         from: wallet,
@@ -130,7 +142,8 @@ async function fetchDelegationEdges(wallet: string): Promise<GraphEdge[]> {
         amount: t['payment-transaction'].amount || 0,
         round: t['confirmed-round'] || 0,
       }));
-  } catch {
+  } catch (e) {
+    logger.warn('fetchDelegationEdges failed', { wallet, error: String(e) });
     return [];
   }
 }
@@ -141,7 +154,7 @@ export async function analyzeTrustGraph(
   wallet: string,
   maxDepth: number = 5
 ): Promise<TrustGraphResult | null> {
-  if (!/^[A-Z2-7]{58}$/.test(wallet)) return null;
+  if (!isValidWallet(wallet)) return null;
 
   const allEdges: GraphEdge[] = [];
   const visited = new Map<string, GraphNode>();
@@ -158,33 +171,65 @@ export async function analyzeTrustGraph(
     const edges = await fetchDelegationEdges(address);
     allEdges.push(...edges);
 
-    // Process each target
+    // Collect unique unseen targets, limit to 10 per depth level
+    const newTargets: { edge: GraphEdge; info: { balance: number; trustScore: number } | null }[] = [];
+    const seenTargets = new Set<string>();
     for (const edge of edges) {
-      if (!visited.has(edge.to)) {
+      if (!visited.has(edge.to) && !seenTargets.has(edge.to)) {
+        seenTargets.add(edge.to);
+        if (newTargets.length >= 10) break;
         const info = await fetchAccountInfo(edge.to);
-        visited.set(edge.to, {
-          address: edge.to,
-          trustScore: 0,
-          balanceAlgo: info?.balance ? info.balance / 1_000_000 : 0,
-          depth: depth + 1,
-        });
-        queue.push({ address: edge.to, depth: depth + 1 });
+        newTargets.push({ edge, info });
       }
+    }
+
+    // Process collected targets
+    for (const { edge, info } of newTargets) {
+      visited.set(edge.to, {
+        address: edge.to,
+        trustScore: 0,
+        balanceAlgo: info?.balance ? info.balance / MICRO_ALGO : 0,
+        depth: depth + 1,
+      });
+      queue.push({ address: edge.to, depth: depth + 1 });
     }
   }
 
   const nodes = Array.from(visited.values());
   const nodeCount = nodes.length;
 
-  // Build paths (simplified: direct paths from wallet)
+  // P0 FIX: Fetch actual trust scores for all visited nodes (was hardcoded to 0)
+  const trustScorePromises = nodes.map(async (node) => {
+    try {
+      const result = await scoreWallet(node.address);
+      return { address: node.address, trustScore: result?.trustScore ?? 0 };
+    } catch {
+      return { address: node.address, trustScore: 0 };
+    }
+  });
+  const trustScoreResults = await Promise.all(trustScorePromises);
+  const trustScoreMap = new Map(trustScoreResults.map(r => [r.address, r.trustScore]));
+
+  // Update nodes with actual trust scores
+  for (const node of nodes) {
+    node.trustScore = trustScoreMap.get(node.address) ?? 0;
+  }
+
+  // Build paths from direct edges
   const paths: TrustPath[] = [];
   const directEdges = allEdges.filter(e => e.from === wallet);
   for (const edge of directEdges) {
+    const targetNode = visited.get(edge.to);
+    const sourceNode = visited.get(wallet);
+    const trustScores = [
+      sourceNode?.trustScore ?? 0,
+      targetNode?.trustScore ?? 0,
+    ].filter(s => s > 0);
     paths.push({
       path: [wallet, edge.to],
       depth: 1,
       totalDelegated: edge.amount,
-      weakestLink: computeWeakestLink([50]), // placeholder until trust scores are fetched
+      weakestLink: trustScores.length > 0 ? computeWeakestLink(trustScores) : 0,
     });
   }
 
@@ -207,7 +252,7 @@ export async function analyzeTrustGraph(
       scoreImpact,
       affectedWallets: 1,
       explanation: [
-        `If ${edge.to.slice(0, 8)}... is removed, exposure drops from $${(exposure.totalExposure / 1_000_000).toFixed(2)} to $${(remainingExposure.totalExposure / 1_000_000).toFixed(2)}`,
+        `If ${edge.to.slice(0, 8)}... is removed, exposure drops from $${(exposure.totalExposure / MICRO_ALGO).toFixed(2)} to $${(remainingExposure.totalExposure / MICRO_ALGO).toFixed(2)}`,
         `Impact: ${Math.round((1 - scoreImpact) * 100)}% reduction in delegated trust`,
       ],
     });
@@ -221,9 +266,9 @@ export async function analyzeTrustGraph(
     explanation.push(`Trust graph contains ${nodeCount} wallets across ${Math.min(maxDepth, nodeCount - 1)} depth levels`);
   }
   explanation.push(`${allEdges.length} delegation edges detected`);
-  explanation.push(`Direct exposure: $${(exposure.directExposure / 1_000_000).toFixed(2)} ALGO`);
+  explanation.push(`Direct exposure: $${(exposure.directExposure / MICRO_ALGO).toFixed(2)} ALGO`);
   if (exposure.indirectExposure > 0) {
-    explanation.push(`Indirect exposure: $${(exposure.indirectExposure / 1_000_000).toFixed(2)} ALGO`);
+    explanation.push(`Indirect exposure: $${(exposure.indirectExposure / MICRO_ALGO).toFixed(2)} ALGO`);
   }
   if (whatIfs.length > 0) {
     explanation.push(`${whatIfs.length} what-if scenario${whatIfs.length > 1 ? 's' : ''} analyzed`);
