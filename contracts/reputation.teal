@@ -106,6 +106,10 @@ route_method:
 // ApplicationArgs[0] = "record"
 // ApplicationArgs[1] = event type char (p/u/d/r/e/s)
 // ApplicationArgs[2] = amount (uint64, microAlgo)
+//
+// Authorization:
+//   Self-reported events (p/u/d/r/s): sender must be the target wallet
+//   Endorsements (e): anyone can endorse another wallet
 method_record:
   txn NumAppArgs
   int 3
@@ -114,6 +118,25 @@ method_record:
   txn NumAccounts
   int 1
   >=  assert
+
+  // Check if this is an endorsement (event type = "e")
+  txna ApplicationArgs 1
+  byte "e"
+  ==
+
+  bnz method_record_endorsement
+
+  // ── Self-reported event: sender must be target ──
+  txn Sender
+  txna Accounts 0
+  ==  assert
+  bnz method_record_common
+
+method_record_endorsement:
+  // ── Endorsement: anyone can endorse ──
+  // Fall through to common recording logic
+
+method_record_common:
 
   // Build box key: "rep:" + wallet(32) + ":" + event_type_char(1)
   byte "rep:"

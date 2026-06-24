@@ -264,10 +264,14 @@ method_revoke_delegation:
   box_del
   pop
 
-  // Decrement total_delegations
+  // Decrement total_delegations (with underflow guard)
   byte "total_delegations"
   byte "total_delegations"
   app_global_get
+  dup
+  int 0
+  >
+  assert
   int 1
   -
   app_global_put
@@ -303,12 +307,6 @@ method_check_delegation:
 
   // Log result
   log
-  itxn_begin
-    int Logit
-    itxn_field OpCode
-    txna ApplicationArgs 0
-    itxn_field ApplicationArg
-  itxn_submit
 
   int 1
   return
@@ -326,12 +324,6 @@ method_get_delegations:
   itob
 
   log
-  itxn_begin
-    int Logit
-    itxn_field OpCode
-    byte "total_delegations"
-    itxn_field ApplicationArg
-  itxn_submit
 
   int 1
   return
