@@ -2,37 +2,58 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 import express from 'express';
+import helmet from 'helmet';
+import { config } from './config';
 import { scoreWallet } from './trust-score';
 import { scoreDelegation } from './delegation';
 import { checkCounterparty } from './counterparty';
 import { estimateCredit } from './credit';
 import { detectSybil } from './sybil';
-import { recordEvent, computeReputation } from './reputation';
+import { recordEvent, computeReputation, EVENT_TYPES } from './reputation';
 import { underwrite } from './underwriting';
 import { analyzeTrustGraph } from './trust-graph';
 import { generatePassport } from './passport';
 import { logger } from './lib/logger';
 import { isValidWallet } from './lib/constants';
 import { x402Middleware } from './lib/x402';
+import { rateLimiter, corsMiddleware, requestIdMiddleware, requestLoggingMiddleware } from './lib/security';
+import { algod } from './lib/algorand-client';
+import { LRUCache } from './lib/cache';
 
 const app = express();
-const PORT = parseInt(process.env.PORT || '3000', 10);
+const PORT = config.port;
 
+// P1 FIX: Response cache for wallet lookups (60s TTL, 500 entries)
+const responseCache = new LRUCache<unknown>(500, 60_000);
+
+// Security: trust proxy for correct IP behind load balancers
+app.set('trust proxy', 1);
+
+// Security: helmet for HTTP headers (HSTS, X-Content-Type-Options, CSP, etc.)
+app.use(helmet());
+
+// Request ID and logging
+app.use(requestIdMiddleware);
+app.use(requestLoggingMiddleware);
+
+// CORS with configurable origins
+app.use(corsMiddleware({ origin: config.corsAllowedOrigins }));
+app.use(rateLimiter({ windowMs: 60_000, max: 60 }));
 app.use(express.json({ limit: '100kb' }));
 app.use(x402Middleware);
 
 // ── Helper: validate wallet from query param ──────────────────
 function requireWallet(req: express.Request, res: express.Response): string | null {
-  const wallet = req.query.wallet as string;
-  if (!wallet) {
+  const raw = req.query.wallet;
+  if (typeof raw !== 'string' || !raw) {
     res.status(400).json({ error: 'Missing required query parameter: wallet' });
     return null;
   }
-  if (!isValidWallet(wallet)) {
+  if (!isValidWallet(raw)) {
     res.status(400).json({ error: 'Invalid wallet address. Must be 58-character base32 (A-Z, 2-7).' });
     return null;
   }
-  return wallet;
+  return raw;
 }
 
 // ── Helper: validate wallet from body ─────────────────────────
@@ -63,9 +84,18 @@ app.get('/score', async (req, res) => {
   const wallet = requireWallet(req, res);
   if (!wallet) return;
 
+  // P1 FIX: Check response cache first
+  const cacheKey = `score:${wallet}`;
+  const cached = responseCache.get(cacheKey);
+  if (cached) {
+    res.json(cached);
+    return;
+  }
+
   try {
     const result = await scoreWallet(wallet);
     if (!result) { res.status(404).json({ error: 'Wallet not found on testnet' }); return; }
+    responseCache.set(cacheKey, result);
     res.json(result);
   } catch (error) {
     logger.error('Failed to score wallet', { wallet, error: String(error) });
@@ -115,13 +145,15 @@ app.post('/credit-estimate', async (req, res) => {
   const wallet = requireBodyWallet(req, res);
   if (!wallet) return;
 
-  const amount = req.body?.amount;
-  if (amount !== undefined) {
-    const validated = validateAmount(amount);
+  const rawAmount = req.body?.amount;
+  let amount: number | undefined;
+  if (rawAmount !== undefined) {
+    const validated = validateAmount(rawAmount);
     if (validated === null) {
       res.status(400).json({ error: 'Amount must be a positive finite number.' });
       return;
     }
+    amount = validated;
   }
 
   try {
@@ -175,7 +207,7 @@ app.post('/reputation/record', async (req, res) => {
     return;
   }
 
-  const validTypes = ['payment', 'purchase', 'dispute', 'refund', 'endorsement', 'service'];
+  const validTypes = EVENT_TYPES;
   if (!validTypes.includes(eventType)) {
     res.status(400).json({ error: `Invalid eventType. Must be one of: ${validTypes.join(', ')}` });
     return;
@@ -200,6 +232,9 @@ app.post('/reputation/record', async (req, res) => {
       res.status(400).json({ error: 'Failed to record event' });
       return;
     }
+    // P1 FIX: Invalidate response cache for this wallet after reputation change
+    responseCache.delete(`passport:${wallet}`);
+    responseCache.delete(`score:${wallet}`);
     res.json(result);
   } catch (error) {
     logger.error('Failed to record reputation event', { wallet, error: String(error) });
@@ -242,9 +277,18 @@ app.get('/passport', async (req, res) => {
   const wallet = requireWallet(req, res);
   if (!wallet) return;
 
+  // P1 FIX: Check response cache first
+  const cacheKey = `passport:${wallet}`;
+  const cached = responseCache.get(cacheKey);
+  if (cached) {
+    res.json(cached);
+    return;
+  }
+
   try {
     const result = await generatePassport(wallet);
     if (!result) { res.status(404).json({ error: 'Wallet not found on testnet' }); return; }
+    responseCache.set(cacheKey, result);
     res.json(result);
   } catch (error) {
     logger.error('Failed to generate passport', { wallet, error: String(error) });
@@ -253,15 +297,33 @@ app.get('/passport', async (req, res) => {
 });
 
 // ── Health ────────────────────────────────────────────────────
-app.get('/health', (_req, res) => {
-  res.json({
+app.get('/health', async (_req, res) => {
+  const health: Record<string, unknown> = {
     status: 'ok',
     service: 'Agent Passport',
-    version: '0.2.0',
-    network: process.env.ALGO_NETWORK || 'testnet',
-    x402: process.env.X402_ENABLED === 'true',
+    version: '0.1.0',
+    network: config.algoNetwork,
+    x402: config.x402Enabled,
     timestamp: new Date().toISOString(),
-  });
+  };
+
+  // Deep probe: verify Algorand endpoint connectivity
+  try {
+    const status = await algod.status().do();
+    health.algorand = {
+      connected: true,
+      round: Number((status as any)['last-round'] || 0),
+    };
+  } catch (e) {
+    health.status = 'degraded';
+    health.algorand = {
+      connected: false,
+      error: String(e),
+    };
+  }
+
+  const statusCode = health.status === 'ok' ? 200 : 503;
+  res.status(statusCode).json(health);
 });
 
 let server: ReturnType<typeof express.application.listen> | null = null;
@@ -269,7 +331,7 @@ let server: ReturnType<typeof express.application.listen> | null = null;
 function main() {
   server = app.listen(PORT, () => {
     logger.info(`Agent Passport running on port ${PORT}`, {
-      network: process.env.ALGO_NETWORK || 'testnet',
+      network: config.algoNetwork,
       port: PORT,
     });
   });
@@ -302,5 +364,3 @@ process.on('uncaughtException', (error) => {
 });
 
 main();
-
-export { app };
