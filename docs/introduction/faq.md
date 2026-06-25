@@ -2,7 +2,7 @@
 
 > Couldn't find an answer? Open a
 > [Support question](https://github.com/sachn-cs/agent-passport/issues/new?template=question.md)
-> or check the [docs/](.) directory.
+> or browse [../README.md](../README.md).
 
 ## General
 
@@ -10,22 +10,30 @@
 
 A stateless HTTP API that scores Algorand wallets for trust, delegation
 trust, sybil risk, reputation, and creditworthiness — and lets sponsors
-publish on-chain delegations. See the [README](../README.md) for the
-overview and [docs/ARCHITECTURE.md](ARCHITECTURE.md) for the design.
+publish on-chain delegations. See [overview.md](overview.md) for the
+high-level design and [../architecture/system-design.md](../architecture/system-design.md)
+for the system design.
 
 ### Is it production-ready?
 
-Yes. The v0.1.0 release ran a full k6 load test against the public
-Algorand testnet — 724,889 requests across four scenarios with 0% errors
-at 500 VU and 0.45% at 1000 VU. The detailed production-readiness report
-is at [docs/REPORT.md](REPORT.md).
+Yes. The v0.1.0 release ran a smoke k6 load test against the public
+Algorand testnet — 0% errors at all VU counts. The full production-
+readiness report is at
+[../reports/production-readiness.md](../reports/production-readiness.md)
+and the most recent run at
+[../reports/load-test-2026-06-25.md](../reports/load-test-2026-06-25.md).
+Full 100/500/1000 VU runs are reproducible via
+[../operations/load-testing.md](../operations/load-testing.md).
 
 ### Why no database?
 
 The service is **fully stateless** — every request fetches data from
 Algorand (algod + indexer) and caches it in-memory for 60 seconds. There
 is no Postgres, no Redis, no message queue. This makes the service
-trivial to scale horizontally and trivial to roll back.
+trivial to scale horizontally and trivial to roll back. The only files
+written to disk are `data/rate-limit.json` and
+`data/system-exposure.json`, both of which can be disabled by removing
+the env var.
 
 ### Why Algorand?
 
@@ -38,10 +46,11 @@ chain with an indexer; the trust algorithm is chain-agnostic.
 ### Testnet vs mainnet — which should I deploy?
 
 Either. The defaults point at the **public AlgoNode testnet**, which is
-what most people use to start. For production, point
-`ALGOD_URL` and `INDEXER_URL` at a mainnet endpoint — see
-[docs/DEPLOYMENT.md](DEPLOYMENT.md) for the full list of options
-(AlgoNode, Nodely, BCC, local node) and their latency trade-offs.
+what most people use to start. For production, point `ALGOD_URL` and
+`INDEXER_URL` at a mainnet endpoint — see
+[../operations/deployment.md](../operations/deployment.md) for the full
+list of options (AlgoNode, Nodely, BCC, local node) and their latency
+trade-offs.
 
 ### What SLOs should I use?
 
@@ -54,7 +63,8 @@ It depends on your Algorand endpoint:
 
 The relaxed targets are the k6-measured baseline against the public
 testnet. The strict targets are achievable with a low-latency endpoint
-and are an upgrade path, not a prerequisite.
+and are an upgrade path, not a prerequisite. See
+[../operations/observability.md](../operations/observability.md) § SLOs.
 
 ### Can I deploy without Docker?
 
@@ -63,23 +73,25 @@ provided as a convenience, not a requirement.
 
 ### How do I run behind a load balancer?
 
-Set `app.set('trust proxy', 1)` is already done, so per-IP rate limiting
-sees the real client IP via `X-Forwarded-For`. Configure your LB to send
+`app.set('trust proxy', 1)` is already set, so per-IP rate limiting sees
+the real client IP via `X-Forwarded-For`. Configure your LB to send
 `X-Forwarded-For` and `X-Forwarded-Proto` headers. For multi-replica
 deployments, back the in-memory idempotency store with Redis — see
-`src/lib/idempotency.ts` for the interface.
+[../operations/idempotency.md](../operations/idempotency.md) § Multi-
+replica.
 
 ## API
 
 ### Why does my first call return 402?
 
-x402 micropayments are off by default. If you set `X402_ENABLED=true`
-in `.env`, every premium endpoint will return `402 Payment Required`
-with a payment spec, and you must retry with an `x-payment` header
-containing a verified on-chain USDC transaction. Most consumers should
-**leave x402 off** during development.
+x402 micropayments are off by default. If you set `X402_ENABLED=true` in
+`.env`, every premium endpoint will return `402 Payment Required` with a
+payment spec, and you must retry with an `x-payment` header containing a
+verified on-chain USDC transaction. Most consumers should **leave x402
+off** during development.
 
-See [docs/API.md](API.md) for the full x402 flow.
+See [../architecture/middleware-stack.md](../architecture/middleware-stack.md)
+§ x402 for the full flow.
 
 ### What's a valid wallet address?
 
@@ -89,10 +101,11 @@ SDKs.
 
 ### Why does `/delegate` return 503?
 
-The on-chain registry contract is not configured. Set
-`REGISTRY_APP_ID` (and `OPERATOR_MNEMONIC`) in `.env` after deploying
-the contract with `npm run deploy-registry`. Without these, every
-on-chain call returns `503 REGISTRY_NOT_CONFIGURED` by design.
+The on-chain registry contract is not configured. Set `REGISTRY_APP_ID`
+(and `OPERATOR_MNEMONIC`) in `.env` after deploying the contract with
+`npm run deploy-registry`. Without these, every on-chain call returns
+`503 REGISTRY_NOT_CONFIGURED` by design. See
+[../architecture/smart-contracts.md](../architecture/smart-contracts.md).
 
 ### What's the difference between `/score` and `/passport`?
 
@@ -103,31 +116,32 @@ on-chain call returns `503 REGISTRY_NOT_CONFIGURED` by design.
   tamper-evident `checksum`. 1.5–3 s cold, ~1 ms cached.
 
 Use `/score` for high-volume underwriting; use `/passport` for
-human-readable, shareable documents.
+human-readable, shareable documents. See
+[../concepts/passport-document.md](../concepts/passport-document.md).
 
 ### Why is my response cached?
 
-The service uses an LRU cache with a 60 s TTL on `/score` and
-`/passport`. Mutating endpoints (`/delegate`, `/revoke`,
-`/reputation/record`) invalidate the cache for affected wallets.
-If you need a fresh value, use a different wallet or wait 60 s.
+The service uses an LRU cache with a 60 s TTL on `/score`, `/passport`,
+and `/verify`. Mutating endpoints (`/delegate`, `/revoke`,
+`/reputation/record`) invalidate the cache for affected wallets. See
+[../architecture/caching.md](../architecture/caching.md). If you need a
+fresh value, use a different wallet or wait 60 s.
 
 ## Trust scoring
 
 ### How is the score computed?
 
-Six weighted sub-scores, summed and clamped to 0–100. See
-[docs/TRUST-SCORING.md](TRUST-SCORING.md) for the full algorithm,
-weights, and risk-level buckets.
+Five weighted sub-scores, summed and clamped to 0–100. See
+[../concepts/trust-scoring.md](../concepts/trust-scoring.md) for the
+full algorithm, weights, and risk-level buckets.
 
 | Component | Weight | What it measures |
 |-----------|-------:|------------------|
 | Age | 0.20 | Account age (linear + log ramp over 730 days) |
-| Sponsor | 0.25 | Average sponsor trust + count bonus |
-| Activity | 0.20 | Transaction volume and consistency |
-| Risk | 0.15 | Sybil risk penalty |
-| Velocity | 0.10 | Spike detection vs historical average |
-| Compliance | 0.10 | Sanctions, mixer, scam flag penalties |
+| Activity | 0.25 | Transaction frequency and asset diversity |
+| Volume | 0.20 | Balance and transaction count (log) |
+| Velocity | 0.15 | Bot/spam behaviour via tx-per-day ratio |
+| Compliance | 0.20 | Sanctions, mixer, scam flag penalties |
 
 ### Can a wallet with no history get a high score?
 
@@ -138,16 +152,19 @@ bucket until the wallet has 30+ days of activity.
 
 ### How do you prevent sybil attacks?
 
-Multiple layers, all documented in [docs/SECURITY.md](SECURITY.md):
+Multiple layers, all documented in
+[../security/threat-model.md](../security/threat-model.md) and
+[../concepts/sybil-detection.md](../concepts/sybil-detection.md):
 
-- Sybil detection: clustering, timing regularity, amount fingerprint,
-  funding correlation
-- Trust amplification guards: quality-weighted sponsor count,
-  depth-adjusted trust cap (mitigated against trust inflation)
-- Cycle detection: BFS with a visited set to prevent circular
+- **12 sybil signals** (creation clustering, interaction density,
+  balance similarity, circular activity, timing regularity, amount
+  fingerprint, funding correlation, plus 4 graph-traversal signals)
+- **Trust amplification guards** — quality-weighted sponsor count,
+  depth-adjusted trust cap (mitigates trust inflation)
+- **Cycle detection** — BFS with a visited set to prevent circular
   delegations
-- Logarithmic amount scoring: 10K ALGO and 100K ALGO both score 100 —
-  whale delegations cannot dominate
+- **Logarithmic amount scoring** — 10K ALGO and 100K ALGO both score
+  100; whale delegations cannot dominate
 
 ### Why are risk levels `low` / `medium` / `high` / `critical`?
 
@@ -171,14 +188,16 @@ sub-scores.
 Apply `alerts/prometheus-scrape.yml` to your Prometheus config, apply
 `alerts/alertmanager.yml` to your Alertmanager config, and import
 `alerts/grafana-dashboard.json` (17 panels) into your Grafana. The full
-metric inventory is in [docs/OBSERVABILITY.md](OBSERVABILITY.md).
+metric inventory is at
+[../operations/observability.md](../operations/observability.md).
 
 ### What's the difference between `slo-prod-relaxed` and `slo-prod-strict`?
 
-- `slo-prod-relaxed.yml` — targets based on **measured** k6 data
-  against the public testnet: P95 < 1.5 s, 99% availability, > 100 rps.
-- `slo-prod-strict.yml` — aspirational targets achievable with a
-  low-latency Algorand endpoint: P95 < 500 ms, 99.9% availability,
+- `alerts/slo-prod-relaxed.yml` — targets based on **measured** k6
+  data against the public testnet: P95 < 1.5 s, 99% availability,
+  > 100 rps.
+- `alerts/slo-prod-strict.yml` — aspirational targets achievable with
+  a low-latency Algorand endpoint: P95 < 500 ms, 99.9% availability,
   > 1500 rps.
 
 Pick the one that matches your deployment target.
@@ -188,14 +207,15 @@ Pick the one that matches your deployment target.
 ### Where do I report a security issue?
 
 **Email** sachncs@gmail.com with `[SECURITY]` in the subject. Do **not**
-file a public GitHub issue. See [SECURITY.md](../SECURITY.md) for the
-full policy and disclosure timeline.
+file a public GitHub issue. See [../../SECURITY.md](../../SECURITY.md)
+for the full policy and disclosure timeline.
 
 ### How is the operator wallet secured?
 
 The 25-word mnemonic lives in `OPERATOR_MNEMONIC`. Use a secret manager
 (Kubernetes Secrets, AWS Secrets Manager, GCP Secret Manager, Vault) —
-never commit it. The CI workflow does **not** log or store it.
+never commit it. The CI workflow does **not** log or store it. See
+[../security/operator-wallet.md](../security/operator-wallet.md).
 
 ### What happens if my operator mnemonic leaks?
 
@@ -208,16 +228,17 @@ immutable; revoke the malicious ones and re-issue.
 
 ### How do I contribute?
 
-See [CONTRIBUTING.md](../CONTRIBUTING.md). The TL;DR:
+See [../../CONTRIBUTING.md](../../CONTRIBUTING.md). The TL;DR:
 
 1. Fork the repo, branch from `master`
 2. Use [Conventional Commits](https://www.conventionalcommits.org/)
-3. Run `npm run lint && npm run typecheck && SKIP_E2E=1 npm test`
-4. Open a PR with the [template](../.github/PULL_REQUEST_TEMPLATE.md)
-   filled in
+3. Run `npm run lint && npm run typecheck && npm test`
+4. Open a PR with the
+   [template](../../.github/PULL_REQUEST_TEMPLATE.md) filled in
 
 ### Where do I report a vulnerability in a dependency?
 
-File a [bug report](https://github.com/sachn-cs/agent-passport/issues/new?template=bug_report.md)
+File a
+[bug report](https://github.com/sachn-cs/agent-passport/issues/new?template=bug_report.md)
 linking the GHSA / CVE. Dependabot opens weekly PRs — see
-[.github/dependabot.yml](../.github/dependabot.yml).
+[../../.github/dependabot.yml](../../.github/dependabot.yml).

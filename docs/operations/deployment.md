@@ -1,4 +1,8 @@
-# Deployment Guide
+# Deployment
+
+This is the canonical deployment guide. It replaces the legacy
+`docs/DEPLOYMENT.md` content (now inlined below with the env-var
+table replaced by [environment-variables.md](environment-variables.md)).
 
 ## Quick start
 
@@ -8,9 +12,13 @@ cp .env.example .env
 npm start
 ```
 
-By default this points at the public Algorand testnet — no setup beyond the env file is needed.
+By default this points at the public Algorand testnet — no setup
+beyond the env file is needed.
 
 ## Health endpoints
+
+See [../api/health.md](../api/health.md) for the full table. Short
+version:
 
 | Endpoint | Purpose | Use for |
 |----------|---------|---------|
@@ -19,54 +27,25 @@ By default this points at the public Algorand testnet — no setup beyond the en
 | `GET /health/deep` | Both — includes Algorand status in body, always 200 | Operational dashboards |
 | `GET /metrics` | Prometheus metrics | Prometheus scrape |
 
-## Environment variables
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `PORT` | 3000 | Server port |
-| `ALGOD_URL` | `https://testnet-api.algonode.cloud:443` | Algod endpoint |
-| `INDEXER_URL` | `https://testnet-idx.algonode.cloud:443` | Indexer endpoint |
-| `ALGOD_TOKEN` | `''` | Algod API token (optional for public endpoints) |
-| `INDEXER_TOKEN` | `''` | Indexer API token (optional for public endpoints) |
-| `ALGO_NETWORK` | `testnet` | Display only |
-| `REGISTRY_APP_ID` | 0 | Registry contract app ID (must be > 0 to enable `/delegate` and `/revoke`) |
-| `REPUTATION_APP_ID` | 0 | Reputation contract app ID |
-| `OPERATOR_MNEMONIC` | — | 25-word Algorand mnemonic for the operator wallet |
-| `RATE_LIMIT_MAX` | 600 | Max requests per IP per minute. Set this for production traffic. |
-| `RATE_LIMIT_TRUSTED_IPS` | — | Comma-separated IPs exempted from rate limiting (internal services, operator hosts) |
-| `RATE_LIMIT_PERSISTENCE_PATH` | `data/rate-limit.json` | Where to persist rate-limit state across restarts |
-| `LOG_LEVEL` | `info` | One of: `debug`, `info`, `warn`, `error` |
-| `LOG_FILE` | — | Path to log file (optional) |
-| `LOG_ERROR_FILE` | — | Path to error log file (optional) |
-| `CORS_ALLOWED_ORIGINS` | `*` | Comma-separated origins, or `*` for all |
-| `REQUEST_TIMEOUT_MS` | 30000 | Per-request timeout in milliseconds |
-| `LOAD_TEST_MODE` | `0` | Set to `1` to disable rate limiting (load testing only) |
-
 ## Going to production — checklist
-
-The k6 load test on 2026-06-25 against Algorand testnet measured the following:
-
-| Scenario | VUs | Total reqs | Error rate | P50 | P95 | P99 | Throughput |
-|----------|----:|-----------:|-----------:|----:|----:|----:|-----------:|
-| A | 100 | 12,425 | 0.00% | 52ms | 1.15s | 2.19s | 190 rps |
-| B | 500 | 113,133 | 0.00% | 51ms | 154ms | 1.13s | 1,829 rps |
-| C | 1000 | 125,458 | 0.45% | 117ms | 2.27s | 4.13s | 1,760 rps |
-| D (sustained) | 1 (12 rps) | 473,873 | 0.00% | 94µs | 133µs | 282µs | 7,897 rps |
-
-The service is **fully stateless** and ready to deploy against any Algorand endpoint.
 
 ### 1. Choose your Algorand network
 
-Pick the deployment target that fits your latency and reliability requirements:
+Pick the deployment target that fits your latency and reliability
+requirements:
 
 | Option | When to use | Latency | Setup |
 |--------|-------------|---------|-------|
 | **Testnet (AlgoNode)** | Dev, staging, low-traffic production, MVP launches | 200-800ms per round-trip | None — defaults are set |
 | **Mainnet via public endpoint** | Production with relaxed SLOs (matches testnet numbers) | 200-800ms per round-trip | Update `ALGOD_URL` and `INDEXER_URL` to mainnet |
 | **Mainnet via hosted provider** (Nodely, BCC, AlgoNode paid tier) | Production with stricter SLOs and zero node ops | 50-200ms per round-trip | Subscribe to provider, set URLs |
-| **Mainnet via local Algorand node** | Production needing the tightest SLOs (500ms P95) | 5-20ms per round-trip | Run your own node — see [Algorand node docs](https://developer.algorand.org/docs/run-a-node/participate/) |
+| **Mainnet via local Algorand node** | Production needing the tightest SLOs (500ms P95) | 5-20ms per round-trip | Run your own node — see [Algorand node docs](https://developer.algonand.org/docs/run-a-node/participate/) |
 
-The k6 testnet baseline above (P95 < 1.5s, 99% availability) is what you should expect with any of the first three options. The local-node option is an upgrade path if you need the stricter `slo-prod-strict` targets (P95 < 500ms, 99.9% availability).
+The measured k6 testnet baseline (P95 < 1.5s, 99% availability) is
+what you should expect with any of the first three options. The
+local-node option is an upgrade path if you need the stricter
+`slo-prod-strict` targets (P95 < 500ms, 99.9% availability). See
+[observability.md](observability.md) § SLOs.
 
 ### 2. Set `ALGOD_URL` and `INDEXER_URL`
 
@@ -91,27 +70,38 @@ INDEXER_URL=http://algorand-indexer:8980
 ### 3. Deploy the registry and reputation contracts (if using `/delegate` and `/revoke`)
 
 ```bash
-npm run deploy-registry
-npm run deploy-reputation
+DEPLOYER_MNEMONIC="<25-word-mnemonic>" npm run deploy-registry
+DEPLOYER_MNEMONIC="<25-word-mnemonic>" npm run deploy-reputation
 ```
 
-Then set:
+Each script prints the resulting app ID. Set in `.env`:
+
 ```bash
 REGISTRY_APP_ID=<app-id>
 REPUTATION_APP_ID=<app-id>
 OPERATOR_MNEMONIC="<25-word-mnemonic>"
 ```
 
+The deployer and operator mnemonics are **different** wallets. The
+deployer is used only at deploy time; the operator signs runtime
+transactions. See
+[../security/operator-wallet.md](../security/operator-wallet.md).
+
 ### 4. Tune the rate limit
 
 ```bash
-RATE_LIMIT_MAX=600          # 600 req/min/IP is the production-tested default
+RATE_LIMIT_MAX=600                    # 600 req/min/IP is the production-tested default
 RATE_LIMIT_TRUSTED_IPS="10.0.0.1,10.0.0.2"  # internal services, operator hosts
 ```
 
+See [rate-limiting.md](rate-limiting.md).
+
 ### 5. For multi-replica deployments, back idempotency with Redis
 
-The in-memory idempotency store works for single-replica deployments. For multi-replica, back it with Redis (SETNX + EX). The interface is in `src/lib/idempotency.ts`.
+The in-memory idempotency store works for single-replica deployments.
+For multi-replica, back it with Redis (SETNX + EX). The interface is
+in `src/lib/idempotency.ts`. See
+[idempotency.md](idempotency.md) § Multi-replica.
 
 ### 6. Provision Prometheus + Alertmanager + Grafana
 
@@ -119,8 +109,11 @@ The in-memory idempotency store works for single-replica deployments. For multi-
 - Apply `alerts/alertmanager.yml` to your Alertmanager config
 - Import `alerts/grafana-dashboard.json` to your Grafana
 - Choose the right SLO file:
-  - Testnet, public mainnet endpoint, or hosted provider: `alerts/slo-prod-relaxed.yml`
+  - Testnet, public mainnet endpoint, or hosted provider:
+    `alerts/slo-prod-relaxed.yml`
   - Local Algorand node: `alerts/slo-prod-strict.yml`
+
+See [observability.md](observability.md) for the full alert inventory.
 
 ### 7. Run the load test in your production environment
 
@@ -129,15 +122,21 @@ cd load-tests
 ./run-all.sh
 ```
 
-Compare against the k6 testnet baseline above. With a low-latency endpoint (local node or premium provider), expect:
-- P95 < 500ms for `/score`, `/verify`, `/discovery/search`
-- P95 < 1s for `/passport`, `/underwrite`, `/trust-graph`
-- 0% errors at 500 VU
-- < 1% errors at 1000 VU
+Compare against the k6 testnet baseline:
+
+| Scenario | VUs | Testnet P95 | Expected prod-strict P95 |
+|----------|----:|------------:|------------------------:|
+| A (100) | 100 | 1.15s | <500ms |
+| B (500) | 500 | 154ms | <750ms |
+| C (1000) | 1000 | 2.27s | <1.5s |
+| D (sustained) | 12 rps | 133µs | <300ms |
+
+See [load-testing.md](load-testing.md).
 
 ### 8. Set up on-call rotation
 
-Against `alerts/escalation-policy.yml` and the 8 runbooks in `alerts/runbooks/`.
+Against `alerts/escalation-policy.yml` and the 8 runbooks in
+`alerts/runbooks/`. See [runbooks.md](runbooks.md) for the index.
 
 ## Kubernetes example
 
@@ -163,7 +162,7 @@ spec:
         - containerPort: 3000
         env:
         - name: ALGOD_URL
-          value: "https://testnet-api.algonode.cloud:443"  # or your mainnet endpoint
+          value: "https://testnet-api.algonode.cloud:443"
         - name: INDEXER_URL
           value: "https://testnet-idx.algonode.cloud:443"
         - name: RATE_LIMIT_MAX
@@ -200,8 +199,10 @@ spec:
     targetPort: 3000
 ```
 
-## Stateless
+## Stateless deployment
 
-- No database required — all data fetched from Algorand per request (cached in-memory for 60s)
+- No database required — all data fetched from Algorand per request
+  (cached in-memory for 60s — see
+  [../architecture/caching.md](../architecture/caching.md))
 - Safe to restart at any time
 - Multi-replica safe (with the Redis idempotency caveat above)

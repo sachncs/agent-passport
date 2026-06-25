@@ -1,11 +1,10 @@
 # Getting Started
 
-This guide gets you from zero to your first trust score, delegation, and
-underwriting decision in under five minutes.
+This guide gets you from zero to your first trust score, delegation,
+and underwriting decision in under five minutes.
 
-> If you prefer to read the full reference, see
-> [docs/ARCHITECTURE.md](ARCHITECTURE.md), [docs/API.md](API.md), and
-> [docs/DEPLOYMENT.md](DEPLOYMENT.md).
+> If you prefer to read the full reference, see the
+> [docs/README.md](../README.md) index.
 
 ## 1. Prerequisites
 
@@ -29,7 +28,8 @@ cp .env.example .env
 
 The `.env.example` file works as-is. It points at the AlgoNode testnet,
 disables x402 payments, and uses sensible defaults for every other
-variable.
+variable. See [../operations/environment-variables.md](../operations/environment-variables.md)
+for the full env-var table.
 
 ## 3. Run
 
@@ -59,13 +59,19 @@ curl -s "http://localhost:3000/score?wallet=GD64YIY3TWGDMCNPP553DZPPR6LDUSFBBHU5
 
 You will get back a JSON object with a `trustScore` (0–100), a
 `riskLevel` (`low` / `medium` / `high` / `critical`), a sub-score
-`breakdown`, an `onChain` block, and an `explanation` array.
+`breakdown`, an `onChain` block, and an `explanation` array. See
+[../concepts/trust-scoring.md](../concepts/trust-scoring.md) for the
+math.
 
 ### Full passport
 
 ```bash
 curl -s "http://localhost:3000/passport?wallet=GD64YIY3TWGDMCNPP553DZPPR6LDUSFBBHU5AAAAA7XBICTFJ7BY7C55XX" | jq
 ```
+
+The passport bundles trust, delegation, sybil, reputation, credit,
+on-chain context, and a tamper-evident SHA-256 checksum. See
+[../concepts/passport-document.md](../concepts/passport-document.md).
 
 ### Underwriting decision
 
@@ -80,6 +86,8 @@ curl -s http://localhost:3000/health
 curl -s http://localhost:3000/ready        # 200 or 503
 curl -s http://localhost:3000/metrics      # Prometheus format
 ```
+
+See [../api/health.md](../api/health.md) for the full health surface.
 
 ## 5. Use the SDK
 
@@ -110,6 +118,8 @@ npx tsx index.ts
 # Trust score: 78 low
 ```
 
+See [../development/sdk-typescript.md](../development/sdk-typescript.md).
+
 ### Python
 
 ```bash
@@ -134,11 +144,13 @@ python main.py
 # Trust score: 78 low
 ```
 
+See [../development/sdk-python.md](../development/sdk-python.md).
+
 ## 6. Run the Test Suite
 
 ```bash
-npm test                  # Full suite, including E2E
-SKIP_E2E=1 npm test       # Skip the E2E suite that hits the public testnet
+npm test                           # Unit tests (integration suite excluded by default)
+npm run test:integration           # Live testnet E2E + integration suite
 npm run lint
 npm run typecheck
 ```
@@ -150,39 +162,46 @@ cd sdk && npm test
 cd sdk/python && pytest
 ```
 
+See [../development/testing.md](../development/testing.md).
+
 ## 7. Try the On-Chain Endpoints (Optional)
 
 The `/delegate` and `/revoke` routes submit transactions to the Algorand
 registry contract. To enable them:
 
 ```bash
-# 1. Deploy the contracts to testnet
-npm run deploy-registry
-npm run deploy-reputation
+# 1. Fund a deployer wallet with ≥0.1 ALGO on testnet
+#    (https://testnet.algoexplorer.io/dispenser)
 
-# 2. Set the resulting app IDs and the operator mnemonic in .env
+# 2. Deploy the contracts
+DEPLOYER_MNEMONIC="word1 word2 ... word25" npm run deploy-registry
+DEPLOYER_MNEMONIC="word1 word2 ... word25" npm run deploy-reputation
+
+# 3. Set the resulting app IDs and the operator mnemonic in .env
 REGISTRY_APP_ID=12345
 REPUTATION_APP_ID=67890
 OPERATOR_MNEMONIC="word1 word2 ... word25"
 
-# 3. Restart the service
+# 4. Restart the service
 npm run dev
 ```
 
-Now `POST /delegate` and `POST /revoke` will work. Without these env vars
-the routes return `503 REGISTRY_NOT_CONFIGURED`.
+Now `POST /delegate` and `POST /revoke` will work. Without these env
+vars the routes return `503 REGISTRY_NOT_CONFIGURED`. See
+[../architecture/smart-contracts.md](../architecture/smart-contracts.md)
+and [../security/operator-wallet.md](../security/operator-wallet.md).
 
 ## 8. Where to Go Next
 
 | Goal | Read |
 |------|------|
-| Understand the scoring algorithm | [docs/TRUST-SCORING.md](TRUST-SCORING.md) |
-| See the full HTTP surface | [docs/openapi.yaml](openapi.yaml) or [docs/API.md](API.md) |
-| Deploy to production | [docs/DEPLOYMENT.md](DEPLOYMENT.md) |
-| Wire up metrics & alerts | [docs/OBSERVABILITY.md](OBSERVABILITY.md) |
-| Understand the threat model | [docs/SECURITY.md](SECURITY.md) |
-| Run load tests | [load-tests/EXECUTION.md](../load-tests/EXECUTION.md) |
-| Add a wallet to the sanctions list | [docs/SANCTIONS-INTEGRATION.md](SANCTIONS-INTEGRATION.md) |
-| Publish to the Bazaar | `GET /discovery/search` and `docs/bazaar-metadata.json` |
+| Understand the scoring algorithm | [../concepts/trust-scoring.md](../concepts/trust-scoring.md) |
+| See the full HTTP surface | [../api/README.md](../api/README.md) or [../api/openapi.yaml](../api/openapi.yaml) |
+| Deploy to production | [../operations/deployment.md](../operations/deployment.md) |
+| Wire up metrics & alerts | [../operations/observability.md](../operations/observability.md) |
+| Understand the threat model | [../security/threat-model.md](../security/threat-model.md) |
+| Run load tests | [../operations/load-testing.md](../operations/load-testing.md) |
+| Add a wallet to the sanctions list | [../security/sanctions-integration.md](../security/sanctions-integration.md) |
+| Publish to the Bazaar | `GET /discovery/search` and [../api/health.md](../api/health.md) |
 
 Welcome aboard!

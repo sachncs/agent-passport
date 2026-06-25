@@ -22,6 +22,8 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
+      - name: Check markdown links
+        run: node scripts/ci/check-md-links.mjs
       - run: npm test
 
   build:

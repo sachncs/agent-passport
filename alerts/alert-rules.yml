@@ -1,7 +1,10 @@
 # Agent Passport Alert Rules (Prometheus/Alertmanager)
-# 
+#
 # These rules define alerting thresholds for the Agent Passport service.
 # Deploy with Prometheus Alertmanager for production monitoring.
+#
+# Runbook URLs point to docs/operations/runbooks.md and the corresponding
+# sub-runnbook under alerts/runbooks/.
 
 groups:
   - name: agent_passport_critical
@@ -16,7 +19,7 @@ groups:
         annotations:
           summary: "Agent Passport API is down"
           description: "Agent Passport API has been unreachable for more than 1 minute."
-          runbook_url: "https://wiki.example.com/runbooks/agent-passport-api-down"
+          runbook_url: "alerts/runbooks/agent-passport-api-down.md"
 
       # P0: Payment Verification Failing
       - alert: X402PaymentVerificationFailing
@@ -28,7 +31,7 @@ groups:
         annotations:
           summary: "x402 payment verification failing"
           description: "Payment verification failure rate is above 10% for 2 minutes."
-          runbook_url: "https://wiki.example.com/runbooks/x402-verification-failure"
+          runbook_url: "alerts/runbooks/x402-verification-failure.md"
 
       # P0: Contract Indexing Failure
       - alert: ContractIndexingFailure
@@ -40,7 +43,7 @@ groups:
         annotations:
           summary: "Contract indexing failure detected"
           description: "Dispute event rate is elevated, indicating potential indexing issues."
-          runbook_url: "https://wiki.example.com/runbooks/contract-indexing-failure"
+          runbook_url: "alerts/runbooks/contract-indexing-failure.md"
 
       # P0: High Error Rate
       - alert: HighErrorRate
@@ -52,7 +55,7 @@ groups:
         annotations:
           summary: "High HTTP error rate detected"
           description: "Error rate is above 5% for 3 minutes. Current value: {{ $value }}"
-          runbook_url: "https://wiki.example.com/runbooks/high-error-rate"
+          runbook_url: "alerts/runbooks/elevated-error-rate.md"
 
   - name: agent_passport_warning
     rules:
@@ -66,7 +69,7 @@ groups:
         annotations:
           summary: "Elevated P95 latency"
           description: "P95 request latency is above 1.5 seconds for 5 minutes. Testnet floor is 1.15s at 100 VU. Current value: {{ $value }}s"
-          runbook_url: "https://wiki.example.com/runbooks/elevated-latency"
+          runbook_url: "alerts/runbooks/elevated-latency.md"
 
       # P1: Elevated Latency (P99) — testnet baseline is 2.27s under 1000 VU
       - alert: ElevatedLatencyP99
@@ -77,11 +80,12 @@ groups:
           team: platform
         annotations:
           summary: "Elevated P99 latency"
-          description: "P99 request latency is above 3 seconds for 5 minutes. Testnet floor is 2.27s at 1000 VU."
+          description: "P99 request latency is above 3 seconds for 5 minutes. Testnet floor is 2.27s under 1000 VU."
+          runbook_url: "alerts/runbooks/elevated-latency.md"
 
       # P1: Elevated Error Rate — testnet baseline is 0.45% under 1000 VU
       - alert: ElevatedErrorRate
-        expr: rate(agent_passport_http_request_errors_total[5m]) / rate(agent_passport_http_requests_total[5m]) > 0.02
+        expr: rate(agent_passport_http_request_errors_total[5m]) / rate(agent_passport_http_request_errors_total[5m] + rate(agent_passport_http_requests_total[5m])) > 0.02
         for: 5m
         labels:
           severity: warning
@@ -89,6 +93,7 @@ groups:
         annotations:
           summary: "Elevated error rate"
           description: "Error rate is above 2% for 5 minutes. Testnet baseline is 0.45% under 1000 VU."
+          runbook_url: "alerts/runbooks/elevated-error-rate.md"
 
       # P1: Replay Attack Spike
       - alert: ReplayAttackSpike
@@ -100,7 +105,7 @@ groups:
         annotations:
           summary: "x402 replay attack attempts detected"
           description: "Replay attack attempt rate is above 5% for 2 minutes."
-          runbook_url: "https://wiki.example.com/runbooks/replay-attack-spike"
+          runbook_url: "alerts/runbooks/replay-attack-spike.md"
 
       # P1: High Trust Score Latency — measured P95 = 949ms under 1000 VU on testnet
       - alert: HighTrustScoreLatency
@@ -136,6 +141,7 @@ groups:
         annotations:
           summary: "Unusual traffic volume detected"
           description: "Request rate is above 100 req/s for 10 minutes."
+          runbook_url: "alerts/runbooks/unusual-traffic.md"
 
       # P2: Unusual Graph Growth
       - alert: UnusualGraphGrowth
@@ -147,6 +153,7 @@ groups:
         annotations:
           summary: "Unusual graph growth detected"
           description: "Average graph traversal depth is increasing abnormally."
+          runbook_url: "alerts/runbooks/graph-growth.md"
 
       # P2: Cache Hit Rate Drop
       - alert: CacheHitRateDrop
@@ -196,7 +203,7 @@ groups:
         annotations:
           summary: "High 5xx error rate"
           description: "5xx error rate above 1% for 3 minutes."
-          runbook_url: "https://wiki.example.com/runbooks/high-5xx-rate"
+          runbook_url: "alerts/runbooks/elevated-error-rate.md"
 
       # P0: Algorand Dependency Down
       - alert: AlgorandDependencyDown
@@ -209,7 +216,7 @@ groups:
         annotations:
           summary: "Algorand dependency down"
           description: "Health check is failing, indicating Algorand endpoint connectivity issues."
-          runbook_url: "https://wiki.example.com/runbooks/algorand-dependency-down"
+          runbook_url: "alerts/runbooks/agent-passport-api-down.md"
 
       # P1: Contract Event Stall
       - alert: ContractEventStall
@@ -221,7 +228,7 @@ groups:
         annotations:
           summary: "No contract events recorded in 4+ hours"
           description: "Contract indexing may be stalled. Check REGISTRY_APP_ID / REPUTATION_APP_ID."
-          runbook_url: "https://wiki.example.com/runbooks/contract-indexing-failure"
+          runbook_url: "alerts/runbooks/contract-indexing-failure.md"
 
       # P1: High CPU usage
       - alert: HighCPUUsage

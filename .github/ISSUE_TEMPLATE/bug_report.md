@@ -50,4 +50,4 @@ Paste relevant log lines (with request IDs) or attach a screenshot.
       default `.env.example`.
 - [ ] I have included the `X-Request-ID` from a failing response (if any).
 - [ ] I am not reporting a security vulnerability — that goes to
-      [SECURITY.md](SECURITY.md) via email.
+      [SECURITY.md](../../SECURITY.md) via email.

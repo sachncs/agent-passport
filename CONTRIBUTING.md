@@ -139,7 +139,7 @@ agent-passport/
 └── dist/               # Build output (gitignored)
 ```
 
-See the [README](README.md) and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+See the [README](README.md) and [docs/README.md](docs/README.md)
 for more detail.
 
 ## Coding Standards
@@ -292,16 +292,18 @@ Slugs are lowercase, hyphenated, and descriptive (e.g.
 ## Documentation Expectations
 
 - Public APIs in `src/app.ts` and any new route must be reflected in
-  `docs/openapi.yaml` and the [Postman collection](docs/postman-collection.json).
-- New SDK methods require an entry in `sdk/README.md` (TS) or
-  `sdk/python/README.md` (Python) and a CHANGELOG entry.
-- New environment variables must be added to `.env.example` **and** the
-  README environment-variable table.
+  `docs/api/openapi.yaml` and the [Postman collection](docs/api/postman-collection.json).
+- New SDK methods require an entry in
+  [docs/development/sdk-typescript.md](docs/development/sdk-typescript.md)
+  (TS) or [docs/development/sdk-python.md](docs/development/sdk-python.md)
+  (Python) and a CHANGELOG entry.
+- New environment variables must be added to `.env.example` **and**
+  [docs/operations/environment-variables.md](docs/operations/environment-variables.md).
 - New Prometheus metrics must be documented in
-  [docs/OBSERVABILITY.md](docs/OBSERVABILITY.md) with label cardinality
-  guidance.
+  [docs/operations/observability.md](docs/operations/observability.md)
+  with label cardinality guidance.
 - New alerts must include a runbook under `alerts/runbooks/` and an entry
-  in the alert-to-runbook map.
+  in [docs/operations/runbooks.md](docs/operations/runbooks.md).
 
 ## Release Process
 

@@ -1,0 +1,318 @@
+{
+  "info": {
+    "name": "Agent Passport",
+    "description": "Stateless trust scoring, delegation, credit, sybil, reputation, and underwriting for AI agents on Algorand. No authentication required.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "wallet", "value": "GD64YIY3TWGDMCNPP553DZPPR6LDUSFQOIJVFDPPXWEG3FVOJCCDBBHU5A" },
+    { "key": "idempotencyKey", "value": "postman-{{$randomUUID}}" }
+  ],
+  "item": [
+    {
+      "name": "Trust",
+      "item": [
+        {
+          "name": "GET /score",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/score?wallet={{wallet}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["score"],
+              "query": [{ "key": "wallet", "value": "{{wallet}}" }]
+            }
+          }
+        },
+        {
+          "name": "GET /delegation",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/delegation?wallet={{wallet}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["delegation"],
+              "query": [{ "key": "wallet", "value": "{{wallet}}" }]
+            }
+          }
+        },
+        {
+          "name": "GET /trust-graph",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/trust-graph?wallet={{wallet}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["trust-graph"],
+              "query": [{ "key": "wallet", "value": "{{wallet}}" }]
+            }
+          }
+        },
+        {
+          "name": "GET /underwrite",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/underwrite?wallet={{wallet}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["underwrite"],
+              "query": [{ "key": "wallet", "value": "{{wallet}}" }]
+            }
+          }
+        },
+        {
+          "name": "POST /counterparty-check",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"buyer\": \"{{wallet}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/counterparty-check",
+              "host": ["{{baseUrl}}"],
+              "path": ["counterparty-check"]
+            }
+          }
+        },
+        {
+          "name": "POST /credit-estimate",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"wallet\": \"{{wallet}}\",\n  \"amount\": 5000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/credit-estimate",
+              "host": ["{{baseUrl}}"],
+              "path": ["credit-estimate"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reputation",
+      "item": [
+        {
+          "name": "GET /reputation",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reputation?wallet={{wallet}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["reputation"],
+              "query": [{ "key": "wallet", "value": "{{wallet}}" }]
+            }
+          }
+        },
+        {
+          "name": "POST /reputation/record",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{idempotencyKey}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"wallet\": \"{{wallet}}\",\n  \"eventType\": \"payment\",\n  \"amount\": 100\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reputation/record",
+              "host": ["{{baseUrl}}"],
+              "path": ["reputation", "record"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sybil",
+      "item": [
+        {
+          "name": "GET /sybil-check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/sybil-check?wallet={{wallet}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["sybil-check"],
+              "query": [{ "key": "wallet", "value": "{{wallet}}" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Passport",
+      "item": [
+        {
+          "name": "GET /passport",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/passport?wallet={{wallet}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["passport"],
+              "query": [{ "key": "wallet", "value": "{{wallet}}" }]
+            }
+          }
+        },
+        {
+          "name": "GET /verify",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/verify?wallet={{wallet}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["verify"],
+              "query": [{ "key": "wallet", "value": "{{wallet}}" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "On-chain (requires REGISTRY_APP_ID and OPERATOR_MNEMONIC)",
+      "item": [
+        {
+          "name": "POST /delegate",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{idempotencyKey}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sponsor\": \"{{wallet}}\",\n  \"agent\": \"ABCDEFGHIJKLMNOPQRSTUVWXYZ234567ABCDEFGHIJKLMNOPQRSTUVW234\",\n  \"amount\": 1000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/delegate",
+              "host": ["{{baseUrl}}"],
+              "path": ["delegate"]
+            }
+          }
+        },
+        {
+          "name": "POST /revoke",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{idempotencyKey}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sponsor\": \"{{wallet}}\",\n  \"agent\": \"ABCDEFGHIJKLMNOPQRSTUVWXYZ234567ABCDEFGHIJKLMNOPQRSTUVW234\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/revoke",
+              "host": ["{{baseUrl}}"],
+              "path": ["revoke"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Discovery",
+      "item": [
+        {
+          "name": "GET /discovery/search",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/discovery/search?q=trust&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["discovery", "search"],
+              "query": [
+                { "key": "q", "value": "trust" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "System",
+      "item": [
+        {
+          "name": "GET /health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            }
+          }
+        },
+        {
+          "name": "GET /ready",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ready",
+              "host": ["{{baseUrl}}"],
+              "path": ["ready"]
+            }
+          }
+        },
+        {
+          "name": "GET /health/deep",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health/deep",
+              "host": ["{{baseUrl}}"],
+              "path": ["health", "deep"]
+            }
+          }
+        },
+        {
+          "name": "GET /registry/status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/registry/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["registry", "status"]
+            }
+          }
+        },
+        {
+          "name": "GET /metrics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/metrics",
+              "host": ["{{baseUrl}}"],
+              "path": ["metrics"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -448,6 +448,184 @@ paths:
                     items:
                       type: object
 
+  /ready:
+    get:
+      summary: Readiness probe — checks Algorand connectivity
+      operationId: readinessCheck
+      tags: [System]
+      responses:
+        '200':
+          description: Service is ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadinessResponse'
+        '503':
+          description: Algorand endpoint unreachable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadinessResponse'
+
+  /health/deep:
+    get:
+      summary: Always-200 informational health (includes Algorand status in body)
+      operationId: healthDeep
+      tags: [System]
+      responses:
+        '200':
+          description: Service is alive; Algorand status in body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /registry/status:
+    get:
+      summary: Whether the on-chain contracts are configured
+      operationId: registryStatus
+      tags: [System]
+      responses:
+        '200':
+          description: Registry status
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [configured, appId]
+                properties:
+                  configured:
+                    type: boolean
+                  appId:
+                    type: integer
+
+  /delegate:
+    post:
+      summary: Submit an on-chain delegation
+      description: |
+        Submits an `add_delegation` call to `registry.teal`. Requires
+        `REGISTRY_APP_ID>0` and `OPERATOR_MNEMONIC` set.
+      operationId: delegate
+      tags: [On-chain]
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: false
+          schema:
+            type: string
+            minLength: 8
+            maxLength: 255
+            pattern: '^[A-Za-z0-9_\-:]+$'
+          description: Recommended for safe retry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sponsor, agent, amount]
+              properties:
+                sponsor:
+                  type: string
+                  pattern: '^[A-Z2-7]{58}$'
+                agent:
+                  type: string
+                  pattern: '^[A-Z2-7]{58}$'
+                amount:
+                  type: number
+                  minimum: 0
+                  exclusiveMinimum: true
+      responses:
+        '201':
+          description: Delegation submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DelegationResult'
+        '400':
+          description: Invalid input
+        '402':
+          description: x402 payment required
+        '409':
+          description: Idempotency-Key reused with different body
+        '429':
+          description: Rate limit exceeded
+        '500':
+          description: Internal server error
+        '503':
+          description: Registry not configured (REGISTRY_APP_ID=0)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+                  code:
+                    type: string
+                    enum: [REGISTRY_NOT_CONFIGURED]
+
+  /revoke:
+    post:
+      summary: Revoke an on-chain delegation
+      operationId: revoke
+      tags: [On-chain]
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sponsor, agent]
+              properties:
+                sponsor:
+                  type: string
+                  pattern: '^[A-Z2-7]{58}$'
+                agent:
+                  type: string
+                  pattern: '^[A-Z2-7]{58}$'
+      responses:
+        '200':
+          description: Revocation submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RevocationResult'
+        '400':
+          description: Invalid input
+        '402':
+          description: x402 payment required
+        '409':
+          description: Idempotency-Key reused with different body
+        '429':
+          description: Rate limit exceeded
+        '500':
+          description: Internal server error
+        '503':
+          description: Registry not configured
+
+  /metrics:
+    get:
+      summary: Prometheus metrics
+      operationId: metrics
+      tags: [System]
+      responses:
+        '200':
+          description: Prometheus-format metrics
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: |
+                  # HELP agent_passport_http_requests_total Total HTTP requests
+                  # TYPE agent_passport_http_requests_total counter
+                  agent_passport_http_requests_total{method="GET",path="/score",status="200"} 42
+
 components:
   schemas:
     HealthResponse:
@@ -769,3 +947,71 @@ components:
       properties:
         error:
           type: string
+        code:
+          type: string
+        statusCode:
+          type: integer
+      required: [error]
+
+    ReadinessResponse:
+      type: object
+      required: [status, service, network, timestamp, algorand]
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded]
+        service:
+          type: string
+        network:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        algorand:
+          type: object
+          required: [connected]
+          properties:
+            connected:
+              type: boolean
+            round:
+              type: integer
+            error:
+              type: string
+
+    DelegationResult:
+      type: object
+      required: [txId, sponsor, agent, amount, round, timestamp]
+      properties:
+        txId:
+          type: string
+          description: Algorand transaction ID
+        sponsor:
+          type: string
+          pattern: '^[A-Z2-7]{58}$'
+        agent:
+          type: string
+          pattern: '^[A-Z2-7]{58}$'
+        amount:
+          type: number
+        round:
+          type: integer
+        timestamp:
+          type: integer
+          description: Unix seconds
+
+    RevocationResult:
+      type: object
+      required: [txId, sponsor, agent, round, timestamp]
+      properties:
+        txId:
+          type: string
+        sponsor:
+          type: string
+          pattern: '^[A-Z2-7]{58}$'
+        agent:
+          type: string
+          pattern: '^[A-Z2-7]{58}$'
+        round:
+          type: integer
+        timestamp:
+          type: integer

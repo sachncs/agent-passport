@@ -51,8 +51,8 @@ Fixes #
 
 ## Checklist
 
-- [ ] My code follows the project's [contribution guide](CONTRIBUTING.md)
-- [ ] I have read the [code of conduct](CODE_OF_CONDUCT.md)
+- [ ] My code follows the project's [contribution guide](../CONTRIBUTING.md)
+- [ ] I have read the [code of conduct](../CODE_OF_CONDUCT.md)
 - [ ] I have linked the related issue above
 - [ ] My branch is up to date with `master`
 - [ ] I have squashed / organised my commits logically

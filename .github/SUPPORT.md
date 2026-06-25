@@ -10,7 +10,7 @@ If you need help, please:
    [Support question](https://github.com/sachn-cs/agent-passport/issues/new?template=question.md)
    template.
 
-For security issues, see [SECURITY.md](SECURITY.md) — do **not** file a
+For security issues, see [SECURITY.md](../SECURITY.md) — do **not** file a
 public issue.
 
 ## Community
