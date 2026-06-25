@@ -5,6 +5,7 @@ describe('Logger', () => {
   let consoleSpy: { log: ReturnType<typeof vi.spyOn>; error: ReturnType<typeof vi.spyOn>; warn: ReturnType<typeof vi.spyOn>; debug: ReturnType<typeof vi.spyOn> };
 
   beforeEach(() => {
+    vi.restoreAllMocks();
     consoleSpy = {
       log: vi.spyOn(console, 'log').mockImplementation(() => {}),
       error: vi.spyOn(console, 'error').mockImplementation(() => {}),
@@ -60,6 +61,7 @@ describe('createRequestLogger', () => {
   let consoleSpy: { log: ReturnType<typeof vi.spyOn> };
 
   beforeEach(() => {
+    vi.restoreAllMocks();
     consoleSpy = {
       log: vi.spyOn(console, 'log').mockImplementation(() => {}),
     };

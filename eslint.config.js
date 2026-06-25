@@ -1,14 +1,18 @@
 import js from '@eslint/js';
+import tseslint from 'typescript-eslint';
 
-export default [
-  js.configs.recommended,
+export default tseslint.config(
   {
+    ignores: ['dist/', 'node_modules/', 'coverage/', 'sdk/', 'public/', '**/*.d.ts'],
+  },
+  js.configs.recommended,
+  ...tseslint.configs.recommended,
+  {
+    files: ['src/**/*.ts', 'scripts/**/*.ts'],
     rules: {
-      'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
       'no-console': 'off',
     },
   },
-  {
-    ignores: ['dist/', 'node_modules/', 'coverage/', 'sdk/'],
-  },
-];
+);
