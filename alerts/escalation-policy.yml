@@ -1,0 +1,137 @@
+# Agent Passport Escalation Policy
+#
+# Defines how alerts are escalated based on severity and duration.
+
+escalation_policies:
+  - name: critical_escalation
+    description: "Critical alerts require immediate response"
+    rules:
+      - severity: critical
+        wait: 0m
+        channels:
+          - pagerduty:
+              service: agent-passport-critical
+              escalation_policy: platform-oncall
+          - slack:
+              channel: '#agent-passport-alerts'
+              severity: critical
+          - email:
+              recipients:
+                - platform-oncall@example.com
+      - severity: critical
+        wait: 15m
+        channels:
+          - pagerduty:
+              service: agent-passport-critical
+              escalation_policy: engineering-manager
+          - slack:
+              channel: '#agent-passport-alerts'
+              severity: critical
+      - severity: critical
+        wait: 30m
+        channels:
+          - pagerduty:
+              service: agent-passport-critical
+              escalation_policy: vp-engineering
+          - slack:
+              channel: '#incidents'
+              severity: critical
+
+  - name: warning_escalation
+    description: "Warning alerts require response within 1 hour"
+    rules:
+      - severity: warning
+        wait: 0m
+        channels:
+          - slack:
+              channel: '#agent-passport-alerts'
+              severity: warning
+      - severity: warning
+        wait: 30m
+        channels:
+          - email:
+              recipients:
+                - platform-team@example.com
+      - severity: warning
+        wait: 1h
+        channels:
+          - pagerduty:
+              service: agent-passport-warning
+              escalation_policy: platform-oncall
+
+  - name: info_escalation
+    description: "Info alerts are monitored and reviewed daily"
+    rules:
+      - severity: info
+        wait: 0m
+        channels:
+          - slack:
+              channel: '#agent-passport-monitoring'
+              severity: info
+      - severity: info
+        wait: 24h
+        channels:
+          - email:
+              recipients:
+                - platform-team@example.com
+              digest: true
+
+notification_templates:
+  - name: pagerduty_critical
+    channel: pagerduty
+    subject: "[P0] Agent Passport: {{ .AlertName }}"
+    body: |
+      {{ .AlertName }}
+      Severity: {{ .Severity }}
+      Description: {{ .Description }}
+      Runbook: {{ .RunbookURL }}
+      Dashboard: https://grafana.example.com/d/agent-passport
+
+  - name: slack_critical
+    channel: slack
+    subject: "🚨 CRITICAL: {{ .AlertName }}"
+    body: |
+      *{{ .AlertName }}*
+      Severity: `{{ .Severity }}`
+      {{ .Description }}
+      <{{ .RunbookURL }}|Runbook> | <https://grafana.example.com/d/agent-passport|Dashboard>
+
+  - name: slack_warning
+    channel: slack
+    subject: "⚠️ WARNING: {{ .AlertName }}"
+    body: |
+      *{{ .AlertName }}*
+      Severity: `{{ .Severity }}`
+      {{ .Description }}
+      <{{ .RunbookURL }}|Runbook>
+
+slo_targets:
+  - name: availability
+    description: "API availability SLO"
+    target: 99.9
+    window: 30d
+    metric: |
+      1 - (rate(agent_passport_http_request_errors_total{status=~"5.."}[30d]) 
+           / rate(agent_passport_http_requests_total[30d]))
+
+  - name: latency_p95
+    description: "P95 latency SLO"
+    target: 95
+    window: 30d
+    metric: |
+      histogram_quantile(0.95, rate(agent_passport_http_request_duration_seconds_bucket[30d]))
+
+  - name: latency_p99
+    description: "P99 latency SLO"
+    target: 99
+    window: 30d
+    metric: |
+      histogram_quantile(0.99, rate(agent_passport_http_request_duration_seconds_bucket[30d]))
+
+  - name: error_budget
+    description: "Error budget remaining"
+    target: 0.1
+    window: 30d
+    metric: |
+      (1 - (rate(agent_passport_http_request_errors_total{status=~"5.."}[30d]) 
+           / rate(agent_passport_http_requests_total[30d]))) * 100

@@ -1,8 +1,104 @@
+# ── Dependencies ───────────────────────────────────────────────
 node_modules/
+.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# ── Build output ───────────────────────────────────────────────
 dist/
+build/
+out/
+*.tsbuildinfo
+
+# ── Test / coverage ────────────────────────────────────────────
+coverage/
+.nyc_output/
+*.lcov
+
+# ── Logs ───────────────────────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ── Environment / secrets ──────────────────────────────────────
 .env
 .env.*
 !.env.example
-*.log
-coverage/
+.envrc
+
+# ── Runtime / state (not source) ───────────────────────────────
 data/
+cache/
+tmp/
+temp/
+
+# ── Editor / IDE ───────────────────────────────────────────────
+.idea/
+.vscode/
+!.vscode/settings.json
+!.vscode/extensions.json
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+*.sublime-project
+*.sublime-workspace
+*.iml
+.fleet/
+.cursor/
+
+# ── OS files ───────────────────────────────────────────────────
+.Trashes
+.Spotlight-V100
+.fseventsd
+.AppleDouble
+.LSOverride
+
+# ── Python (Python SDK) ────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.pytest_cache/
+.benchmarks/
+.coverage
+.coverage.*
+htmlcov/
+*.egg-info/
+*.egg
+build/
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.nox/
+.venv/
+venv/
+env/
+ENV/
+
+# ── TypeScript SDK dist (built output) ─────────────────────────
+sdk/dist/
+sdk/python/agent_passport_sdk.egg-info/
+sdk/python/.pytest_cache/
+sdk/python/.benchmarks/
+
+# ── k6 load-test results (large JSON artifacts) ────────────────
+load-tests/results/*.json
+load-tests/results/*.txt
+!load-tests/results/.gitkeep

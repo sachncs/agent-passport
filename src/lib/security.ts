@@ -13,6 +13,8 @@ interface RateLimitEntry {
 const RATE_LIMIT_PATH = process.env.RATE_LIMIT_PERSISTENCE_PATH
   || join(process.cwd(), 'data', 'rate-limit.json');
 
+let globalClients: Map<string, RateLimitEntry> | null = null;
+
 function loadRateLimitState(): Map<string, RateLimitEntry> {
   const clients = new Map<string, RateLimitEntry>();
   try {
@@ -52,10 +54,18 @@ function saveRateLimitState(clients: Map<string, RateLimitEntry>): void {
   }
 }
 
+export function resetRateLimiter(): void {
+  if (globalClients) globalClients.clear();
+}
+
 export function rateLimiter(opts: { windowMs?: number; max?: number } = {}) {
   const windowMs = opts.windowMs ?? 60_000;
-  const max = opts.max ?? 60;
-  const clients = loadRateLimitState();
+  // Default raised from 60 → 600 req/min per IP.
+  // Override with env RATE_LIMIT_MAX or pass `max` in opts.
+  const envMax = process.env.RATE_LIMIT_MAX ? parseInt(process.env.RATE_LIMIT_MAX, 10) : NaN;
+  const max = opts.max ?? (Number.isFinite(envMax) ? envMax : 600);
+  const clients = globalClients ?? loadRateLimitState();
+  globalClients = clients;
 
   // Cleanup stale entries every 5 minutes
   setInterval(() => {
@@ -71,6 +81,23 @@ export function rateLimiter(opts: { windowMs?: number; max?: number } = {}) {
   }, 300_000);
 
   return (req: Request, res: Response, next: NextFunction) => {
+    // Operational endpoints (health, metrics) bypass rate limiting
+    if (req.path === '/health' || req.path === '/ready' || req.path === '/health/deep' || req.path === '/metrics' || req.path === '/registry/status') {
+      return next();
+    }
+
+    // Load-test bypass — never rate-limit when LOAD_TEST_MODE=1
+    if (process.env.LOAD_TEST_MODE === '1') {
+      return next();
+    }
+
+    // Trusted-IP bypass — internal services, operator wallet hosts
+    const trustedIps = (process.env.RATE_LIMIT_TRUSTED_IPS || '').split(',').map(s => s.trim()).filter(Boolean);
+    const clientIp = req.ip ?? req.socket.remoteAddress ?? '';
+    if (trustedIps.length > 0 && trustedIps.includes(clientIp)) {
+      return next();
+    }
+
     const key = req.ip ?? req.socket.remoteAddress ?? 'unknown';
     const now = Date.now();
     let entry = clients.get(key);

@@ -2,8 +2,46 @@
   "name": "agent-passport",
   "version": "0.1.0",
   "type": "module",
-  "description": "Stateless trust scoring service for AI agents on Algorand testnet",
+  "description": "Stateless trust scoring, delegation, credit, sybil, reputation, and underwriting for AI agents on Algorand",
+  "license": "MIT",
+  "author": {
+    "name": "Sachin",
+    "email": "sachncs@gmail.com"
+  },
+  "homepage": "https://github.com/sachn-cs/agent-passport#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sachn-cs/agent-passport.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sachn-cs/agent-passport/issues"
+  },
+  "keywords": [
+    "algorand",
+    "agent",
+    "trust",
+    "trust-scoring",
+    "x402",
+    "micropayments",
+    "credit",
+    "delegation",
+    "sybil",
+    "reputation",
+    "underwriting",
+    "fraud",
+    "risk",
+    "bazaar"
+  ],
   "main": "dist/index.js",
+  "files": [
+    "dist",
+    "src",
+    "contracts",
+    "scripts",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",

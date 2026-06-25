@@ -1,0 +1,66 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agent-passport-sdk"
+version = "0.2.0"
+description = "Python SDK for Agent Passport — trust scoring, delegation, credit, sybil, reputation, and underwriting for AI agents on Algorand"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.9"
+authors = [
+    { name = "Sachin", email = "sachncs@gmail.com" }
+]
+keywords = [
+    "algorand",
+    "agent",
+    "trust",
+    "trust-scoring",
+    "x402",
+    "micropayments",
+    "credit",
+    "delegation",
+    "sybil",
+    "reputation",
+    "underwriting",
+    "fraud",
+    "risk",
+    "sdk",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+[project.urls]
+Homepage = "https://github.com/sachn-cs/agent-passport"
+Repository = "https://github.com/sachn-cs/agent-passport.git"
+Documentation = "https://github.com/sachn-cs/agent-passport/tree/master/sdk/python"
+Issues = "https://github.com/sachn-cs/agent-passport/issues"
+Changelog = "https://github.com/sachn-cs/agent-passport/blob/master/sdk/python/CHANGELOG.md"
+
+dependencies = [
+    "requests>=2.31",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "responses>=0.23",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["agent_passport*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]

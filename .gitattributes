@@ -1,0 +1,49 @@
+# Auto-detect text files and normalize line endings to LF on commit.
+* text=auto eol=lf
+
+# Shell scripts must use LF (do not allow CRLF).
+*.sh text eol=lf
+
+# Windows batch files.
+*.bat text eol=crlf
+
+# Markdown should always use LF.
+*.md text eol=lf
+
+# TypeScript / JavaScript.
+*.ts text eol=lf
+*.js text eol=lf
+*.cjs text eol=lf
+*.mjs text eol=lf
+
+# Python.
+*.py text eol=lf
+*.pyi text eol=lf
+
+# JSON / YAML / TOML.
+*.json text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.toml text eol=lf
+
+# TEAL (Algorand smart contracts).
+*.teal text eol=lf
+
+# Explicitly mark binary files to avoid diff churn.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.tar.gz binary
+*.tgz binary
+*.gz binary
+
+# Lock files are not usually diffed, but keep them text for review tools.
+package-lock.json text eol=lf -diff
+
+# Use linguist overrides to improve GitHub language detection.
+docs/ linguist-documentation
+*.teal linguist-language=TEAL

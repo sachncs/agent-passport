@@ -36,6 +36,35 @@
               "path": ["health"]
             }
           }
+        },
+        {
+          "name": "Verify Wallet",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/verify?wallet={{wallet1}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["verify"],
+              "query": [
+                { "key": "wallet", "value": "{{wallet1}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Bazaar Discovery",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/discovery/search?q=trust&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["discovery", "search"],
+              "query": [
+                { "key": "q", "value": "trust" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
         }
       ]
     }

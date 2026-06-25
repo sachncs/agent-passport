@@ -1,0 +1,37 @@
+# Agent Passport — SLO Index
+#
+# This file is a documentation pointer. The actual SLO definitions are in:
+#   - slo-prod-relaxed.yml — default, recommended for most deployments
+#   - slo-prod-strict.yml  — for deployments needing tighter SLOs
+#
+# Choose the right SLO file based on your deployment:
+#
+#   Environment                                              File to deploy
+#   ──────────────────────────────────────────────────────────────────────────
+#   Testnet (default)                                        alerts/slo-prod-relaxed.yml
+#   Mainnet via public Algorand endpoint                     alerts/slo-prod-relaxed.yml
+#   Mainnet via hosted premium provider (Nodely, BCC, etc.)  alerts/slo-prod-strict.yml
+#   Mainnet via local Algorand node                          alerts/slo-prod-strict.yml
+#
+# Key differences:
+#
+#   Metric         prod-relaxed           prod-strict
+#   ──────────────────────────────────────────────────────────
+#   Availability   99% (30d)              99.9% (30d)
+#   P95 latency    < 1.5s                 < 500ms
+#   P99 latency    < 3.0s                 < 1.5s
+#
+# Both files include:
+#   - SLO target metrics (recorded as gauge time-series for SLI tracking)
+#   - Fast-burn and slow-burn alerts (multi-window per Google SRE workbook)
+#   - Throughput thresholds derived from the k6 load test on 2026-06-25
+#
+# The prod-relaxed targets are real and measured. The prod-strict targets
+# are achievable with a low-latency Algorand endpoint (local node, premium
+# hosted provider, or geographic co-location) but not with the public
+# AlgoNode free tier.
+#
+# See load-tests/results/full-{a,b,c,d}.txt for the raw measurement data.
+# See docs/OBSERVABILITY.md for the full SLO rationale and per-endpoint projections.
+
+groups: []

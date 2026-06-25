@@ -1,0 +1,246 @@
+# Agent Passport Alert Rules (Prometheus/Alertmanager)
+# 
+# These rules define alerting thresholds for the Agent Passport service.
+# Deploy with Prometheus Alertmanager for production monitoring.
+
+groups:
+  - name: agent_passport_critical
+    rules:
+      # P0: API Down
+      - alert: AgentPassportAPIDown
+        expr: up{job="agent-passport"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Agent Passport API is down"
+          description: "Agent Passport API has been unreachable for more than 1 minute."
+          runbook_url: "https://wiki.example.com/runbooks/agent-passport-api-down"
+
+      # P0: Payment Verification Failing
+      - alert: X402PaymentVerificationFailing
+        expr: rate(agent_passport_x402_payment_failures_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: critical
+          team: payments
+        annotations:
+          summary: "x402 payment verification failing"
+          description: "Payment verification failure rate is above 10% for 2 minutes."
+          runbook_url: "https://wiki.example.com/runbooks/x402-verification-failure"
+
+      # P0: Contract Indexing Failure
+      - alert: ContractIndexingFailure
+        expr: rate(agent_passport_contract_disputes_total[10m]) > 5
+        for: 5m
+        labels:
+          severity: critical
+          team: blockchain
+        annotations:
+          summary: "Contract indexing failure detected"
+          description: "Dispute event rate is elevated, indicating potential indexing issues."
+          runbook_url: "https://wiki.example.com/runbooks/contract-indexing-failure"
+
+      # P0: High Error Rate
+      - alert: HighErrorRate
+        expr: rate(agent_passport_http_request_errors_total[5m]) / rate(agent_passport_http_requests_total[5m]) > 0.05
+        for: 3m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "High HTTP error rate detected"
+          description: "Error rate is above 5% for 3 minutes. Current value: {{ $value }}"
+          runbook_url: "https://wiki.example.com/runbooks/high-error-rate"
+
+  - name: agent_passport_warning
+    rules:
+      # P1: Elevated Latency (P95) — thresholds updated 2026-06-25 from real measurements
+      - alert: ElevatedLatencyP95
+        expr: histogram_quantile(0.95, sum by (le) (rate(agent_passport_http_request_duration_seconds_bucket[5m]))) > 1.5
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "Elevated P95 latency"
+          description: "P95 request latency is above 1.5 seconds for 5 minutes. Testnet floor is 1.15s at 100 VU. Current value: {{ $value }}s"
+          runbook_url: "https://wiki.example.com/runbooks/elevated-latency"
+
+      # P1: Elevated Latency (P99) — testnet baseline is 2.27s under 1000 VU
+      - alert: ElevatedLatencyP99
+        expr: histogram_quantile(0.99, sum by (le) (rate(agent_passport_http_request_duration_seconds_bucket[5m]))) > 3
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "Elevated P99 latency"
+          description: "P99 request latency is above 3 seconds for 5 minutes. Testnet floor is 2.27s at 1000 VU."
+
+      # P1: Elevated Error Rate — testnet baseline is 0.45% under 1000 VU
+      - alert: ElevatedErrorRate
+        expr: rate(agent_passport_http_request_errors_total[5m]) / rate(agent_passport_http_requests_total[5m]) > 0.02
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "Elevated error rate"
+          description: "Error rate is above 2% for 5 minutes. Testnet baseline is 0.45% under 1000 VU."
+
+      # P1: Replay Attack Spike
+      - alert: ReplayAttackSpike
+        expr: rate(agent_passport_x402_replay_attempts_total[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+          team: security
+        annotations:
+          summary: "x402 replay attack attempts detected"
+          description: "Replay attack attempt rate is above 5% for 2 minutes."
+          runbook_url: "https://wiki.example.com/runbooks/replay-attack-spike"
+
+      # P1: High Trust Score Latency — measured P95 = 949ms under 1000 VU on testnet
+      - alert: HighTrustScoreLatency
+        expr: histogram_quantile(0.95, sum by (le) (rate(agent_passport_trust_score_duration_seconds_bucket[5m]))) > 1.5
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "Trust score computation is slow"
+          description: "P95 trust score latency is above 1.5 seconds for 5 minutes. Testnet baseline is 949ms."
+
+      # P1: High Graph Traversal Latency
+      - alert: HighGraphTraversalLatency
+        expr: histogram_quantile(0.95, rate(agent_passport_graph_traversal_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "Graph traversal is slow"
+          description: "P95 graph traversal latency is above 2 seconds for 5 minutes."
+
+  - name: agent_passport_info
+    rules:
+      # P2: Unusual Traffic Pattern
+      - alert: UnusualTrafficPattern
+        expr: rate(agent_passport_http_requests_total[5m]) > 100
+        for: 10m
+        labels:
+          severity: info
+          team: platform
+        annotations:
+          summary: "Unusual traffic volume detected"
+          description: "Request rate is above 100 req/s for 10 minutes."
+
+      # P2: Unusual Graph Growth
+      - alert: UnusualGraphGrowth
+        expr: rate(agent_passport_graph_traversal_depth_sum[1h]) > 50
+        for: 30m
+        labels:
+          severity: info
+          team: platform
+        annotations:
+          summary: "Unusual graph growth detected"
+          description: "Average graph traversal depth is increasing abnormally."
+
+      # P2: Cache Hit Rate Drop
+      - alert: CacheHitRateDrop
+        expr: rate(agent_passport_cache_hits_total[5m]) / (rate(agent_passport_cache_hits_total[5m]) + rate(agent_passport_cache_misses_total[5m])) < 0.5
+        for: 15m
+        labels:
+          severity: info
+          team: platform
+        annotations:
+          summary: "Cache hit rate has dropped"
+          description: "Cache hit rate is below 50% for 15 minutes."
+
+      # P2: High Memory Usage
+      - alert: HighMemoryUsage
+        expr: agent_passport_process_memory_usage_bytes{type="heapUsed"} / agent_passport_process_memory_usage_bytes{type="heapTotal"} > 0.85
+        for: 10m
+        labels:
+          severity: info
+          team: platform
+        annotations:
+          summary: "High memory usage detected"
+          description: "Heap usage is above 85% for 10 minutes."
+
+      # P2: Unique Wallet Spike
+      - alert: UniqueWalletSpike
+        expr: rate(agent_passport_unique_wallets[1h]) > 1000
+        for: 30m
+        labels:
+          severity: info
+          team: business
+        annotations:
+          summary: "Unusual number of unique wallets"
+          description: "More than 1000 unique wallets per hour for 30 minutes."
+
+      # P0: 5xx Error Rate
+      - alert: High5xxRate
+        expr: |
+          (
+            sum(rate(agent_passport_http_request_errors_total{error_type="server_error"}[5m]))
+            /
+            sum(rate(agent_passport_http_requests_total[5m]))
+          ) > 0.01
+        for: 3m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "High 5xx error rate"
+          description: "5xx error rate above 1% for 3 minutes."
+          runbook_url: "https://wiki.example.com/runbooks/high-5xx-rate"
+
+      # P0: Algorand Dependency Down
+      - alert: AlgorandDependencyDown
+        expr: |
+          sum(rate(agent_passport_http_request_errors_total{error_type="server_error", path="/health"}[5m])) > 0.1
+        for: 2m
+        labels:
+          severity: critical
+          team: blockchain
+        annotations:
+          summary: "Algorand dependency down"
+          description: "Health check is failing, indicating Algorand endpoint connectivity issues."
+          runbook_url: "https://wiki.example.com/runbooks/algorand-dependency-down"
+
+      # P1: Contract Event Stall
+      - alert: ContractEventStall
+        expr: agent_passport_contract_event_stall_seconds > 14400
+        for: 5m
+        labels:
+          severity: warning
+          team: blockchain
+        annotations:
+          summary: "No contract events recorded in 4+ hours"
+          description: "Contract indexing may be stalled. Check REGISTRY_APP_ID / REPUTATION_APP_ID."
+          runbook_url: "https://wiki.example.com/runbooks/contract-indexing-failure"
+
+      # P1: High CPU usage
+      - alert: HighCPUUsage
+        expr: agent_passport_process_cpu_usage_ratio > 0.85
+        for: 10m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High CPU usage"
+          description: "Process CPU usage above 85% for 10 minutes."
+
+      # P2: Idempotency conflict spike
+      - alert: IdempotencyConflictSpike
+        expr: rate(agent_passport_idempotency_conflicts_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: info
+          team: platform
+        annotations:
+          summary: "Unusual number of idempotency conflicts"
+          description: "Idempotency-Key conflicts above 5% for 5 minutes. May indicate client retry misuse."

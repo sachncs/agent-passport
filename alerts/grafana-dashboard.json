@@ -1,0 +1,342 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Agent Passport Monitoring",
+    "tags": ["agent-passport", "trust-scoring", "algorand"],
+    "timezone": "utc",
+    "panels": [
+      {
+        "id": 1,
+        "title": "API Request Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "sum by (path) (rate(agent_passport_http_requests_total[5m]))",
+            "legendFormat": "{{path}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          { "format": "reqps", "min": 0 },
+          { "format": "short" }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "API Latency (P50, P95, P99)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, sum by (le) (rate(agent_passport_http_request_duration_seconds_bucket[5m])))",
+            "legendFormat": "P50",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.95, sum by (le) (rate(agent_passport_http_request_duration_seconds_bucket[5m])))",
+            "legendFormat": "P95",
+            "refId": "B"
+          },
+          {
+            "expr": "histogram_quantile(0.99, sum by (le) (rate(agent_passport_http_request_duration_seconds_bucket[5m])))",
+            "legendFormat": "P99",
+            "refId": "C"
+          }
+        ],
+        "yaxes": [
+          { "format": "s", "min": 0 },
+          { "format": "short" }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Error Rate (4xx vs 5xx)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "sum by (error_type) (rate(agent_passport_http_request_errors_total[5m])) / sum(rate(agent_passport_http_requests_total[5m]))",
+            "legendFormat": "{{error_type}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          { "format": "percentunit", "min": 0, "max": 1 },
+          { "format": "short" }
+        ],
+        "thresholds": [
+          { "value": 0.01, "colorMode": "warning" },
+          { "value": 0.05, "colorMode": "critical" }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Trust Score Latency",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum by (le) (rate(agent_passport_trust_score_duration_seconds_bucket[5m])))",
+            "legendFormat": "P95",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          { "format": "s", "min": 0 },
+          { "format": "short" }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Graph Traversal Latency",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum by (le) (rate(agent_passport_graph_traversal_duration_seconds_bucket[5m])))",
+            "legendFormat": "P95",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          { "format": "s", "min": 0 },
+          { "format": "short" }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "x402 Payments",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "sum by (status) (rate(agent_passport_x402_payments_verified_total[5m]))",
+            "legendFormat": "Verified-{{status}}",
+            "refId": "A"
+          },
+          {
+            "expr": "sum by (reason) (rate(agent_passport_x402_payment_failures_total[5m]))",
+            "legendFormat": "Failure-{{reason}}",
+            "refId": "B"
+          },
+          {
+            "expr": "sum (rate(agent_passport_x402_replay_attempts_total[5m]))",
+            "legendFormat": "Replay Attempts",
+            "refId": "C"
+          },
+          {
+            "expr": "sum (rate(agent_passport_x402_settlement_failures_total[5m]))",
+            "legendFormat": "Settlement Failures",
+            "refId": "D"
+          }
+        ],
+        "yaxes": [
+          { "format": "reqps", "min": 0 },
+          { "format": "short" }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Contract Events",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(agent_passport_contract_endorsements_total[5m])",
+            "legendFormat": "Endorsements",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(agent_passport_contract_revocations_total[5m])",
+            "legendFormat": "Revocations",
+            "refId": "B"
+          },
+          {
+            "expr": "rate(agent_passport_contract_disputes_total[5m])",
+            "legendFormat": "Disputes",
+            "refId": "C"
+          },
+          {
+            "expr": "rate(agent_passport_contract_success_events_total[5m])",
+            "legendFormat": "Success Events",
+            "refId": "D"
+          }
+        ],
+        "yaxes": [
+          { "format": "reqps", "min": 0 },
+          { "format": "short" }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Process Memory",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "agent_passport_process_memory_usage_bytes{type=\"heapUsed\"}",
+            "legendFormat": "Heap Used",
+            "refId": "A"
+          },
+          {
+            "expr": "agent_passport_process_memory_usage_bytes{type=\"heapTotal\"}",
+            "legendFormat": "Heap Total",
+            "refId": "B"
+          },
+          {
+            "expr": "agent_passport_process_memory_usage_bytes{type=\"rss\"}",
+            "legendFormat": "RSS",
+            "refId": "C"
+          },
+          {
+            "expr": "agent_passport_process_memory_usage_bytes{type=\"external\"}",
+            "legendFormat": "External",
+            "refId": "D"
+          }
+        ],
+        "yaxes": [
+          { "format": "bytes", "min": 0 },
+          { "format": "short" }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Process CPU Usage",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "agent_passport_process_cpu_usage_ratio",
+            "legendFormat": "CPU Ratio",
+            "refId": "A"
+          },
+          {
+            "expr": "agent_passport_system_load_average{window=\"1m\"}",
+            "legendFormat": "1m load",
+            "refId": "B"
+          },
+          {
+            "expr": "agent_passport_system_load_average{window=\"5m\"}",
+            "legendFormat": "5m load",
+            "refId": "C"
+          }
+        ],
+        "yaxes": [
+          { "format": "short", "min": 0 },
+          { "format": "short" }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Process Uptime",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "agent_passport_process_uptime_seconds",
+            "legendFormat": "Uptime",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": { "unit": "s" }
+      },
+      {
+        "id": 11,
+        "title": "Passports Generated",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rate(agent_passport_passports_generated_total[5m])",
+            "legendFormat": "Rate",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": { "unit": "reqps" }
+      },
+      {
+        "id": 12,
+        "title": "Unique Wallets",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "agent_passport_unique_wallets",
+            "legendFormat": "Count",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 13,
+        "title": "Cache Performance",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "sum by (cache_name) (rate(agent_passport_cache_hits_total[5m]))",
+            "legendFormat": "Hits-{{cache_name}}",
+            "refId": "A"
+          },
+          {
+            "expr": "sum by (cache_name) (rate(agent_passport_cache_misses_total[5m]))",
+            "legendFormat": "Misses-{{cache_name}}",
+            "refId": "B"
+          },
+          {
+            "expr": "sum by (cache_name) (rate(agent_passport_cache_evictions_total[5m]))",
+            "legendFormat": "Evictions-{{cache_name}}",
+            "refId": "C"
+          }
+        ],
+        "yaxes": [
+          { "format": "ops", "min": 0 },
+          { "format": "short" }
+        ]
+      },
+      {
+        "id": 14,
+        "title": "Underwriting Decisions",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "sum by (outcome) (rate(agent_passport_underwriting_decisions_total[5m]))",
+            "legendFormat": "{{outcome}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          { "format": "reqps", "min": 0 },
+          { "format": "short" }
+        ]
+      },
+      {
+        "id": 15,
+        "title": "Counterparty Checks",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "sum by (outcome) (rate(agent_passport_counterparty_checks_total[5m]))",
+            "legendFormat": "{{outcome}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          { "format": "reqps", "min": 0 },
+          { "format": "short" }
+        ]
+      },
+      {
+        "id": 16,
+        "title": "Idempotency",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "sum by (path) (rate(agent_passport_idempotency_hits_total[5m]))",
+            "legendFormat": "Replays-{{path}}",
+            "refId": "A"
+          },
+          {
+            "expr": "sum by (path) (rate(agent_passport_idempotency_conflicts_total[5m]))",
+            "legendFormat": "Conflicts-{{path}}",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          { "format": "reqps", "min": 0 },
+          { "format": "short" }
+        ]
+      }
+    ],
+    "time": { "from": "now-1h", "to": "now" },
+    "refresh": "30s"
+  }
+}

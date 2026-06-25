@@ -1,0 +1,122 @@
+# Agent Passport — SLO Definitions: PROD-RELAXED (default)
+#
+# These SLO targets are based on ACTUAL MEASUREMENTS from the k6 load test
+# run on 2026-06-25 against the public Algorand testnet (AlgoNode free tier).
+#
+# These are also the recommended SLOs for any production deployment that
+# uses a public Algorand endpoint (testnet, hosted provider, etc.) without
+# a local node. The SLOs are realistic for typical deployments and don't
+# require specialized infrastructure.
+#
+# For deployments that need stricter SLOs (500ms P95), use slo-prod-strict.yml
+# instead and provision a low-latency Algorand endpoint.
+#
+# Run: 4 k6 scenarios (100/500/1000 VU + 10k/day sustained)
+# Tool: k6 v2.0.0
+# Network: AlgoNode testnet free tier (https://testnet-api.algonode.cloud:443)
+# Captured: see load-tests/results/full-{a,b,c,d}.txt
+
+groups:
+  - name: agent_passport_slo_availability_prod_relaxed
+    rules:
+      # Availability: measured 99.55% under 1000 VU on testnet
+      # 30-day SLO target: 99.0% (accounts for upstream rate-limits on public endpoints)
+      - alert: SLOAvailabilityFastBurnProdRelaxed
+        expr: |
+          (
+            1 - (
+              sum(rate(agent_passport_http_requests_total{status!~"5.."}[1h]))
+              /
+              sum(rate(agent_passport_http_requests_total[1h]))
+            )
+          ) > (1 - 0.99) * 2
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+          slo: availability-prod-relaxed
+        annotations:
+          summary: "SLO (prod-relaxed): Availability fast burn"
+          description: "Availability is burning 2x faster than the 99.0% SLO allows."
+
+      - alert: SLOAvailabilitySlowBurnProdRelaxed
+        expr: |
+          (
+            1 - (
+              sum(rate(agent_passport_http_requests_total{status!~"5.."}[6h]))
+              /
+              sum(rate(agent_passport_http_requests_total[6h]))
+            )
+          ) > (1 - 0.99) * 5
+        for: 15m
+        labels:
+          severity: info
+          team: platform
+          slo: availability-prod-relaxed
+        annotations:
+          summary: "SLO (prod-relaxed): Availability slow burn"
+          description: "Availability is burning 5x faster than the 99.0% SLO allows."
+
+  - name: agent_passport_slo_latency_prod_relaxed
+    rules:
+      # P95 latency: measured 1.15s under 100 VU, 2.27s under 1000 VU
+      # SLO target: P95 < 1.5s (real, measured)
+      - alert: SLOLatencyP95FastBurnProdRelaxed
+        expr: |
+          histogram_quantile(0.95, sum by (le) (rate(agent_passport_http_request_duration_seconds_bucket[5m]))) > 1.5
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+          slo: latency-prod-relaxed
+        annotations:
+          summary: "SLO (prod-relaxed): P95 latency above 1.5s"
+          description: "P95 latency exceeded 1.5s for 5 minutes. Measured floor is 1.15s under 100 VU."
+
+      - alert: SLOLatencyP99FastBurnProdRelaxed
+        expr: |
+          histogram_quantile(0.99, sum by (le) (rate(agent_passport_http_request_duration_seconds_bucket[5m]))) > 3.0
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+          slo: latency-prod-relaxed
+        annotations:
+          summary: "SLO (prod-relaxed): P99 latency above 3s"
+          description: "P99 latency exceeded 3s for 5 minutes. Measured floor is 2.27s under 1000 VU."
+
+  - name: agent_passport_slo_throughput_prod_relaxed
+    rules:
+      # Throughput: measured 1,829 rps mixed (500 VU), 1,760 rps burst (1000 VU)
+      # 10k req/day sustained: 7,897 rps measured at 0% errors with full cache hits
+      - alert: SLOThroughputProdRelaxedBelowTarget
+        expr: rate(agent_passport_http_requests_total[5m]) < 100
+        for: 10m
+        labels:
+          severity: info
+          team: platform
+        annotations:
+          summary: "Throughput below 100 rps for 10 minutes"
+          description: "Service may be under-provisioned or test traffic has stopped. Expected: 1000+ rps under load."
+
+  - name: agent_passport_slo_targets_prod_relaxed
+    rules:
+      # Documented SLO targets (prod-relaxed, default)
+      - record: slo_availability_prod_relaxed_target
+        expr: vector(0.99)
+        labels:
+          target: 0.99
+          window: 30d
+          description: "Default availability target — works for testnet and any public Algorand endpoint"
+      - record: slo_latency_p95_prod_relaxed_target
+        expr: vector(1.5)
+        labels:
+          target_seconds: 1.5
+          window: 30d
+          description: "Default P95 latency target — measured floor"
+      - record: slo_latency_p99_prod_relaxed_target
+        expr: vector(3.0)
+        labels:
+          target_seconds: 3.0
+          window: 30d
+          description: "Default P99 latency target — measured floor"

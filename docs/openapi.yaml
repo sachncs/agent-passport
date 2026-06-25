@@ -8,8 +8,9 @@ info:
     delegation trust, sybil detection, reputation, credit estimation, and underwriting decisions.
   version: 0.1.0
   contact:
-    name: Agent Passport
-    url: https://github.com/algorand/agent-passport
+    name: Agent Passport Maintainers
+    email: sachncs@gmail.com
+    url: https://github.com/sachn-cs/agent-passport
   license:
     name: MIT
 
@@ -370,6 +371,82 @@ paths:
           description: Wallet not found
         '500':
           description: Internal server error
+
+  /verify:
+    get:
+      summary: Lightweight wallet validity check
+      description: |
+        Returns whether the supplied wallet is a syntactically valid Algorand address
+        and, if so, derives simple on-chain flags (funded, active). Free, no payment required.
+        Cached for 60s.
+      operationId: verifyWallet
+      tags: [Free]
+      parameters:
+        - name: wallet
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Verification result
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [valid, wallet, flags]
+                properties:
+                  valid:
+                    type: boolean
+                    description: Whether the wallet is a valid base32 Algorand address
+                  wallet:
+                    type: string
+                  flags:
+                    type: object
+                    additionalProperties: true
+                  cached:
+                    type: boolean
+        '400':
+          description: Missing wallet parameter
+
+  /discovery/search:
+    get:
+      summary: Bazaar service discovery
+      description: |
+        Search the registered Bazaar services by query. Filters by name, description,
+        category, and tags.
+      operationId: discoverySearch
+      tags: [Free]
+      parameters:
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [query, total, results]
+                properties:
+                  query:
+                    type: string
+                  total:
+                    type: integer
+                  results:
+                    type: array
+                    items:
+                      type: object
 
 components:
   schemas:

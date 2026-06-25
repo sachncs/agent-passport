@@ -1,0 +1,14 @@
+{
+  "name": "agent-passport-load-tests",
+  "version": "0.1.0",
+  "private": true,
+  "description": "k6 load test suite for Agent Passport",
+  "scripts": {
+    "scenario-a": "k6 run scenarios/a-100vu.js",
+    "scenario-b": "k6 run scenarios/b-500vu.js",
+    "scenario-c": "k6 run scenarios/c-1000vu.js",
+    "scenario-d": "k6 run scenarios/d-sustained.js",
+    "all": "./run-all.sh",
+    "combined": "k6 run scenarios/combined.js"
+  }
+}
