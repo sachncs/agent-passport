@@ -36,6 +36,7 @@ export interface GraphSignals {
 export interface GraphTransaction {
   from: string;
   to: string;
+  round?: number;
 }
 
 // ── Adjacency List ──────────────────────────────────────────────
@@ -450,7 +451,7 @@ export function computeGraphSignals(
   const txnsWithRound = transactions.map(t => ({
     from: t.from,
     to: t.to,
-    round: (t as any).round || 0,
+    round: t.round || 0,
   }));
   const temporalCorrelation = computeTemporalCorrelation(txnsWithRound, nodes);
 

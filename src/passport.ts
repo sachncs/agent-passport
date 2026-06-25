@@ -274,7 +274,7 @@ export async function generatePassport(
   try {
     const { algod } = await import('./lib/algorand-client');
     const status = await algod.status().do();
-    blockRound = Number((status as any)['last-round'] || 0);
+    blockRound = Number(status.lastRound || 0);
   } catch (e) {
     logger.warn('algod.status failed — passport will use 0 for blockRound', { wallet, error: String(e) });
   }

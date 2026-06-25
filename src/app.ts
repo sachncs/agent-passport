@@ -390,11 +390,10 @@ app.get('/verify', async (req, res) => {
     }
     try {
       const info = await algod.accountInformation(raw).do();
-      const data = info as any;
       // Naive flag heuristics — refine in production
-      flags.funded = Number(data.amount || 0) > 0;
-      flags.active = (data['total-apps-opted-in'] || 0) > 0 || (data['total-assets-opted-in'] || 0) > 0;
-      flags.empty = Number(data.amount || 0) === 0;
+      flags.funded = Number(info.amount || 0n) > 0;
+      flags.active = (info.totalAppsOptedIn || 0) > 0 || (info.totalAssetsOptedIn || 0) > 0;
+      flags.empty = Number(info.amount || 0n) === 0;
       responseCache.set(cacheKey, { flags });
     } catch (e) {
       // Wallet not found on chain is still a valid Algorand address format
@@ -483,7 +482,7 @@ app.get('/ready', async (_req, res) => {
     const status = await algod.status().do();
     health.algorand = {
       connected: true,
-      round: Number((status as any)['last-round'] || 0),
+      round: Number(status.lastRound || 0),
     };
   } catch (e) {
     health.status = 'degraded';
@@ -513,7 +512,7 @@ app.get('/health/deep', async (_req, res) => {
     const status = await algod.status().do();
     health.algorand = {
       connected: true,
-      round: Number((status as any)['last-round'] || 0),
+      round: Number(status.lastRound || 0),
     };
   } catch (e) {
     health.algorand = {

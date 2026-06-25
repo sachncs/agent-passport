@@ -20,7 +20,7 @@ function makeApp() {
   let counter = 0;
   app.post('/test', (req, res) => {
     counter += 1;
-    res.json({ counter, body: req.body, key: (req as any).idempotencyKey });
+    res.json({ counter, body: req.body, key: req.idempotencyKey });
   });
   app.get('/test', (_req, res) => res.json({ ok: true }));
   return app;

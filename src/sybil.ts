@@ -338,11 +338,14 @@ async function fetchAccountInfo(wallet: string, fresh: boolean = false): Promise
   }
 
   try {
-    const info = await withTimeout(algod.accountInformation(wallet).do(), 10_000, 'accountInformation');
-    const data = info as any;
+    const info = (await withTimeout(
+      algod.accountInformation(wallet).do(),
+      10_000,
+      'accountInformation',
+    )) as { amount: bigint; createdAtRound?: number };
     const result: SybilAccountInfo = {
-      balance: Number(data.amount || 0),
-      createdRound: data['created-at-round'] || 0,
+      balance: Number(info.amount || 0n),
+      createdRound: info.createdAtRound || 0,
     };
     if (!fresh) sybilAccountInfoCache.set(wallet, result);
     return result;
@@ -352,13 +355,25 @@ async function fetchAccountInfo(wallet: string, fresh: boolean = false): Promise
   }
 }
 
+interface SybilIndexerTransaction {
+  sender?: string;
+  'payment-transaction'?: { receiver?: string; amount?: number };
+  'asset-transfer-transaction'?: { receiver?: string; amount?: number };
+  'confirmed-round'?: number;
+}
+
+interface SybilIndexerResponse {
+  transactions?: SybilIndexerTransaction[];
+  'next-token'?: string;
+}
+
 async function fetchTransactions(wallet: string, fresh: boolean = false): Promise<{
   transactions: { from: string; to: string; round: number; amount: number }[];
   counterpartyCounts: Map<string, number>;
   fundingSources: Map<string, string>;
 }> {
   try {
-    let allTxns: any[] = [];
+    let allTxns: SybilIndexerTransaction[] = [];
     let nextToken: string | undefined;
     let hasMore = true;
 
@@ -370,7 +385,7 @@ async function fetchTransactions(wallet: string, fresh: boolean = false): Promis
       const res = await fetchWithTimeout(url.toString(), { timeoutMs: 10_000 });
       if (!res.ok) break;
 
-      const data = await res.json() as any;
+      const data = (await res.json()) as SybilIndexerResponse;
       const txns = data.transactions || [];
       allTxns = allTxns.concat(txns);
 

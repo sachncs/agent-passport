@@ -32,7 +32,7 @@ describe('fetchWithTimeout', () => {
     globalThis.fetch = vi.fn(async (_url: string, opts?: RequestInit) => {
       capturedSignal = opts?.signal;
       return new Response('ok');
-    }) as any;
+    }) as unknown as typeof fetch;
 
     await fetchWithTimeout('http://example.com', { timeoutMs: 1000 });
 
@@ -46,7 +46,7 @@ describe('fetchWithTimeout', () => {
     const originalFetch = globalThis.fetch;
     globalThis.fetch = vi.fn(async () => {
       throw new TypeError('Failed to fetch');
-    }) as any;
+    }) as unknown as typeof fetch;
 
     await expect(fetchWithTimeout('http://example.com')).rejects.toThrow('Failed to fetch');
 

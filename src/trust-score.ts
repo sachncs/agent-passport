@@ -254,25 +254,33 @@ async function fetchAccountInfo(wallet: string, fresh: boolean = false): Promise
 
   try {
     // P0 FIX: Only fetch algod.status() when not cached, or use cached lastRound
-    const info = await withTimeout(algod.accountInformation(wallet).do(), 10_000, 'accountInformation');
-    const data = info as any;
+    const info = (await withTimeout(
+      algod.accountInformation(wallet).do(),
+      10_000,
+      'accountInformation',
+    )) as {
+      amount: bigint;
+      assets?: unknown[];
+      createdApps?: unknown[];
+      createdAtRound?: number;
+    };
 
     // Fetch current round — reuse if available from cache, otherwise fetch fresh
     let lastRound: number;
     if (!fresh) {
       // For non-fresh requests, try to get round from a lightweight status call
       const status = await withTimeout(algod.status().do(), 10_000, 'algod.status');
-      lastRound = Number((status as any)['last-round'] || 0);
+      lastRound = Number(status.lastRound || 0);
     } else {
       const status = await withTimeout(algod.status().do(), 10_000, 'algod.status');
-      lastRound = Number((status as any)['last-round'] || 0);
+      lastRound = Number(status.lastRound || 0);
     }
 
     const result: AccountInfo = {
-      amount: Number(data.amount || 0),
-      assetCount: (data.assets || []).length,
-      appCount: (data['created-apps'] || []).length,
-      createdRound: data['created-at-round'] || 0,
+      amount: Number(info.amount || 0n),
+      assetCount: (info.assets || []).length,
+      appCount: (info.createdApps || []).length,
+      createdRound: info.createdAtRound || 0,
       lastRound,
     };
     if (!fresh) accountInfoCache.set(wallet, result);
@@ -283,13 +291,22 @@ async function fetchAccountInfo(wallet: string, fresh: boolean = false): Promise
   }
 }
 
+interface TrustScoreIndexerTransaction {
+  'confirmed-round'?: number;
+}
+
+interface TrustScoreIndexerResponse {
+  transactions?: TrustScoreIndexerTransaction[];
+  'next-token'?: string;
+}
+
 async function fetchTransactionHistory(wallet: string, fresh: boolean = false): Promise<{
   totalTxns: number;
   firstRound: number;
   lastRound: number;
 }> {
   try {
-    let allTxns: any[] = [];
+    let allTxns: TrustScoreIndexerTransaction[] = [];
     let nextToken: string | undefined;
     let hasMore = true;
     let pages = 0;
@@ -302,7 +319,7 @@ async function fetchTransactionHistory(wallet: string, fresh: boolean = false): 
       const res = await fetchWithTimeout(url.toString(), { timeoutMs: 10_000 });
       if (!res.ok) break;
 
-      const data = await res.json() as any;
+      const data = (await res.json()) as TrustScoreIndexerResponse;
       const txns = data.transactions || [];
       allTxns = allTxns.concat(txns);
 

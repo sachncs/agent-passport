@@ -529,10 +529,13 @@ async function fetchReputationFromContract(
 export async function verifyCounterparty(counterparty: string): Promise<boolean> {
   if (!isValidWallet(counterparty)) return false;
   try {
-    const info = await withTimeout(algod.accountInformation(counterparty).do(), 5_000, 'accountInformation');
-    const data = info as any;
+    const info = (await withTimeout(
+      algod.accountInformation(counterparty).do(),
+      5_000,
+      'accountInformation',
+    )) as { createdAtRound?: number };
     // Counterparty must exist and have been active (created-at-round > 0)
-    return (data['created-at-round'] ?? 0) > 0;
+    return (info.createdAtRound ?? 0) > 0;
   } catch {
     return false;
   }
@@ -560,14 +563,22 @@ export async function verifyDisputeEvent(
   try {
     // Check if there are transactions between wallet and counterparty
     const url = `${config.indexerUrl}/v2/accounts/${wallet}/transactions?limit=100`;
-    const res = await withTimeout(fetch(url, { signal: AbortSignal.timeout(5000) } as any), 5_000, 'fetchDisputeTxns');
+    const res = await withTimeout(fetch(url, { signal: AbortSignal.timeout(5000) }), 5_000, 'fetchDisputeTxns');
     if (!res.ok) return false;
 
-    const data = await res.json() as any;
+    interface DisputeTransaction {
+      sender?: string;
+      'payment-transaction'?: { receiver?: string };
+      'asset-transfer-transaction'?: { receiver?: string };
+    }
+    interface DisputeResponse {
+      transactions?: DisputeTransaction[];
+    }
+    const data = (await res.json()) as DisputeResponse;
     const txns = data.transactions || [];
 
     // Verify there's at least one transaction between wallet and counterparty
-    return txns.some((t: any) => {
+    return txns.some((t) => {
       const sender = t.sender || '';
       const receiver = t['payment-transaction']?.receiver ||
                        t['asset-transfer-transaction']?.receiver || '';
@@ -595,20 +606,28 @@ export async function verifySelfReportedEvent(
 
   try {
     const url = `${config.indexerUrl}/v2/accounts/${wallet}/transactions?limit=50`;
-    const res = await withTimeout(fetch(url, { signal: AbortSignal.timeout(5000) } as any), 5_000, 'fetchSelfReportTxns');
+    const res = await withTimeout(fetch(url, { signal: AbortSignal.timeout(5000) }), 5_000, 'fetchSelfReportTxns');
     if (!res.ok) return false;
 
-    const data = await res.json() as any;
+    interface SelfReportTransaction {
+      'payment-transaction'?: unknown;
+      'asset-transfer-transaction'?: unknown;
+      'tx-type'?: string;
+    }
+    interface SelfReportResponse {
+      transactions?: SelfReportTransaction[];
+    }
+    const data = (await res.json()) as SelfReportResponse;
     const txns = data.transactions || [];
 
     // For payment events, verify at least one payment transaction exists
     if (eventType === 'payment' || eventType === 'purchase') {
-      return txns.some((t: any) => !!t['payment-transaction'] || !!t['asset-transfer-transaction']);
+      return txns.some((t) => !!t['payment-transaction'] || !!t['asset-transfer-transaction']);
     }
 
     // For service events, verify at least one application call exists
     if (eventType === 'service') {
-      return txns.some((t: any) => t['tx-type'] === 'appl');
+      return txns.some((t) => t['tx-type'] === 'appl');
     }
 
     // Disputes and refunds are verified separately (verifyDisputeEvent / verifyCounterparty)
@@ -670,7 +689,7 @@ export async function recordEvent(
   }
 
   const status = await withTimeout(algod.status().do(), 10_000, 'algod.status');
-  const currentRound = Number((status as any)['last-round'] || 0);
+  const currentRound = Number(status.lastRound || 0);
 
   // F4: Deduplication — check for duplicate event
   const eventHash = computeEventHash(wallet, eventType, counterparty, currentRound);

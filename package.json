@@ -51,6 +51,7 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
+    "test:integration": "vitest run --include 'src/**/*-integration.test.ts'",
     "score": "tsx scripts/score.ts",
     "delegate": "tsx scripts/delegate.ts",
     "deploy-registry": "tsx scripts/deploy-registry.ts",

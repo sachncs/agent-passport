@@ -250,7 +250,7 @@ export async function underwrite(
   const riskLevel = classifyUnderwritingRisk(compositeScore);
 
   // Recommended limit (creditLimit as base, NOT in compositeScore)
-  let creditLimit = creditResult?.estimatedLimit ?? 0;
+  const creditLimit = creditResult?.estimatedLimit ?? 0;
   let recommendedLimit = approved
     ? computeUnderwritingLimit(compositeScore, creditLimit, sybilRisk, reputation)
     : 0;

@@ -18,6 +18,16 @@ interface Delegation {
   round: number;
 }
 
+interface IndexerTransaction {
+  sender?: string;
+  'asset-transfer-transaction'?: {
+    receiver?: string;
+    amount?: number;
+  };
+  'round-time'?: number;
+  'confirmed-round'?: number;
+}
+
 interface DelegationPath {
   path: string[];
   depth: number;
@@ -130,11 +140,11 @@ async function fetchDelegationsFromIndexer(wallet: string): Promise<Delegation[]
     const res = await fetchWithTimeout(url, { timeoutMs: 10_000 });
     if (!res.ok) return [];
 
-    const data = await res.json() as any;
+    const data = (await res.json()) as { transactions?: IndexerTransaction[] };
     const txns = data.transactions || [];
 
     return txns
-      .map((t: any) => ({
+      .map((t) => ({
         delegator: wallet,
         delegatee: t['asset-transfer-transaction']?.receiver || t.sender || '',
         amount: t['asset-transfer-transaction']?.amount || 0,
@@ -266,8 +276,7 @@ async function isTrustAnchor(wallet: string): Promise<boolean> {
 
   try {
     const info = await algod.accountInformation(wallet).do();
-    const data = info as any;
-    return (data['created-apps'] || []).some((app: any) => app.id === REGISTRY_APP_ID);
+    return (info.createdApps || []).some((app) => Number(app.id) === REGISTRY_APP_ID);
   } catch (e) {
     logger.warn('isTrustAnchor failed', { wallet, error: String(e) });
     return false;

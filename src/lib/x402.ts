@@ -69,13 +69,13 @@ export async function verifySettlement(
 
     // Verify the payment with the facilitator
     const result = await facilitatorClient.verify(
-      paymentPayload as any,
-      paymentRequirements as any,
+      paymentPayload as unknown as Parameters<HTTPFacilitatorClient['verify']>[0],
+      paymentRequirements as unknown as Parameters<HTTPFacilitatorClient['verify']>[1],
     );
 
     if (result.isValid) {
       logger.info('Payment settlement verified', {
-        amount: (paymentRequirements as any)?.price,
+        amount: (paymentRequirements as { price?: string })?.price,
       });
       return { verified: true };
     }

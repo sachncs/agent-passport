@@ -269,7 +269,7 @@ describe('API Endpoints', () => {
         onChain: { balanceAlgo: 100, totalTxns: 50, assetCount: 3, appCount: 1, accountAgeDays: 365, firstSeenRound: 1000, lastSeenRound: 2000 },
         explanation: ['Test'],
       };
-      mockScoreWallet.mockResolvedValueOnce(mockResult as any);
+      mockScoreWallet.mockResolvedValueOnce(mockResult as unknown as Awaited<ReturnType<typeof scoreWallet>>);
       const res = await request(app).get(`/score?wallet=${VALID_WALLET}`);
       expect(res.status).toBe(200);
       expect(res.body.trustScore).toBe(75);
@@ -315,7 +315,7 @@ describe('API Endpoints', () => {
         delegation: { depth: 2, sponsorCount: 3, sponsorQuality: 65, delegationPath: [VALID_WALLET], totalDelegatedAmount: 5000000, isTrustAnchor: false, trustedAncestors: 1 },
         explanation: ['Test delegation'],
       };
-      mockScoreDelegation.mockResolvedValueOnce(mockResult as any);
+      mockScoreDelegation.mockResolvedValueOnce(mockResult as unknown as Awaited<ReturnType<typeof scoreDelegation>>);
       const res = await request(app).get(`/delegation?wallet=${VALID_WALLET}`);
       expect(res.status).toBe(200);
       expect(res.body.trustScore).toBe(65);
@@ -360,7 +360,7 @@ describe('API Endpoints', () => {
         delegationScore: 65,
         explanation: ['Strong on-chain history', 'Well-sponsored', 'Approved with 85% confidence'],
       };
-      mockCheckCounterparty.mockResolvedValueOnce(mockResult as any);
+      mockCheckCounterparty.mockResolvedValueOnce(mockResult as unknown as Awaited<ReturnType<typeof checkCounterparty>>);
       const res = await request(app).post('/counterparty-check').send({ buyer: VALID_WALLET });
       expect(res.status).toBe(200);
       expect(res.body.allow).toBe(true);
@@ -418,7 +418,7 @@ describe('API Endpoints', () => {
         breakdown: { balanceCapacity: 250, activityBonus: 45, ageBonus: 30, riskPenalty: 0 },
         explanation: ['Strong collateral'],
       };
-      mockEstimateCredit.mockResolvedValueOnce(mockResult as any);
+      mockEstimateCredit.mockResolvedValueOnce(mockResult as unknown as Awaited<ReturnType<typeof estimateCredit>>);
       const res = await request(app).post('/credit-estimate').send({ wallet: VALID_WALLET });
       expect(res.status).toBe(200);
       expect(res.body.estimatedLimit).toBe(342.50);
@@ -435,7 +435,7 @@ describe('API Endpoints', () => {
         breakdown: { balanceCapacity: 250, activityBonus: 45, ageBonus: 30, riskPenalty: 0 },
         explanation: ['Within capacity'],
       };
-      mockEstimateCredit.mockResolvedValueOnce(mockResult as any);
+      mockEstimateCredit.mockResolvedValueOnce(mockResult as unknown as Awaited<ReturnType<typeof estimateCredit>>);
       const res = await request(app).post('/credit-estimate').send({ wallet: VALID_WALLET, amount: 200 });
       expect(res.status).toBe(200);
       expect(res.body.estimatedLimit).toBe(342.50);
@@ -480,7 +480,7 @@ describe('API Endpoints', () => {
         flaggedWallets: ['BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB'],
         explanation: ['4 wallets created within 48 hours', 'High sybil risk'],
       };
-      mockDetectSybil.mockResolvedValueOnce(mockResult as any);
+      mockDetectSybil.mockResolvedValueOnce(mockResult as unknown as Awaited<ReturnType<typeof detectSybil>>);
       const res = await request(app).get(`/sybil-check?wallet=${VALID_WALLET}`);
       expect(res.status).toBe(200);
       expect(res.body.sybilRisk).toBe(0.91);
@@ -525,7 +525,7 @@ describe('API Endpoints', () => {
         breakdown: { successfulPayments: 5, successfulPurchases: 3, disputes: 0, refunds: 0, sponsorEndorsements: 2, serviceInteractions: 1, totalEvents: 11, positiveEvents: 11, negativeEvents: 0 },
         explanation: ['Strong reputation'],
       };
-      mockComputeReputation.mockResolvedValueOnce(mockResult as any);
+      mockComputeReputation.mockResolvedValueOnce(mockResult as unknown as Awaited<ReturnType<typeof computeReputation>>);
       const res = await request(app).get(`/reputation?wallet=${VALID_WALLET}`);
       expect(res.status).toBe(200);
       expect(res.body.reputation).toBe(75);
@@ -586,7 +586,7 @@ describe('API Endpoints', () => {
         round: 42000000,
         timestamp: 1700000000,
       };
-      mockRecordEvent.mockResolvedValueOnce(mockResult as any);
+      mockRecordEvent.mockResolvedValueOnce(mockResult as unknown as Awaited<ReturnType<typeof recordEvent>>);
       const res = await request(app).post('/reputation/record').send({ wallet: VALID_WALLET, eventType: 'payment', amount: 1000000 });
       expect(res.status).toBe(200);
       expect(res.body.eventType).toBe('payment');

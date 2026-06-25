@@ -109,9 +109,8 @@ async function fetchAccountInfo(wallet: string, fresh: boolean = false): Promise
 
   try {
     const info = await withTimeout(algod.accountInformation(wallet).do(), 10_000, 'accountInformation');
-    const data = info as any;
     const result: GraphAccountInfo = {
-      balance: Number(data.amount || 0),
+      balance: Number(info.amount || 0n),
       trustScore: 0,
     };
     if (!fresh) graphAccountInfoCache.set(wallet, result);
@@ -122,24 +121,33 @@ async function fetchAccountInfo(wallet: string, fresh: boolean = false): Promise
   }
 }
 
+interface TrustGraphIndexerTransaction {
+  'payment-transaction'?: { receiver?: string; amount?: number };
+  'confirmed-round'?: number;
+}
+
+interface TrustGraphIndexerResponse {
+  transactions?: TrustGraphIndexerTransaction[];
+}
+
 async function fetchDelegationEdges(wallet: string, limit: number = 100): Promise<GraphEdge[]> {
   try {
     const url = `${INDEXER_URL}/v2/accounts/${wallet}/transactions?limit=${limit}&tx-type=pay`;
     const res = await fetchWithTimeout(url, { timeoutMs: 10_000 });
     if (!res.ok) return [];
 
-    const data = await res.json() as any;
+    const data = (await res.json()) as TrustGraphIndexerResponse;
     const txns = data.transactions || [];
 
     return txns
-      .filter((t: any) => {
+      .filter((t) => {
         const receiver = t['payment-transaction']?.receiver;
         return receiver && receiver !== wallet && isValidWallet(receiver);
       })
-      .map((t: any) => ({
+      .map((t) => ({
         from: wallet,
-        to: t['payment-transaction'].receiver,
-        amount: t['payment-transaction'].amount || 0,
+        to: t['payment-transaction']!.receiver!,
+        amount: t['payment-transaction']?.amount || 0,
         round: t['confirmed-round'] || 0,
       }));
   } catch (e) {

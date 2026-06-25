@@ -9,6 +9,13 @@ interface RateLimitEntry {
   resetAt: number;
 }
 
+declare module 'express-serve-static-core' {
+  interface Request {
+    requestId?: string;
+    clientIp?: string;
+  }
+}
+
 // P1 FIX: Persistent rate limiter state
 const RATE_LIMIT_PATH = process.env.RATE_LIMIT_PERSISTENCE_PATH
   || join(process.cwd(), 'data', 'rate-limit.json');
@@ -173,7 +180,7 @@ export function requestIdMiddleware(req: Request, res: Response, next: NextFunct
   }
 
   const finalId = requestId || randomUUID();
-  (req as any).requestId = finalId;
+  req.requestId = finalId;
   res.setHeader('X-Request-ID', finalId);
   next();
 }
@@ -183,8 +190,8 @@ export function requestIdMiddleware(req: Request, res: Response, next: NextFunct
  */
 export function requestLoggingMiddleware(req: Request, res: Response, next: NextFunction) {
   const clientIp = req.ip ?? req.socket.remoteAddress ?? 'unknown';
-  const requestId = (req as any).requestId;
-  (req as any).clientIp = clientIp;
+  const requestId = req.requestId;
+  req.clientIp = clientIp;
 
   // Log the request with IP and ID for audit trail
   logger.info('Request received', {
