@@ -24,7 +24,7 @@
     "prepublishOnly": "npm run build && npm test"
   },
   "dependencies": {
-    "zod": "^3.23.8"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "typescript": "^5.6.0",
