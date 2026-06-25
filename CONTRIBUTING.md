@@ -135,7 +135,6 @@ agent-passport/
 ├── alerts/             # Prometheus / Alertmanager / Grafana / runbooks
 ├── load-tests/         # k6 scenarios + results
 ├── public/             # Static dashboard HTML
-├── examples/           # Reference integrations
 ├── data/               # Runtime persistence (gitignored)
 └── dist/               # Build output (gitignored)
 ```
