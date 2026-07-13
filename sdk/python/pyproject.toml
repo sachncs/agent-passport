@@ -41,11 +41,11 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/sachn-cs/agent-passport"
-Repository = "https://github.com/sachn-cs/agent-passport.git"
-Documentation = "https://github.com/sachn-cs/agent-passport/tree/master/sdk/python"
-Issues = "https://github.com/sachn-cs/agent-passport/issues"
-Changelog = "https://github.com/sachn-cs/agent-passport/blob/master/sdk/python/CHANGELOG.md"
+Homepage = "https://github.com/sachncs/agent-passport"
+Repository = "https://github.com/sachncs/agent-passport.git"
+Documentation = "https://github.com/sachncs/agent-passport/tree/master/sdk/python"
+Issues = "https://github.com/sachncs/agent-passport/issues"
+Changelog = "https://github.com/sachncs/agent-passport/blob/master/sdk/python/CHANGELOG.md"
 
 dependencies = [
     "requests>=2.31",

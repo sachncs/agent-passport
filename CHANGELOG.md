@@ -26,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Expanded `.gitignore` with OS, IDE, Python, and load-test artifacts
 - `package.json`, `sdk/package.json`, and `sdk/python/pyproject.toml` now
   declare `repository`, `homepage`, `bugs`, `keywords`, and `author`
-- `docs/openapi.yaml` repo URL aligned to `sachn-cs/agent-passport`
+- `docs/openapi.yaml` repo URL aligned to `sachncs/agent-passport`
 - `README.md` reorganised: added badges, Features, Tech Stack, and Roadmap
   sections; relative links to all docs; cross-references CONTRIBUTING,
   CODE_OF_CONDUCT, and SECURITY
@@ -76,5 +76,5 @@ Initial public release of the Agent Passport service.
 - Configurable CORS
 - On-chain USDC payment verification for x402
 
-[Unreleased]: https://github.com/sachn-cs/agent-passport/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/sachn-cs/agent-passport/releases/tag/v0.1.0
+[Unreleased]: https://github.com/sachncs/agent-passport/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/sachncs/agent-passport/releases/tag/v0.1.0

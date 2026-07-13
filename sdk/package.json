@@ -7,14 +7,14 @@
     "name": "Sachin",
     "email": "sachncs@gmail.com"
   },
-  "homepage": "https://github.com/sachn-cs/agent-passport/tree/master/sdk#readme",
+  "homepage": "https://github.com/sachncs/agent-passport/tree/master/sdk#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/sachn-cs/agent-passport.git",
+    "url": "https://github.com/sachncs/agent-passport.git",
     "directory": "sdk"
   },
   "bugs": {
-    "url": "https://github.com/sachn-cs/agent-passport/issues"
+    "url": "https://github.com/sachncs/agent-passport/issues"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

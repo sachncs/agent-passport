@@ -1,89 +1,74 @@
-# Agent Passport: Delegated Trust Infrastructure
+<p align="center">
+  <h1 align="center">Agent Passport</h1>
+  <p align="center">Stateless, pay-per-query trust and underwriting API for AI agents on Algorand.</p>
+  <p align="center">
+    <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License"></a>
+    <a href=".github/workflows/ci.yml"><img src="https://img.shields.io/badge/build-passing-brightgreen" alt="Build"></a>
+    <a href="package.json"><img src="https://img.shields.io/badge/version-0.1.0-blue" alt="Version"></a>
+    <a href="package.json"><img src="https://img.shields.io/badge/node-%E2%89%A520-339933" alt="Node"></a>
+    <a href="tsconfig.json"><img src="https://img.shields.io/badge/TypeScript-strict-3178C6" alt="TypeScript"></a>
+    <a href="https://developer.algorand.org"><img src="https://img.shields.io/badge/Algorand-testnet%20%7C%20mainnet-000000" alt="Algorand"></a>
+    <a href="https://x402.org"><img src="https://img.shields.io/badge/x402-payment--enabled-FF6B6B" alt="x402"></a>
+    <a href="#development"><img src="https://img.shields.io/badge/tests-1%2C145%20unit%20passing-brightgreen" alt="Tests"></a>
+    <a href="https://github.com/sachncs/agent-passport/stargazers"><img src="https://img.shields.io/github/stars/sachncs/agent-passport?style=social" alt="Stars"></a>
+  </p>
+</p>
 
-A stateless, pay-per-query trust and underwriting API for AI agents, using
-delegated-underwriting and x402 micropayments on Algorand.
+A stateless trust-scoring API at `http://localhost:3000`, pointed at the public
+Algorand testnet. No database, no wallet, no signup —
+`npm install && cp .env.example .env && npm start` and you have
+trust scoring, delegation, credit, sybil detection, reputation,
+underwriting, and passport generation for any Algorand wallet.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Build](https://img.shields.io/badge/build-passing-brightgreen.svg)](.github/workflows/ci.yml)
-[![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](package.json)
-[![Node ≥ 20](https://img.shields.io/badge/node-%E2%89%A520-339933.svg)](package.json)
-[![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6.svg)](tsconfig.json)
-[![Algorand](https://img.shields.io/badge/Algorand-testnet%20%7C%20mainnet-000000.svg)](https://developer.algorand.org)
-[![x402](https://img.shields.io/badge/x402-payment--enabled-FF6B6B.svg)](https://x402.org)
-[![Tests](https://img.shields.io/badge/tests-1%2C145%20unit%20passing-brightgreen.svg)](#development)
-[![Stars](https://img.shields.io/github/stars/sachn-cs/agent-passport?style=social)](https://github.com/sachn-cs/agent-passport/stargazers)
-
-> **TL;DR** — `npm install && cp .env.example .env && npm start` and you have
-> a trust-scoring API at `http://localhost:3000`, pointed at the public
-> Algorand testnet. No database, no wallet, no signup.
-
-For the full documentation, see **[docs/README.md](docs/README.md)** —
-the single source of truth for architecture, algorithms, operations, and
-contributing.
+Full documentation: **[docs/README.md](docs/README.md)** — single source of
+truth for architecture, algorithms, operations, and contributing.
 
 ---
 
 ## Features
 
-- **Composite trust score (0–100)** with explainable sub-scores: age,
-  activity, volume, velocity, compliance — see
-  [docs/concepts/trust-scoring.md](docs/concepts/trust-scoring.md)
-- **Delegated trust graph** with cycle detection, depth attenuation,
-  and quality-weighted sponsor counts — see
-  [docs/concepts/delegation.md](docs/concepts/delegation.md)
-- **Underwriting decisions** with credit capacity estimation, default
-  propagation, and a $100k system exposure cap — see
-  [docs/concepts/credit-and-underwriting.md](docs/concepts/credit-and-underwriting.md)
-- **Sybil detection** across 12 signals (clustering, timing, amount
-  fingerprint, funding correlation, balance similarity, interaction
-  density, circular activity, plus 4 graph-traversal signals) — see
-  [docs/concepts/sybil-detection.md](docs/concepts/sybil-detection.md)
-- **On-chain reputation events** via the `registry.teal` and
-  `reputation.teal` Algorand contracts — see
-  [docs/architecture/smart-contracts.md](docs/architecture/smart-contracts.md)
+- **Composite trust score (0–100)** — explainable sub-scores (age, activity,
+  volume, velocity, compliance). See
+  [docs/concepts/trust-scoring.md](docs/concepts/trust-scoring.md).
+- **Delegated trust graph** — cycle detection, depth attenuation, and
+  quality-weighted sponsor counts. See
+  [docs/concepts/delegation.md](docs/concepts/delegation.md).
+- **Underwriting decisions** — credit capacity estimation, default
+  propagation, $100k system exposure cap. See
+  [docs/concepts/credit-and-underwriting.md](docs/concepts/credit-and-underwriting.md).
+- **Sybil detection** — 12 signals (clustering, timing, amount fingerprint,
+  funding correlation, balance similarity, interaction density, circular
+  activity, plus 4 graph-traversal signals). See
+  [docs/concepts/sybil-detection.md](docs/concepts/sybil-detection.md).
+- **On-chain reputation events** — `registry.teal` and `reputation.teal`
+  Algorand contracts. See
+  [docs/architecture/smart-contracts.md](docs/architecture/smart-contracts.md).
 - **Optional x402 micropayments** — pay-per-query in USDC, settled
-  on-chain, with replay protection
-- **Stateless service** — every request fetches data from Algorand
-  and caches it in-memory for 60 s. No database, no message queue, no
-  shared state. Scale horizontally by adding pods.
-- **Production-grade observability** — 38 Prometheus metrics, 24+
-  alert rules, 17-panel Grafana dashboard, 8 runbooks, two SLO profiles
-  — see [docs/operations/observability.md](docs/operations/observability.md)
+  on-chain, with replay protection.
+- **Stateless service** — every request fetches from Algorand and caches
+  in-memory for 60 s. No database, no message queue, no shared state.
+  Scale horizontally by adding pods.
+- **Production-grade observability** — 38 Prometheus metrics, 24+ alert
+  rules, 17-panel Grafana dashboard, 8 runbooks, two SLO profiles. See
+  [docs/operations/observability.md](docs/operations/observability.md).
 - **First-class SDKs** — TypeScript (`@agent-passport/sdk`) and Python
   (`agent-passport-sdk`), both with typed errors, idempotency helpers,
-  and x402 payment callbacks — see
+  and x402 payment callbacks. See
   [docs/development/sdk-typescript.md](docs/development/sdk-typescript.md)
-  and [docs/development/sdk-python.md](docs/development/sdk-python.md)
-- **Security hardened** — Helmet headers, 600 req/min/IP rate limit,
-  CORS, 100 KB body limit, 30 s request timeout, per-request UUID,
-  `Idempotency-Key` middleware, on-chain payment verification — see
-  [docs/security/threat-model.md](docs/security/threat-model.md)
-
----
-
-## Table of Contents
-
-- [Installation](#installation)
-- [Usage](#usage)
-- [Project Structure](#project-structure)
-- [Tech Stack](#tech-stack)
-- [Roadmap](#roadmap)
-- [Documentation](#documentation)
-- [Development](#development)
-- [Deployment](#deployment)
-- [Observability](#observability)
-- [Contributing](#contributing)
-- [Code of Conduct](#code-of-conduct)
-- [Security](#security)
-- [FAQ](#faq)
-- [License](#license)
+  and [docs/development/sdk-python.md](docs/development/sdk-python.md).
+- **Security hardened** — Helmet headers, 600 req/min/IP rate limit, CORS,
+  100 KB body limit, 30 s request timeout, per-request UUID,
+  `Idempotency-Key` middleware, on-chain payment verification. See
+  [docs/security/threat-model.md](docs/security/threat-model.md).
 
 ---
 
 ## Installation
 
+### From source
+
 ```bash
-git clone https://github.com/sachn-cs/agent-passport.git
+git clone https://github.com/sachncs/agent-passport.git
 cd agent-passport
 npm install
 cp .env.example .env
@@ -93,13 +78,13 @@ npm start
 By default this points at the public Algorand testnet — no setup beyond the
 env file is needed. Server runs at `http://localhost:3000`.
 
-For development with hot reload:
+### With hot reload
 
 ```bash
 npm run dev
 ```
 
-For Docker:
+### From Docker
 
 ```bash
 docker build -t agent-passport:0.1.0 .
@@ -109,7 +94,9 @@ docker run --rm -p 3000:3000 --env-file .env agent-passport:0.1.0
 For production deployment, see
 [docs/operations/deployment.md](docs/operations/deployment.md).
 
-## Usage
+---
+
+## Quick Start
 
 ### 1. Confirm the service is up
 
@@ -143,7 +130,11 @@ npm install @agent-passport/sdk
 
 ```typescript
 import { AgentPassportClient } from '@agent-passport/sdk';
+
+// Connect to a local service
 const client = new AgentPassportClient({ baseUrl: 'http://localhost:3000' });
+
+// Fetch a trust score
 const score = await client.getScore('GD64YIY3TWGDMCNPP553DZPPR6LDUSFBBHU5AAAAA7XBICTFJ7BY7C55XX');
 console.log(score.trustScore, score.riskLevel);
 ```
@@ -155,6 +146,7 @@ pip install agent-passport-sdk
 
 ```python
 from agent_passport import AgentPassportClient
+
 client = AgentPassportClient(base_url="http://localhost:3000")
 print(client.get_score("GD64YIY3TWGDMCNPP553DZPPR6LDUSFBBHU5AAAAA7XBICTFJ7BY7C55XX"))
 ```
@@ -162,6 +154,8 @@ print(client.get_score("GD64YIY3TWGDMCNPP553DZPPR6LDUSFBBHU5AAAAA7XBICTFJ7BY7C55
 Full SDK reference:
 [docs/development/sdk-typescript.md](docs/development/sdk-typescript.md)
 and [docs/development/sdk-python.md](docs/development/sdk-python.md).
+
+---
 
 ## Configuration
 
@@ -172,17 +166,61 @@ All configuration is via environment variables. Copy `.env.example` to
 The canonical env-var table (every var, every default, every scope) is
 at [docs/operations/environment-variables.md](docs/operations/environment-variables.md).
 
-Quick summary:
+### Service
 
-| Group | Vars |
-|-------|------|
-| Service | `PORT`, `LOG_LEVEL`, `LOG_FILE`, `LOG_ERROR_FILE`, `CORS_ALLOWED_ORIGINS` |
-| Algorand | `ALGOD_URL`, `ALGOD_TOKEN`, `INDEXER_URL`, `INDEXER_TOKEN`, `ALGO_NETWORK` |
-| Smart contracts | `REGISTRY_APP_ID`, `REPUTATION_APP_ID`, `OPERATOR_MNEMONIC`, `DEPLOYER_MNEMONIC` |
-| x402 | `X402_ENABLED`, `X402_FACILITATOR_URL`, `X402_PAYMENT_RECIPIENT`, `X402_NETWORK` |
-| Rate limiting | `RATE_LIMIT_MAX`, `RATE_LIMIT_TRUSTED_IPS`, `RATE_LIMIT_PERSISTENCE_PATH` |
-| System exposure | `EXPOSURE_PERSISTENCE_PATH` |
-| Timeouts / load | `REQUEST_TIMEOUT_MS`, `LOAD_TEST_MODE` |
+| Variable             | Purpose                              |
+|----------------------|--------------------------------------|
+| `PORT`               | HTTP listen port (default `3000`)    |
+| `LOG_LEVEL`          | Pino log level                       |
+| `LOG_FILE`           | Combined log file path               |
+| `LOG_ERROR_FILE`     | Error-only log file path             |
+| `CORS_ALLOWED_ORIGINS` | Comma-separated CORS allow-list    |
+
+### Algorand
+
+| Variable        | Purpose                                |
+|-----------------|----------------------------------------|
+| `ALGOD_URL`     | algod node endpoint                    |
+| `ALGOD_TOKEN`   | algod API token                        |
+| `INDEXER_URL`   | Algorand indexer endpoint              |
+| `INDEXER_TOKEN` | Indexer API token                      |
+| `ALGO_NETWORK`  | `testnet` or `mainnet`                 |
+
+### Smart contracts
+
+| Variable             | Purpose                            |
+|----------------------|------------------------------------|
+| `REGISTRY_APP_ID`    | Delegation registry app id         |
+| `REPUTATION_APP_ID`  | Reputation events app id           |
+| `OPERATOR_MNEMONIC`  | Operator wallet mnemonic           |
+| `DEPLOYER_MNEMONIC`  | Contract deployer mnemonic         |
+
+### x402 payments
+
+| Variable                  | Purpose                       |
+|---------------------------|-------------------------------|
+| `X402_ENABLED`            | Enable pay-per-query (default `false`) |
+| `X402_FACILITATOR_URL`    | x402 facilitator endpoint     |
+| `X402_PAYMENT_RECIPIENT`  | USDC recipient address        |
+| `X402_NETWORK`            | `algorand-testnet` / `-mainnet` |
+
+### Rate limiting & system exposure
+
+| Variable                       | Purpose                                   |
+|--------------------------------|-------------------------------------------|
+| `RATE_LIMIT_MAX`               | Requests/minute per IP                    |
+| `RATE_LIMIT_TRUSTED_IPS`       | Comma-separated bypass list               |
+| `RATE_LIMIT_PERSISTENCE_PATH`  | Persisted rate-limit state file           |
+| `EXPOSURE_PERSISTENCE_PATH`    | Persisted system-exposure ledger          |
+
+### Timeouts & load
+
+| Variable             | Purpose                                   |
+|----------------------|-------------------------------------------|
+| `REQUEST_TIMEOUT_MS` | Per-request timeout (default `30000`)    |
+| `LOAD_TEST_MODE`     | Bypass rate limits for load tests         |
+
+---
 
 ## Project Structure
 
@@ -222,78 +260,51 @@ agent-passport/
 └── dist/                   # Build output (gitignored)
 ```
 
+---
+
 ## Tech Stack
 
-### Service
+| Category       | Technology                                       |
+|----------------|--------------------------------------------------|
+| Runtime        | Node.js ≥ 20                                     |
+| Language       | TypeScript (strict mode)                         |
+| Framework      | [Express 5](https://expressjs.com)               |
+| Security       | [Helmet](https://helmetjs.github.io), CORS, custom rate limiter with persistent state |
+| Validation     | [Zod](https://zod.dev)                           |
+| Algorand       | [algosdk](https://github.com/algorand/js-algorand-sdk) |
+| Payments       | [x402](https://x402.org) (`@x402/core`, `@x402/express`) |
+| Metrics        | [prom-client](https://github.com/siimon/prom-client) |
+| Tests          | [Vitest](https://vitest.dev), [Supertest](https://github.com/ladjs/supertest) |
+| Lint           | [ESLint](https://eslint.org) (flat config)       |
+| Container      | Docker (multi-stage, non-root, healthcheck)      |
+| SDK — TS       | TypeScript 6, native `fetch`, `zod`              |
+| SDK — Python   | Python 3.9+, `requests`, dataclasses, type hints |
+| Contracts      | [TEAL](https://developer.algorand.org/docs/get-details/dapps/avm/teal/) (Algorand v10) |
+| Observability  | Prometheus, Alertmanager, Grafana JSON (17 panels), [k6](https://k6.io) |
 
-- **Runtime:** Node.js ≥ 20
-- **Language:** TypeScript (strict mode)
-- **Framework:** [Express 5](https://expressjs.com)
-- **Security:** [Helmet](https://helmetjs.github.io), CORS, custom rate
-  limiter with persistent state
-- **Validation:** [Zod](https://zod.dev)
-- **Algorand:** [algosdk](https://github.com/algorand/js-algorand-sdk)
-- **Payments:** [x402](https://x402.org) (`@x402/core`, `@x402/express`)
-- **Metrics:** [prom-client](https://github.com/siimon/prom-client)
-- **Tests:** [Vitest](https://vitest.dev), [Supertest](https://github.com/ladjs/supertest)
-- **Lint:** [ESLint](https://eslint.org) (flat config)
-- **Container:** Docker (multi-stage, non-root, healthcheck)
-
-### SDKs
-
-- **TypeScript:** TypeScript 6, native `fetch`, `zod` for validation
-- **Python:** Python 3.9+, `requests`, dataclasses, type hints
-
-### Smart contracts
-
-- **Language:** [TEAL](https://developer.algorand.org/docs/get-details/dapps/avm/teal/)
-  (Algorand v10)
-
-### Observability
-
-- **Metrics:** Prometheus (`/metrics`)
-- **Alerts:** Prometheus alert rules, Alertmanager routing
-- **Dashboards:** Grafana JSON (17 panels)
-- **Load testing:** [k6](https://k6.io)
+---
 
 ## Roadmap
 
-- [x] Stateless trust scoring service (v0.1.0)
-- [x] TypeScript SDK with typed errors, retries, idempotency
-- [x] Python SDK with the same surface
-- [x] On-chain delegation registry (TEAL contract)
-- [x] x402 pay-per-query integration
-- [x] Prometheus metrics + Alertmanager rules + Grafana dashboard
-- [x] k6 load tests against the public testnet
-- [x] Production deployment guide (Kubernetes, env tuning, SLOs)
-- [x] Idempotency middleware (24 h TTL, body-hash dedup, 409 on mismatch)
-- [x] System exposure cap ($100k USDC, persisted)
-- [x] Operator wallet + KMS guidance
-- [ ] Sanctions screening provider integration (Chainalysis / Elliptic) — see
-      [docs/security/sanctions-integration.md](docs/security/sanctions-integration.md)
-- [ ] Redis-backed idempotency store for multi-replica deployments
-- [ ] Webhook subscriptions for reputation event consumers
-- [ ] gRPC interface alongside HTTP
-- [ ] Multi-chain adapters (Ethereum, Solana)
-- [ ] Public Bazaar listing & discoverability metadata
-- [ ] Helm chart for one-command Kubernetes deployment
-- [ ] OpenAPI → SDK code generation (release-please automation)
+- **v0.1.0** (shipped) — stateless trust scoring, TypeScript + Python SDKs,
+  on-chain delegation registry, x402 pay-per-query, Prometheus metrics +
+  Alertmanager rules + Grafana dashboard, k6 load tests, production
+  deployment guide, idempotency middleware (24 h TTL, body-hash dedup,
+  409 on mismatch), system exposure cap ($100k USDC, persisted),
+  operator wallet + KMS guidance.
+- **v0.2.0** (next) — sanctions screening provider integration
+  (Chainalysis / Elliptic) — see
+  [docs/security/sanctions-integration.md](docs/security/sanctions-integration.md),
+  Redis-backed idempotency store for multi-replica deployments, webhook
+  subscriptions for reputation event consumers.
+- **Backlog** — gRPC interface alongside HTTP, multi-chain adapters
+  (Ethereum, Solana), public Bazaar listing & discoverability metadata,
+  Helm chart for one-command Kubernetes deployment, OpenAPI → SDK code
+  generation (release-please automation).
 
-Have an idea? [Open a feature request](https://github.com/sachn-cs/agent-passport/issues/new?template=feature_request.md).
+Have an idea? [Open a feature request](https://github.com/sachncs/agent-passport/issues/new?template=feature_request.md).
 
-## Documentation
-
-The full documentation is at **[docs/README.md](docs/README.md)** and is
-organised by audience:
-
-- **New?** → [docs/introduction/overview.md](docs/introduction/overview.md)
-- **Integrating?** → [docs/api/README.md](docs/api/README.md) +
-  [docs/development/sdk-typescript.md](docs/development/sdk-typescript.md)
-- **Operating?** → [docs/operations/deployment.md](docs/operations/deployment.md)
-  + [docs/operations/observability.md](docs/operations/observability.md)
-- **Reviewing security?** → [docs/security/threat-model.md](docs/security/threat-model.md)
-- **Contributing?** → [CONTRIBUTING.md](CONTRIBUTING.md) +
-  [docs/development/testing.md](docs/development/testing.md)
+---
 
 ## Development
 
@@ -333,17 +344,41 @@ LOAD_TEST_MODE=1 ./run-all.sh
 See [docs/operations/load-testing.md](docs/operations/load-testing.md)
 for thresholds and output interpretation.
 
+### Code Style
+
+- Line length: 100 (ESLint default)
+- Quotes: double (`"`)
+- Formatting: ESLint (`eslint src/`)
+- Type hints: required on all public signatures (`strict` TypeScript)
+- No dead code, no commented-out code in `src/`
+
+### Commit Conventions
+
+We use [Conventional Commits](https://www.conventionalcommits.org/):
+
+```
+feat: add x402 idempotency middleware
+fix: clamp sybil cluster score to [0,100]
+docs: document sanctions-integration flow
+refactor: extract exposure ledger persistence
+test: add adversarial sybil cluster fixtures
+chore: bump @x402/core to 2.18.0
+```
+
+---
+
 ## Deployment
 
 The service is **production-ready** and fully stateless. See
 [docs/operations/deployment.md](docs/operations/deployment.md) for the
 full checklist.
 
-**TL;DR**: the default deployment works against the public Algorand
-testnet out of the box. To deploy to mainnet, update `ALGOD_URL` and
-`INDEXER_URL` to a mainnet endpoint (AlgoNode, a hosted provider, or
-your own node). For tighter SLOs (P95 < 500ms), use a low-latency
-endpoint.
+The default deployment works against the public Algorand testnet out of
+the box. To deploy to mainnet, update `ALGOD_URL` and `INDEXER_URL` to a
+mainnet endpoint (AlgoNode, a hosted provider, or your own node). For
+tighter SLOs (P95 < 500 ms), use a low-latency endpoint.
+
+---
 
 ## Observability
 
@@ -355,6 +390,24 @@ Two SLO profiles:
 - `alerts/slo-prod-strict.yml` — aspirational (P95<500ms, 99.9% availability)
 
 Grafana dashboard JSON in `alerts/grafana-dashboard.json` (17 panels).
+
+---
+
+## Documentation
+
+The full documentation is at **[docs/README.md](docs/README.md)** and is
+organised by audience:
+
+- **New?** → [docs/introduction/overview.md](docs/introduction/overview.md)
+- **Integrating?** → [docs/api/README.md](docs/api/README.md) +
+  [docs/development/sdk-typescript.md](docs/development/sdk-typescript.md)
+- **Operating?** → [docs/operations/deployment.md](docs/operations/deployment.md)
+  + [docs/operations/observability.md](docs/operations/observability.md)
+- **Reviewing security?** → [docs/security/threat-model.md](docs/security/threat-model.md)
+- **Contributing?** → [CONTRIBUTING.md](CONTRIBUTING.md) +
+  [docs/development/testing.md](docs/development/testing.md)
+
+---
 
 ## Contributing
 
@@ -385,4 +438,4 @@ Common questions are answered in
 
 ## License
 
-[MIT](LICENSE) — Copyright © 2026 Sachin.
+[MIT](LICENSE) © 2026 Sachin.

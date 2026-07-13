@@ -26,6 +26,6 @@ are very helpful.
 
 ### Checklist
 
-- [ ] I have read the [README](https://github.com/sachn-cs/agent-passport#readme).
-- [ ] I have searched [existing issues](https://github.com/sachn-cs/agent-passport/issues?q=is%3Aissue)
-      and the [docs/](https://github.com/sachn-cs/agent-passport/tree/master/docs).
+- [ ] I have read the [README](https://github.com/sachncs/agent-passport#readme).
+- [ ] I have searched [existing issues](https://github.com/sachncs/agent-passport/issues?q=is%3Aissue)
+      and the [docs/](https://github.com/sachncs/agent-passport/tree/master/docs).

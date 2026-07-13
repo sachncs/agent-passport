@@ -33,7 +33,7 @@ Any alternative approaches you considered, and why this one is better.
 
 ### Checklist
 
-- [ ] I have searched [existing issues](https://github.com/sachn-cs/agent-passport/issues?q=is%3Aissue)
+- [ ] I have searched [existing issues](https://github.com/sachncs/agent-passport/issues?q=is%3Aissue)
       for duplicates.
 - [ ] I have considered how this interacts with the existing trust scoring
       algorithm, metrics, SLOs, and rate limits.

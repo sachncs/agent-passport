@@ -44,7 +44,7 @@ Paste relevant log lines (with request IDs) or attach a screenshot.
 
 ### Checklist
 
-- [ ] I have searched [existing issues](https://github.com/sachn-cs/agent-passport/issues?q=is%3Aissue)
+- [ ] I have searched [existing issues](https://github.com/sachncs/agent-passport/issues?q=is%3Aissue)
       for duplicates.
 - [ ] I can reproduce the issue against the public Algorand testnet with the
       default `.env.example`.

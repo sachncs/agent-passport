@@ -1,7 +1,7 @@
 # Agent Passport — Production Readiness Report
 
 **Date:** 2026-06-25
-**Codebase:** https://github.com/sachn-cs/agent-passport
+**Codebase:** https://github.com/sachncs/agent-passport
 
 > This is a self-audit by the project maintainer. It documents what
 > was tested, what works, and what is left to do. See

@@ -1,6 +1,6 @@
 # Python SDK (`agent-passport-sdk`)
 
-Python SDK for the [Agent Passport](https://github.com/sachn-cs/agent-passport) service. Provides typed access to trust scoring, delegation, credit, sybil, reputation, underwriting, graph analytics, and passport generation for Algorand wallets.
+Python SDK for the [Agent Passport](https://github.com/sachncs/agent-passport) service. Provides typed access to trust scoring, delegation, credit, sybil, reputation, underwriting, graph analytics, and passport generation for Algorand wallets.
 
 ## Installation
 
@@ -150,7 +150,7 @@ This SDK follows [Semantic Versioning](https://semver.org/).
 - MINOR: new methods or types
 - MAJOR: breaking changes
 
-See [CHANGELOG.md](https://github.com/sachn-cs/agent-passport/blob/master/sdk/python/CHANGELOG.md).
+See [CHANGELOG.md](https://github.com/sachncs/agent-passport/blob/master/sdk/python/CHANGELOG.md).
 
 ## On-chain prerequisites
 

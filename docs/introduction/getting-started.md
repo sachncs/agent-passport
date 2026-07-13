@@ -20,7 +20,7 @@ service. The Algorand public testnet is the default data source.
 ## 2. Install
 
 ```bash
-git clone https://github.com/sachn-cs/agent-passport.git
+git clone https://github.com/sachncs/agent-passport.git
 cd agent-passport
 npm install
 cp .env.example .env

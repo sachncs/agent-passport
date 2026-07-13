@@ -8,13 +8,13 @@
     "name": "Sachin",
     "email": "sachncs@gmail.com"
   },
-  "homepage": "https://github.com/sachn-cs/agent-passport#readme",
+  "homepage": "https://github.com/sachncs/agent-passport#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/sachn-cs/agent-passport.git"
+    "url": "https://github.com/sachncs/agent-passport.git"
   },
   "bugs": {
-    "url": "https://github.com/sachn-cs/agent-passport/issues"
+    "url": "https://github.com/sachncs/agent-passport/issues"
   },
   "keywords": [
     "algorand",
@@ -51,7 +51,7 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
-    "test:integration": "vitest run --include 'src/**/*-integration.test.ts'",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
     "score": "tsx scripts/score.ts",
     "delegate": "tsx scripts/delegate.ts",
     "deploy-registry": "tsx scripts/deploy-registry.ts",

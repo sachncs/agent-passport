@@ -51,7 +51,7 @@ please give us a reasonable window to patch before public disclosure.
 
 ## Disclosure Policy
 
-- We follow [GitHub Security Advisories](https://github.com/sachn-cs/agent-passport/security/advisories)
+- We follow [GitHub Security Advisories](https://github.com/sachncs/agent-passport/security/advisories)
   for publishing vulnerabilities and CVEs.
 - Embargoed details are shared with reporters and downstream operators on a
   need-to-know basis.

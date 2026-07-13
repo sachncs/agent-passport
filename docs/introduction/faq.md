@@ -1,7 +1,7 @@
 # Frequently Asked Questions
 
 > Couldn't find an answer? Open a
-> [Support question](https://github.com/sachn-cs/agent-passport/issues/new?template=question.md)
+> [Support question](https://github.com/sachncs/agent-passport/issues/new?template=question.md)
 > or browse [../README.md](../README.md).
 
 ## General
@@ -239,6 +239,6 @@ See [../../CONTRIBUTING.md](../../CONTRIBUTING.md). The TL;DR:
 ### Where do I report a vulnerability in a dependency?
 
 File a
-[bug report](https://github.com/sachn-cs/agent-passport/issues/new?template=bug_report.md)
+[bug report](https://github.com/sachncs/agent-passport/issues/new?template=bug_report.md)
 linking the GHSA / CVE. Dependabot opens weekly PRs — see
 [../../.github/dependabot.yml](../../.github/dependabot.yml).

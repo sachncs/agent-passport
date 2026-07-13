@@ -1,7 +1,7 @@
 # @agent-passport/sdk
 
 This package's full documentation is at
-**[docs/development/sdk-typescript.md](https://github.com/sachn-cs/agent-passport/blob/master/docs/development/sdk-typescript.md)** in the Agent Passport repository.
+**[docs/development/sdk-typescript.md](https://github.com/sachncs/agent-passport/blob/master/docs/development/sdk-typescript.md)** in the Agent Passport repository.
 
 This README is kept short so the package can be published to npm; the
 canonical, version-controlled reference is in the docs/ tree.

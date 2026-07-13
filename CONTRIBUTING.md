@@ -33,7 +33,7 @@ expected to uphold this code. Please report unacceptable behavior to
 
 ## How to Get Help
 
-- **Bug or feature request?** Open a [GitHub issue](https://github.com/sachn-cs/agent-passport/issues).
+- **Bug or feature request?** Open a [GitHub issue](https://github.com/sachncs/agent-passport/issues).
 - **Security vulnerability?** See [SECURITY.md](SECURITY.md) — do **not** file
   a public issue.
 - **General question?** Open a GitHub Discussion (if enabled) or a
@@ -76,7 +76,7 @@ and describe:
 ### Clone & Install
 
 ```bash
-git clone https://github.com/sachn-cs/agent-passport.git
+git clone https://github.com/sachncs/agent-passport.git
 cd agent-passport
 cp .env.example .env
 npm install
@@ -318,5 +318,5 @@ Slugs are lowercase, hyphenated, and descriptive (e.g.
 ---
 
 Thanks again for contributing. If you have any questions, open a
-[discussion](https://github.com/sachn-cs/agent-passport/discussions) or reach
+[discussion](https://github.com/sachncs/agent-passport/discussions) or reach
 out at **sachncs@gmail.com**.
