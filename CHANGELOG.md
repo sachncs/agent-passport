@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `CODE_OF_CONDUCT.md`, `SECURITY.md`
 - `.editorconfig` and `.gitattributes` for cross-IDE consistency
 - GitHub community files: `ISSUE_TEMPLATE/`, `PULL_REQUEST_TEMPLATE.md`,
-  `dependabot.yml`, `FUNDING.yml`
+  `dependabot.yml`
 - `docs/getting-started.md` and `docs/faq.md`
 
 ### Changed
