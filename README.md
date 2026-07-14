@@ -1,21 +1,16 @@
 <p align="center">
-  <h1 align="center">Agent Passport</h1>
+  <h1 align="center">agent-passport</h1>
   <p align="center">Stateless, pay-per-query trust and underwriting API for AI agents on Algorand.</p>
   <p align="center">
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License"></a>
-    <a href=".github/workflows/ci.yml"><img src="https://img.shields.io/badge/build-passing-brightgreen" alt="Build"></a>
-    <a href="package.json"><img src="https://img.shields.io/badge/version-0.1.0-blue" alt="Version"></a>
-    <a href="package.json"><img src="https://img.shields.io/badge/node-%E2%89%A520-339933" alt="Node"></a>
-    <a href="tsconfig.json"><img src="https://img.shields.io/badge/TypeScript-strict-3178C6" alt="TypeScript"></a>
-    <a href="https://developer.algorand.org"><img src="https://img.shields.io/badge/Algorand-testnet%20%7C%20mainnet-000000" alt="Algorand"></a>
-    <a href="https://x402.org"><img src="https://img.shields.io/badge/x402-payment--enabled-FF6B6B" alt="x402"></a>
-    <a href="#development"><img src="https://img.shields.io/badge/tests-1%2C145%20unit%20passing-brightgreen" alt="Tests"></a>
-    <a href="https://github.com/sachncs/agent-passport/stargazers"><img src="https://img.shields.io/github/stars/sachncs/agent-passport?style=social" alt="Stars"></a>
+    <a href="https://github.com/sachncs/agent-passport/actions"><img src="https://img.shields.io/github/actions/workflow/status/sachncs/agent-passport/ci.yml?branch=master" alt="CI"></a>
+    <a href="https://www.npmjs.com/package/agent-passport"><img src="https://img.shields.io/npm/v/agent-passport" alt="npm"></a>
+    <a href="https://github.com/sachncs/agent-passport/stargazers"><img src="https://img.shields.io/github/stars/sachncs/agent-passport" alt="Stars"></a>
   </p>
 </p>
 
-A stateless trust-scoring API at `http://localhost:3000`, pointed at the public
-Algorand testnet. No database, no wallet, no signup —
+A stateless trust-scoring API at `http://localhost:3000`, pointed at the
+public Algorand testnet. No database, no wallet, no signup —
 `npm install && cp .env.example .env && npm start` and you have
 trust scoring, delegation, credit, sybil detection, reputation,
 underwriting, and passport generation for any Algorand wallet.
@@ -65,6 +60,12 @@ truth for architecture, algorithms, operations, and contributing.
 
 ## Installation
 
+### From npm
+
+```bash
+npm install agent-passport
+```
+
 ### From source
 
 ```bash
@@ -87,12 +88,14 @@ npm run dev
 ### From Docker
 
 ```bash
-docker build -t agent-passport:0.1.0 .
-docker run --rm -p 3000:3000 --env-file .env agent-passport:0.1.0
+docker build -t agent-passport:0.1.3 .
+docker run --rm -p 3000:3000 --env-file .env agent-passport:0.1.3
 ```
 
 For production deployment, see
 [docs/operations/deployment.md](docs/operations/deployment.md).
+
+**Requirements:** Node.js ≥ 20.
 
 ---
 
@@ -121,10 +124,9 @@ curl -s "http://localhost:3000/underwrite?wallet=GD64YIY3TWGDMCNPP553DZPPR6LDUSF
 A 5-minute walkthrough is in
 [docs/introduction/getting-started.md](docs/introduction/getting-started.md).
 
-### 3. Use an SDK
+### Node.js / TypeScript SDK
 
 ```bash
-# TypeScript
 npm install @agent-passport/sdk
 ```
 
@@ -139,8 +141,9 @@ const score = await client.getScore('GD64YIY3TWGDMCNPP553DZPPR6LDUSFBBHU5AAAAA7X
 console.log(score.trustScore, score.riskLevel);
 ```
 
+### Python SDK
+
 ```bash
-# Python
 pip install agent-passport-sdk
 ```
 
@@ -222,6 +225,56 @@ at [docs/operations/environment-variables.md](docs/operations/environment-variab
 
 ---
 
+## API
+
+| Symbol | Type | Description |
+|--------|------|-------------|
+| `GET /score` | HTTP endpoint | Composite trust score (0–100) for a wallet |
+| `GET /passport` | HTTP endpoint | Full passport document with sub-scores |
+| `GET /underwrite` | HTTP endpoint | Underwriting decision and credit capacity |
+| `GET /delegate` | HTTP endpoint | Delegated trust graph |
+| `GET /sybil` | HTTP endpoint | Sybil-detection signal report |
+| `GET /credit` | HTTP endpoint | Credit capacity estimation |
+| `GET /reputation` | HTTP endpoint | On-chain reputation events |
+| `GET /counterparty` | HTTP endpoint | Merchant counterparty risk check |
+| `GET /trust-graph` | HTTP endpoint | Trust graph analytics & what-ifs |
+| `POST /registry/delegate` | HTTP endpoint | On-chain delegate registration |
+| `POST /registry/revoke` | HTTP endpoint | On-chain delegation revocation |
+| `GET /health` | HTTP endpoint | Service health probe |
+| `GET /metrics` | HTTP endpoint | Prometheus metrics scrape |
+
+---
+
+## Examples
+
+### CLI: Check a wallet's trust score
+
+```bash
+curl -s "http://localhost:3000/score?wallet=GD64YIY3TWGDMCNPP553DZPPR6LDUSFBBHU5AAAAA7XBICTFJ7BY7C55XX" | jq
+```
+
+### TypeScript SDK
+
+```typescript
+import { AgentPassportClient } from '@agent-passport/sdk';
+
+const client = new AgentPassportClient({ baseUrl: 'http://localhost:3000' });
+const score = await client.getScore('GD64YIY3TWGDMCNPP553DZPPR6LDUSFBBHU5AAAAA7XBICTFJ7BY7C55XX');
+console.log(`Trust: ${score.trustScore} (${score.riskLevel})`);
+```
+
+### Python SDK
+
+```python
+from agent_passport import AgentPassportClient
+
+client = AgentPassportClient(base_url="http://localhost:3000")
+score = client.get_score("GD64YIY3TWGDMCNPP553DZPPR6LDUSFBBHU5AAAAA7XBICTFJ7BY7C55XX")
+print(f"Trust: {score.trust_score} ({score.risk_level})")
+```
+
+---
+
 ## Project Structure
 
 ```
@@ -259,50 +312,6 @@ agent-passport/
 ├── data/                   # Runtime persistence (gitignored)
 └── dist/                   # Build output (gitignored)
 ```
-
----
-
-## Tech Stack
-
-| Category       | Technology                                       |
-|----------------|--------------------------------------------------|
-| Runtime        | Node.js ≥ 20                                     |
-| Language       | TypeScript (strict mode)                         |
-| Framework      | [Express 5](https://expressjs.com)               |
-| Security       | [Helmet](https://helmetjs.github.io), CORS, custom rate limiter with persistent state |
-| Validation     | [Zod](https://zod.dev)                           |
-| Algorand       | [algosdk](https://github.com/algorand/js-algorand-sdk) |
-| Payments       | [x402](https://x402.org) (`@x402/core`, `@x402/express`) |
-| Metrics        | [prom-client](https://github.com/siimon/prom-client) |
-| Tests          | [Vitest](https://vitest.dev), [Supertest](https://github.com/ladjs/supertest) |
-| Lint           | [ESLint](https://eslint.org) (flat config)       |
-| Container      | Docker (multi-stage, non-root, healthcheck)      |
-| SDK — TS       | TypeScript 6, native `fetch`, `zod`              |
-| SDK — Python   | Python 3.9+, `requests`, dataclasses, type hints |
-| Contracts      | [TEAL](https://developer.algorand.org/docs/get-details/dapps/avm/teal/) (Algorand v10) |
-| Observability  | Prometheus, Alertmanager, Grafana JSON (17 panels), [k6](https://k6.io) |
-
----
-
-## Roadmap
-
-- **v0.1.0** (shipped) — stateless trust scoring, TypeScript + Python SDKs,
-  on-chain delegation registry, x402 pay-per-query, Prometheus metrics +
-  Alertmanager rules + Grafana dashboard, k6 load tests, production
-  deployment guide, idempotency middleware (24 h TTL, body-hash dedup,
-  409 on mismatch), system exposure cap ($100k USDC, persisted),
-  operator wallet + KMS guidance.
-- **v0.2.0** (next) — sanctions screening provider integration
-  (Chainalysis / Elliptic) — see
-  [docs/security/sanctions-integration.md](docs/security/sanctions-integration.md),
-  Redis-backed idempotency store for multi-replica deployments, webhook
-  subscriptions for reputation event consumers.
-- **Backlog** — gRPC interface alongside HTTP, multi-chain adapters
-  (Ethereum, Solana), public Bazaar listing & discoverability metadata,
-  Helm chart for one-command Kubernetes deployment, OpenAPI → SDK code
-  generation (release-please automation).
-
-Have an idea? [Open a feature request](https://github.com/sachncs/agent-passport/issues/new?template=feature_request.md).
 
 ---
 
@@ -367,6 +376,41 @@ chore: bump @x402/core to 2.18.0
 
 ---
 
+## Testing
+
+```bash
+npm test                       # 1 145 unit tests
+npm run test:integration       # Live Algorand testnet integration
+npm run test:coverage          # Unit tests with coverage
+```
+
+Python SDK:
+
+```bash
+cd sdk/python
+pytest
+```
+
+---
+
+## Build
+
+```bash
+npm run build            # Compiles TypeScript to dist/
+npm run build --workspaces   # All workspace packages
+```
+
+---
+
+## Release
+
+1. Bump version in `package.json`
+2. Update `CHANGELOG.md`
+3. Commit with a `version:X.Y.Z` message
+4. Tag and push — CI publishes to npm
+
+---
+
 ## Deployment
 
 The service is **production-ready** and fully stateless. See
@@ -393,25 +437,53 @@ Grafana dashboard JSON in `alerts/grafana-dashboard.json` (17 panels).
 
 ---
 
-## Documentation
+## Tech Stack
 
-The full documentation is at **[docs/README.md](docs/README.md)** and is
-organised by audience:
+| Category       | Technology                                       |
+|----------------|--------------------------------------------------|
+| Runtime        | Node.js ≥ 20                                     |
+| Language       | TypeScript (strict mode)                         |
+| Framework      | [Express 5](https://expressjs.com)               |
+| Security       | [Helmet](https://helmetjs.github.io), CORS, custom rate limiter with persistent state |
+| Validation     | [Zod](https://zod.dev)                           |
+| Algorand       | [algosdk](https://github.com/algorand/js-algorand-sdk) |
+| Payments       | [x402](https://x402.org) (`@x402/core`, `@x402/express`) |
+| Metrics        | [prom-client](https://github.com/siimon/prom-client) |
+| Tests          | [Vitest](https://vitest.dev), [Supertest](https://github.com/ladjs/supertest) |
+| Lint           | [ESLint](https://eslint.org) (flat config)       |
+| Container      | Docker (multi-stage, non-root, healthcheck)      |
+| SDK — TS       | TypeScript 6, native `fetch`, `zod`              |
+| SDK — Python   | Python 3.9+, `requests`, dataclasses, type hints |
+| Contracts      | [TEAL](https://developer.algorand.org/docs/get-details/dapps/avm/teal/) (Algorand v10) |
+| Observability  | Prometheus, Alertmanager, Grafana JSON (17 panels), [k6](https://k6.io) |
 
-- **New?** → [docs/introduction/overview.md](docs/introduction/overview.md)
-- **Integrating?** → [docs/api/README.md](docs/api/README.md) +
-  [docs/development/sdk-typescript.md](docs/development/sdk-typescript.md)
-- **Operating?** → [docs/operations/deployment.md](docs/operations/deployment.md)
-  + [docs/operations/observability.md](docs/operations/observability.md)
-- **Reviewing security?** → [docs/security/threat-model.md](docs/security/threat-model.md)
-- **Contributing?** → [CONTRIBUTING.md](CONTRIBUTING.md) +
-  [docs/development/testing.md](docs/development/testing.md)
+---
+
+## Roadmap
+
+- **v0.1.3** (shipped) — stateless trust scoring, TypeScript + Python SDKs,
+  on-chain delegation registry, x402 pay-per-query, Prometheus metrics +
+  Alertmanager rules + Grafana dashboard, k6 load tests, production
+  deployment guide, idempotency middleware (24 h TTL, body-hash dedup,
+  409 on mismatch), system exposure cap ($100k USDC, persisted),
+  operator wallet + KMS guidance.
+- **v0.2.0** (next) — sanctions screening provider integration
+  (Chainalysis / Elliptic) — see
+  [docs/security/sanctions-integration.md](docs/security/sanctions-integration.md),
+  Redis-backed idempotency store for multi-replica deployments, webhook
+  subscriptions for reputation event consumers.
+- **Backlog** — gRPC interface alongside HTTP, multi-chain adapters
+  (Ethereum, Solana), public Bazaar listing & discoverability metadata,
+  Helm chart for one-command Kubernetes deployment, OpenAPI → SDK code
+  generation (release-please automation).
+
+Have an idea? [Open a feature request](https://github.com/sachncs/agent-passport/issues/new?template=feature_request.md).
 
 ---
 
 ## Contributing
 
-Contributions are welcome! See
+Contributions are welcome. See
 [CONTRIBUTING.md](CONTRIBUTING.md) for the process, coding standards,
 and Conventional Commits workflow. Bug reports and feature requests use
 the [issue templates](.github/ISSUE_TEMPLATE/).
@@ -430,12 +502,6 @@ issues. See [SECURITY.md](SECURITY.md) for the disclosure policy and
 contact information. The full threat model is in
 [docs/security/threat-model.md](docs/security/threat-model.md).
 
-## FAQ
-
-Common questions are answered in
-[docs/introduction/faq.md](docs/introduction/faq.md) and
-[docs/introduction/getting-started.md](docs/introduction/getting-started.md).
-
 ## License
 
-[MIT](LICENSE) © 2026 Sachin.
+[MIT](LICENSE) © 2026 Sachin
