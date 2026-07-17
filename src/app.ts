@@ -11,7 +11,7 @@ import { computeReputation, EVENT_TYPES, recordEvent } from './reputation';
 import { detectSybil } from './sybil';
 import { scoreDelegation } from './delegation';
 import { scoreWallet } from './trust-score';
-import { analyzeTrustGraph, simulateSponsorAdd, simulateSponsorLoss } from './trust-graph';
+import { analyzeTrustGraph, simulateSponsorLoss } from './trust-graph';
 import { underwrite } from './underwriting';
 import { isValidWallet } from './lib/constants';
 import { TTLCache } from './lib/cache';
