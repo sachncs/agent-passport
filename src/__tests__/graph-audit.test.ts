@@ -1,8 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import type { GraphTransaction, GraphSignals } from '../lib/graph';
+import type { GraphTransaction } from '../lib/graph';
 import {
   buildAdjacencyList,
-  getNeighbors,
   computeClusteringCoefficient,
   computeAllClusteringCoefficients,
   computeAverageClustering,
@@ -12,7 +11,6 @@ import {
   computeAverageIntermediateDensity,
   bfs,
   findConnectedComponents,
-  computeComponentRatio,
   computeTemporalCorrelation,
   computeGraphSignals,
 } from '../lib/graph';
@@ -44,10 +42,6 @@ function buildChain(V: number): Map<string, Set<string>> {
     adj.get(`W${i + 1}`)!.add(`W${i}`);
   }
   return adj;
-}
-
-function edge(a: string, b: string): GraphTransaction {
-  return { from: a, to: b };
 }
 
 // ── Section 1: BFS Correctness (12 tests) ──────────────────────
