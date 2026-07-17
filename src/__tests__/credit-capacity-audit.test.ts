@@ -23,13 +23,15 @@ import {
   computeUnderwritingLimit,
   decideApproval,
   computeUnderwritingConfidence,
+} from '../underwriting';
+import type { UnderwritingFactor } from '../underwriting';
+import {
   getSystemExposure,
   resetSystemExposure,
   capToSystemCapacity,
   addSystemExposure,
   MAX_SYSTEM_EXPOSURE,
-} from '../underwriting';
-import type { UnderwritingFactor } from '../underwriting';
+} from '../lib/system-exposure';
 
 function makeFactor(overrides: Partial<UnderwritingFactor>): UnderwritingFactor {
   return {

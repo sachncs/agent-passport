@@ -6,14 +6,16 @@ import {
   decideApproval,
   computeUnderwritingConfidence,
   generateUnderwritingExplanation,
+} from '../underwriting';
+import type { UnderwritingFactor } from '../underwriting';
+import { applySybilPenalty } from '../trust-score';
+import {
   capToSystemCapacity,
   addSystemExposure,
   getSystemExposure,
   resetSystemExposure,
   MAX_SYSTEM_EXPOSURE,
-} from '../underwriting';
-import type { UnderwritingFactor } from '../underwriting';
-import { applySybilPenalty } from '../trust-score';
+} from '../lib/system-exposure';
 import {
   computeIdentityStrength,
   computePaymentReliability,

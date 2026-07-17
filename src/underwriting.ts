@@ -6,16 +6,7 @@ import { computeReputation } from './reputation';
 import { logger } from './lib/logger';
 import { isValidWallet } from './lib/constants';
 import { checkSanctions } from './lib/sanctions';
-import {
-  MAX_SYSTEM_EXPOSURE,
-  getSystemExposure,
-  addSystemExposure,
-  resetSystemExposure,
-  capToSystemCapacity,
-} from './lib/system-exposure';
-
-// Re-export for backward compatibility
-export { MAX_SYSTEM_EXPOSURE, getSystemExposure, addSystemExposure, resetSystemExposure, capToSystemCapacity };
+import { addSystemExposure, capToSystemCapacity } from './lib/system-exposure';
 
 export interface UnderwritingFactor {
   name: string;
