@@ -429,7 +429,7 @@ app.get('/verify', async (req, res) => {
       responseCache.set(cacheKey, { flags });
     } catch {
       // Wallet not found on chain is still a valid Algorand address format
-      flags.lookup_failed = true;
+      flags.lookupFailed = true;
     }
   }
 
