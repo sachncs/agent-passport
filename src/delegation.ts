@@ -200,53 +200,6 @@ export function clearDelegationCache(): void {
   delegationCache.clear();
 }
 
-async function findDelegationPath(
-  wallet: string,
-  trustAnchors: Set<string>,
-  maxDepth = 10,
-): Promise<DelegationPath | null> {
-  if (trustAnchors.has(wallet)) {
-    return { path: [wallet], depth: 0, totalAmount: 0 };
-  }
-
-  const visited = new Map<string, { parent: string; amount: number }>();
-  const queue: Array<{ address: string; depth: number }> = [
-    { address: wallet, depth: 0 },
-  ];
-  visited.set(wallet, { parent: '', amount: 0 });
-
-  while (queue.length > 0) {
-    const { address, depth } = queue.shift()!;
-
-    if (depth >= maxDepth) continue;
-
-    const delegations = await fetchDelegationCached(address);
-
-    let expanded = 0;
-    for (const d of delegations) {
-      if (expanded >= MAX_BRANCHING_FACTOR) break;
-      if (!visited.has(d.delegatee)) {
-        visited.set(d.delegatee, { parent: address, amount: d.amount });
-        expanded++;
-
-        if (trustAnchors.has(d.delegatee)) {
-          const path: string[] = [d.delegatee];
-          let current = address;
-          while (current !== wallet) {
-            path.unshift(current);
-            current = visited.get(current)!.parent;
-          }
-          path.unshift(wallet);
-          return { path, depth: depth + 1, totalAmount: d.amount };
-        }
-
-        queue.push({ address: d.delegatee, depth: depth + 1 });
-      }
-    }
-  }
-
-  return null;
-}
 
 async function findAllTrustedAncestors(
   wallet: string,
