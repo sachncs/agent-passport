@@ -50,7 +50,7 @@ function loadExtraDenyList(): Set<string> {
 }
 
 class MemorySanctionsProvider implements SanctionsProvider {
-  readonly name = 'memory';
+  public readonly name = 'memory';
   private readonly denyList: ReadonlySet<string>;
 
   constructor() {
@@ -69,14 +69,14 @@ class MemorySanctionsProvider implements SanctionsProvider {
 }
 
 class AllowAllProvider implements SanctionsProvider {
-  readonly name = 'allow';
+  public readonly name = 'allow';
   async check(_wallet: string): Promise<SanctionsResult> {
     return { status: 'allowed', provider: this.name, checkedAt: new Date().toISOString() };
   }
 }
 
 class BlockAllProvider implements SanctionsProvider {
-  readonly name = 'block';
+  public readonly name = 'block';
   async check(_wallet: string): Promise<SanctionsResult> {
     return { status: 'denied', reason: 'global_block', provider: this.name, checkedAt: new Date().toISOString() };
   }
