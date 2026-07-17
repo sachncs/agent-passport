@@ -3,7 +3,7 @@ import { estimateCreditWithTrust } from './credit';
 import { scoreDelegationFresh } from './delegation';
 import { computeReputation } from './reputation';
 import { detectSybilFresh } from './sybil';
-import { scoreWallet, scoreWalletFresh } from './trust-score';
+import { scoreWalletFresh } from './trust-score';
 import { isValidWallet } from './lib/constants';
 import { logger } from './lib/logger';
 
@@ -306,7 +306,6 @@ export async function generatePassport(
 
   // Extract scores
   const trustScore = trustResult?.trustScore ?? 0;
-  const delegationScore = delegationResult?.trustScore ?? 0;
   const creditLimit = creditResult?.estimatedLimit ?? 0;
   const sybilRisk = sybilResult?.sybilRisk ?? 0;
   const reputation = reputationResult?.reputation ?? 0;
