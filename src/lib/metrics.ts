@@ -195,7 +195,10 @@ export const discoverySearchesTotal = new client.Counter({
 
 // ── Helpers ─────────────────────────────────────────────────────
 
-export function recordTrustScoreDuration(durationMs: number, riskLevel: string): void {
+export function recordTrustScoreDuration(
+  durationMs: number,
+  riskLevel: string,
+): void {
   trustScoreDurationSeconds.observe({}, durationMs / 1000);
   trustScoreGenerationCount.inc({ risk_level: riskLevel });
 }
@@ -204,7 +207,11 @@ export function recordGraphTraversal(durationMs: number, _depth: number): void {
   graphTraversalDurationSeconds.observe({}, durationMs / 1000);
 }
 
-export function recordX402Verification(durationMs: number, success: boolean, path: string): void {
+export function recordX402Verification(
+  durationMs: number,
+  success: boolean,
+  path: string,
+): void {
   x402VerificationDurationSeconds.observe({ path }, durationMs / 1000);
   if (success) {
     x402PaymentsVerifiedTotal.inc({ status: 'success', path });
@@ -254,7 +261,10 @@ export function recordVerifyCheck(flags: Record<string, boolean>): void {
   }
 }
 
-export function recordDiscoverySearch(query: string, resultCount: number): void {
+export function recordDiscoverySearch(
+  query: string,
+  resultCount: number,
+): void {
   discoverySearchesTotal.inc({
     query_class: query.length > 0 ? 'non_empty' : 'empty',
     result_count: String(resultCount),
@@ -267,7 +277,11 @@ export function recordX402SettlementFailure(reason: string): void {
 
 // ── Middleware ──────────────────────────────────────────────────
 
-export function metricsMiddleware(req: Request, res: Response, next: NextFunction): void {
+export function metricsMiddleware(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): void {
   const startNs = process.hrtime.bigint();
   res.on('finish', () => {
     const path = normalizePath(req.route?.path ?? req.path);
