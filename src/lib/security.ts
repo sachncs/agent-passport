@@ -55,7 +55,11 @@ function saveRateLimitState(clients: Map<string, RateLimitEntry>): void {
       if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
       const obj: Record<string, RateLimitEntry> = {};
       for (const [key, entry] of clients) obj[key] = entry;
-      await fsp.writeFile(RATE_LIMIT_PATH, JSON.stringify(obj), { mode: 0o600 });
+      await fsp.writeFile(
+        RATE_LIMIT_PATH,
+        JSON.stringify(obj),
+        { mode: 0o600 },
+      );
     } catch (e) {
       logger.warn('Failed to persist rate limit state', { error: String(e) });
     } finally {
@@ -76,7 +80,10 @@ export function resetRateLimiter(): void {
  * Set via `RATE_LIMIT_OVERRIDES='{"POST /underwrite":20,"POST /delegate":5}'`
  * in env, or programmatically via setRateLimitOverrides().
  */
-const DEFAULT_OVERRIDES: Record<string, { windowMs?: number; max: number }> = {
+type RouteOverride = { windowMs?: number; max: number };
+type OverrideMap = Record<string, RouteOverride>;
+
+const DEFAULT_OVERRIDES: OverrideMap = {
   // On-chain writes are expensive; cap aggressively.
   'POST /delegate': { max: 5 },
   'POST /revoke':   { max: 5 },
@@ -86,17 +93,17 @@ const DEFAULT_OVERRIDES: Record<string, { windowMs?: number; max: number }> = {
   'POST /counterparty-check': { max: 120 },
 };
 
-let overrides: Record<string, { windowMs?: number; max: number }> = { ...DEFAULT_OVERRIDES };
+let overrides: OverrideMap = { ...DEFAULT_OVERRIDES };
 
-export function setRateLimitOverrides(o: Record<string, { windowMs?: number; max: number }>): void {
+export function setRateLimitOverrides(o: OverrideMap): void {
   overrides = { ...DEFAULT_OVERRIDES, ...o };
 }
 
-export function getRateLimitOverrides(): Record<string, { windowMs?: number; max: number }> {
+export function getRateLimitOverrides(): OverrideMap {
   return overrides;
 }
 
-function lookupOverride(method: string, path: string): { windowMs?: number; max: number } | null {
+function lookupOverride(method: string, path: string): RouteOverride | null {
   const key = `${method} ${path}`;
   return overrides[key] ?? null;
 }
@@ -104,7 +111,8 @@ function lookupOverride(method: string, path: string): { windowMs?: number; max:
 export function rateLimiter(opts: { windowMs?: number; max?: number } = {}) {
   const defaultWindowMs = opts.windowMs ?? 60_000;
   const defaultMax = opts.max ?? (() => {
-    const envMax = process.env.RATE_LIMIT_MAX ? parseInt(process.env.RATE_LIMIT_MAX, 10) : NaN;
+    const env = process.env.RATE_LIMIT_MAX;
+    const envMax = env ? parseInt(env, 10) : NaN;
     return Number.isFinite(envMax) ? envMax : 600;
   })();
 
@@ -202,10 +210,14 @@ export function corsMiddleware(opts: { origin?: string } = {}) {
  *
  * Validates client-provided IDs to prevent log injection.
  */
-export function requestIdMiddleware(req: Request, res: Response, next: NextFunction) {
+export function requestIdMiddleware(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   let requestId = req.headers['x-request-id'] as string | undefined;
 
-  // P2 FIX: Validate client-provided request ID (must be UUID format or generate new)
+  // Validate client-provided request ID (must be UUID format or generate new)
   if (requestId) {
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(requestId)) {
@@ -222,7 +234,11 @@ export function requestIdMiddleware(req: Request, res: Response, next: NextFunct
 /**
  *
  */
-export function requestLoggingMiddleware(req: Request, res: Response, next: NextFunction) {
+export function requestLoggingMiddleware(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   const clientIp = req.ip ?? req.socket.remoteAddress ?? 'unknown';
   const requestId = req.requestId;
   req.clientIp = clientIp;
