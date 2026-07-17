@@ -33,7 +33,9 @@ import {
   MAX_SYSTEM_EXPOSURE,
 } from '../lib/system-exposure';
 
-function makeFactor(overrides: Partial<UnderwritingFactor>): UnderwritingFactor {
+function makeFactor(
+  overrides: Partial<UnderwritingFactor>,
+): UnderwritingFactor {
   return {
     name: 'Test',
     score: 50,
@@ -75,10 +77,21 @@ describe('Credit Capacity Audit — Invariants', () => {
 
     it('credit limit bounded [0, 1350] for arbitrary inputs', () => {
       const inputs = [
-        { balanceCapacity: 500, activityBonus: 100, ageBonus: 75, riskPenalty: 0 },
-        { balanceCapacity: 0, activityBonus: 0, ageBonus: 0, riskPenalty: 150 },
-        { balanceCapacity: 1000, activityBonus: 200, ageBonus: 150, riskPenalty: 0 },
-        { balanceCapacity: 999, activityBonus: 199, ageBonus: 149, riskPenalty: 0 },
+        {
+          balanceCapacity: 500, activityBonus: 100,
+          ageBonus: 75, riskPenalty: 0,
+        },
+        {
+          balanceCapacity: 0, activityBonus: 0, ageBonus: 0, riskPenalty: 150,
+        },
+        {
+          balanceCapacity: 1000, activityBonus: 200,
+          ageBonus: 150, riskPenalty: 0,
+        },
+        {
+          balanceCapacity: 999, activityBonus: 199,
+          ageBonus: 149, riskPenalty: 0,
+        },
         { balanceCapacity: 1, activityBonus: 1, ageBonus: 1, riskPenalty: 0 },
       ];
       for (const input of inputs) {
@@ -104,7 +117,8 @@ describe('Credit Capacity Audit — Invariants', () => {
   describe('Invariant 2: No Capacity Duplication', () => {
     it('delegation score contributes to only one place (underwriting factor)', () => {
       // Delegation score should NOT appear in credit components
-      // Credit formula: balanceCapacity + activityBonus + ageBonus - riskPenalty
+      // Credit formula: balanceCapacity + activityBonus + ageBonus
+      //   - riskPenalty
       // No delegationBonus in the formula
       const breakdown = {
         balanceCapacity: 500,
@@ -163,9 +177,15 @@ describe('Credit Capacity Audit — Invariants', () => {
       const sybilRisk = 0;
       const reputation = 0;
 
-      const limit100 = computeUnderwritingLimit(compositeScore, 100, sybilRisk, reputation);
-      const limit200 = computeUnderwritingLimit(compositeScore, 200, sybilRisk, reputation);
-      const limit400 = computeUnderwritingLimit(compositeScore, 400, sybilRisk, reputation);
+      const limit100 = computeUnderwritingLimit(
+        compositeScore, 100, sybilRisk, reputation,
+      );
+      const limit200 = computeUnderwritingLimit(
+        compositeScore, 200, sybilRisk, reputation,
+      );
+      const limit400 = computeUnderwritingLimit(
+        compositeScore, 400, sybilRisk, reputation,
+      );
 
       // Linear: limit200 = limit100 × 2, limit400 = limit100 × 4
       expect(limit200).toBeCloseTo(limit100 * 2, 0);
