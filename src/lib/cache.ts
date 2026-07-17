@@ -30,6 +30,14 @@ export class TTLCache<V> {
 
   constructor(private readonly opts: TTLCacheOptions) {}
 
+  clear(): void {
+    this.store.clear();
+  }
+
+  delete(key: string): boolean {
+    return this.store.delete(key);
+  }
+
   get(key: string): V | undefined {
     const entry = this.store.get(key);
     if (!entry) {
@@ -48,6 +56,10 @@ export class TTLCache<V> {
     return entry.v;
   }
 
+  get size(): number {
+    return this.store.size;
+  }
+
   set(key: string, value: V, ttlMs?: number): void {
     const exp = Date.now() + (ttlMs ?? this.opts.ttlMs);
     if (this.store.has(key)) this.store.delete(key);
@@ -59,18 +71,6 @@ export class TTLCache<V> {
       this.store.delete(oldest);
       this.evictions++;
     }
-  }
-
-  delete(key: string): boolean {
-    return this.store.delete(key);
-  }
-
-  clear(): void {
-    this.store.clear();
-  }
-
-  get size(): number {
-    return this.store.size;
   }
 
   stats(): { hits: number; misses: number; evictions: number; size: number } {
