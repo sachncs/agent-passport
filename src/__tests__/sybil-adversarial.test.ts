@@ -5,7 +5,6 @@ import {
   computeBalanceSimilarity,
   computeCircularActivity,
   computeSybilRisk,
-  classifySybilRisk,
 } from '../sybil';
 
 // ═══════════════════════════════════════════════════════════════
@@ -273,7 +272,7 @@ describe('Sybil Detection Rate Analysis', () => {
   it('naive farm detection: high recall, low FNR', () => {
     // 100 sybil wallets with high creation clustering + interaction density +
     // graph signals
-    const sybilRisks = Array(100).fill(0).map((_, i) => {
+    const sybilRisks = Array(100).fill(0).map((_, _i) => {
       return computeSybilRisk({
         creationClustering: 0.9 + Math.random() * 0.1,
         interactionDensity: 0.85 + Math.random() * 0.15,
@@ -319,6 +318,7 @@ describe('Sybil Detection Rate Analysis', () => {
     // Deterministic: evasion signals range from below to above threshold
     const sybilRisks = Array(100).fill(0).map((_, i) => {
       const base = 0.45 + (i % 20) * 0.015; // 0.45 → 0.735
+      void i;
       return computeSybilRisk({
         creationClustering: base,
         interactionDensity: base * 0.9,
@@ -421,18 +421,15 @@ describe('Sybil Detection — Known Vulnerabilities', () => {
   });
 
   it('VULN-2: No graph traversal — indirect relationships missed', () => {
-    // W1 → extA → W2 → extB → W3
+    // W1 → extA → W2 (W2 receives from extA)
     // These 3 wallets share external counterparties but are not detected
     // because the system only looks at direct counterparties of the target
     const txns1 = [{ from: 'W1', to: 'extA' }];
     const txns2 = [{ from: 'extA', to: 'W2' }]; // W2 receives from extA
-    const txns3 = [{ from: 'W2', to: 'extB' }];
-    const txns4 = [{ from: 'extB', to: 'W3' }];
 
-    // W1's cluster: [W1, extA] — W2 and W3 not included
-    // W2's cluster: [W2, extA, extB] — W1 and W3 not included
-    // W3's cluster: [W3, extB] — W1 and W2 not included
-    // No cluster contains all 3 wallets
+    // W1's cluster: [W1, extA] — W2 not included
+    // W2's cluster: [W2, extA] — W1 not included
+    // No cluster contains both W1 and W2
     expect(computeCircularActivity([...txns1, ...txns2])).toBe(0);
   });
 
