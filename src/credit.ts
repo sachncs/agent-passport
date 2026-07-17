@@ -1,5 +1,5 @@
-import { scoreWallet, type WalletTrustScore } from './trust-score';
 import { isValidWallet } from './lib/constants';
+import { scoreWallet, type WalletTrustScore } from './trust-score';
 
 export interface CreditEstimate {
   wallet: string;

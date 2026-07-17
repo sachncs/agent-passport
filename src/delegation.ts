@@ -1,8 +1,8 @@
 import { config } from './config';
 import { fetchWithTimeout } from './lib/timeout';
 import { algod } from './lib/algorand-client';
-import { MICRO_ALGO, isValidWallet } from './lib/constants';
 import { logger } from './lib/logger';
+import { isValidWallet, MICRO_ALGO } from './lib/constants';
 
 const INDEXER_URL = config.indexerUrl;
 

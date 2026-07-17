@@ -1,5 +1,5 @@
-import { scoreWallet } from './trust-score';
 import { scoreDelegation } from './delegation';
+import { scoreWallet } from './trust-score';
 import { isValidWallet } from './lib/constants';
 import { checkSanctions } from './lib/sanctions';
 

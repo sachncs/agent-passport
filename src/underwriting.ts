@@ -1,10 +1,10 @@
-import { scoreWalletFresh, applySybilPenalty } from './trust-score';
-import { scoreDelegationFresh } from './delegation';
 import { estimateCreditWithTrust } from './credit';
-import { detectSybilFresh } from './sybil';
+import { scoreDelegationFresh } from './delegation';
 import { computeReputation } from './reputation';
-import { logger } from './lib/logger';
+import { detectSybilFresh } from './sybil';
+import { applySybilPenalty, scoreWalletFresh } from './trust-score';
 import { isValidWallet } from './lib/constants';
+import { logger } from './lib/logger';
 import { checkSanctions } from './lib/sanctions';
 import { addSystemExposure, capToSystemCapacity } from './lib/system-exposure';
 
