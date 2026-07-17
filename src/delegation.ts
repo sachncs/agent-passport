@@ -73,7 +73,7 @@ export function computeSponsorQualityScore(sponsorScore: number): number {
 }
 
 /**
- * Computes score based on number of sponsors, weighted by average sponsor quality.
+ * Computes score based on number of sponsors, weighted by sponsor quality.
  *
  * Design rationale:
  * - 5 low-quality sponsors should not equal 5 high-quality sponsors
@@ -89,10 +89,14 @@ export function computeSponsorQualityScore(sponsorScore: number): number {
  *   5 sponsors, quality=0   → min(100, 100 × 0.1) = 10
  *   1 sponsor,  quality=100 → min(100, 20 × 1.0)  = 20
  */
-export function computeSponsorCountScore(count: number, avgQuality = 100): number {
+export function computeSponsorCountScore(
+  count: number,
+  avgQuality = 100,
+): number {
   const raw = count * 20;
   const qualityMultiplier = Math.max(0.1, avgQuality / 100);
-  return Math.max(0, Math.min(100, Math.round(raw * qualityMultiplier * 10) / 10));
+  const scaled = Math.round(raw * qualityMultiplier * 10) / 10;
+  return Math.max(0, Math.min(100, scaled));
 }
 
 export function computeAmountScore(amountMicroAlgo: number): number {
@@ -134,7 +138,9 @@ export function computeDelegationRecommendedLimit(score: number): number {
 
 // ── On-chain data fetching ─────────────────────────────────────
 
-async function fetchDelegationsFromIndexer(wallet: string): Promise<Delegation[]> {
+async function fetchDelegationsFromIndexer(
+  wallet: string,
+): Promise<Delegation[]> {
   try {
     const url = `${INDEXER_URL}/v2/accounts/${wallet}/transactions?limit=500&tx-type=axfer`;
     const res = await fetchWithTimeout(url, { timeoutMs: 10_000 });
@@ -151,7 +157,9 @@ async function fetchDelegationsFromIndexer(wallet: string): Promise<Delegation[]
         timestamp: t['round-time'] || 0,
         round: t['confirmed-round'] || 0,
       }))
-      .filter((d: Delegation) => d.delegatee && d.delegatee !== wallet && isValidWallet(d.delegatee));
+      .filter((d: Delegation) =>
+        d.delegatee && d.delegatee !== wallet && isValidWallet(d.delegatee),
+      );
   } catch (e) {
     logger.warn('fetchDelegationsFromIndexer failed', { wallet, error: String(e) });
     return [];
@@ -202,7 +210,9 @@ async function findDelegationPath(
   }
 
   const visited = new Map<string, { parent: string; amount: number }>();
-  const queue: Array<{ address: string; depth: number }> = [{ address: wallet, depth: 0 }];
+  const queue: Array<{ address: string; depth: number }> = [
+    { address: wallet, depth: 0 },
+  ];
   visited.set(wallet, { parent: '', amount: 0 });
 
   while (queue.length > 0) {
@@ -245,7 +255,9 @@ async function findAllTrustedAncestors(
 ): Promise<string[]> {
   const ancestors: string[] = [];
   const visited = new Set<string>();
-  const queue: Array<{ address: string; depth: number }> = [{ address: wallet, depth: 0 }];
+  const queue: Array<{ address: string; depth: number }> = [
+    { address: wallet, depth: 0 },
+  ];
   visited.add(wallet);
 
   while (queue.length > 0) {
@@ -276,7 +288,8 @@ async function isTrustAnchor(wallet: string): Promise<boolean> {
 
   try {
     const info = await algod.accountInformation(wallet).do();
-    return (info.createdApps || []).some((app) => Number(app.id) === REGISTRY_APP_ID);
+    const createdApps = info.createdApps ?? [];
+    return createdApps.some((app) => Number(app.id) === REGISTRY_APP_ID);
   } catch (e) {
     logger.warn('isTrustAnchor failed', { wallet, error: String(e) });
     return false;
@@ -288,7 +301,9 @@ async function isTrustAnchor(wallet: string): Promise<boolean> {
 /**
  * Scores delegation trust using cached data (for API endpoints).
  */
-export async function scoreDelegation(wallet: string): Promise<DelegationTrustScore | null> {
+export async function scoreDelegation(
+  wallet: string,
+): Promise<DelegationTrustScore | null> {
   return scoreDelegationInternal(wallet, false);
 }
 
@@ -296,12 +311,17 @@ export async function scoreDelegation(wallet: string): Promise<DelegationTrustSc
  *
  * Clears the BFS delegation cache to guarantee fresh data.
  */
-export async function scoreDelegationFresh(wallet: string): Promise<DelegationTrustScore | null> {
+export async function scoreDelegationFresh(
+  wallet: string,
+): Promise<DelegationTrustScore | null> {
   clearDelegationCache();
   return scoreDelegationInternal(wallet, true);
 }
 
-async function scoreDelegationInternal(wallet: string, fresh: boolean): Promise<DelegationTrustScore | null> {
+async function scoreDelegationInternal(
+  wallet: string,
+  fresh: boolean,
+): Promise<DelegationTrustScore | null> {
   if (!isValidWallet(wallet)) return null;
 
   const [delegations, isAnchor] = await Promise.all([
@@ -359,7 +379,9 @@ async function scoreDelegationInternal(wallet: string, fresh: boolean): Promise<
     ? sponsorScores.reduce((a, b) => a + b, 0) / sponsorScores.length
     : 0;
 
-  const totalDelegatedAmount = delegations.reduce((sum, d) => sum + d.amount, 0);
+  const totalDelegatedAmount = delegations.reduce(
+    (sum, d) => sum + d.amount, 0,
+  );
 
   const trustedAncestors = await findAllTrustedAncestors(wallet, trustAnchors);
 
@@ -367,16 +389,19 @@ async function scoreDelegationInternal(wallet: string, fresh: boolean): Promise<
   const breakdown = {
     depthScore: computeDepthScore(depth),
     sponsorQualityScore: computeSponsorQualityScore(avgSponsorQuality),
-    sponsorCountScore: computeSponsorCountScore(delegations.length, avgSponsorQuality),
+    sponsorCountScore: computeSponsorCountScore(
+      delegations.length, avgSponsorQuality,
+    ),
     amountScore: computeAmountScore(totalDelegatedAmount),
   };
 
   let trustScore = computeDelegationTrustScore(breakdown);
 
-  // CAP: Trust cannot exceed the highest sponsor trust score (prevents amplification).
-  // A wallet's delegation trust represents trust received through its endorsement network.
-  // It cannot exceed the trust of the most trusted entity in that network.
-  // This is analogous to PageRank: a hub's score is bounded by authority scores.
+  // CAP: Trust cannot exceed the highest sponsor trust score (prevents
+  // amplification). A wallet's delegation trust represents trust received
+  // through its endorsement network. It cannot exceed the trust of the most
+  // trusted entity in that network.
+  // Analogous to PageRank: a hub's score is bounded by authority scores.
   if (sponsorScores.length > 0) {
     const maxSponsorTrust = Math.max(...sponsorScores);
     // Depth-adjusted cap: trust attenuates with graph distance.
