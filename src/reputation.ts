@@ -91,7 +91,7 @@ export function computeEventHash(
   return createHash('sha256').update(key).digest('hex').slice(0, 16);
 }
 
-/** In-memory dedup store with TTL enforcement. In production, use Redis SET with EXPIRE. */
+/** In-memory dedup store with TTL enforcement. In production, use Redis. */
 const recentEventHashes = new Map<string, number>(); // hash → timestamp
 const DEDUP_TTL_MS = 60 * 60 * 1000; // 1 hour
 const DEDUP_MAX_SIZE = 10_000;
@@ -178,14 +178,19 @@ export { stopDedupCleanup, startDedupCleanup };
 
 
 // Tracks endorsement relationships to prevent circular trust inflation
-const endorsementGraph = new Map<string, Set<string>>(); // wallet → set of wallets it endorsed
+// wallet -> set of wallets it endorsed
+const endorsementGraph = new Map<string, Set<string>>();
 const MAX_ENDORSEMENT_DEPTH = 5;
 
 /**
  * Checks if endorsing targetWallet from sourceWallet would create a cycle.
- * A cycle exists if targetWallet has endorsed sourceWallet (directly or indirectly).
+ * A cycle exists if targetWallet has endorsed sourceWallet (directly
+ * or indirectly).
  */
-function wouldCreateEndorsementCycle(sourceWallet: string, targetWallet: string): boolean {
+function wouldCreateEndorsementCycle(
+  sourceWallet: string,
+  targetWallet: string,
+): boolean {
   // Direct self-endorsement
   if (sourceWallet === targetWallet) return true;
 
@@ -195,7 +200,9 @@ function wouldCreateEndorsementCycle(sourceWallet: string, targetWallet: string)
 
   // BFS to check for indirect cycles (depth-limited)
   const visited = new Set<string>([targetWallet]);
-  const queue: Array<{ wallet: string; depth: number }> = [{ wallet: targetWallet, depth: 0 }];
+  const queue: Array<{ wallet: string; depth: number }> = [
+    { wallet: targetWallet, depth: 0 },
+  ];
 
   while (queue.length > 0) {
     const { wallet, depth } = queue.shift()!;
@@ -251,7 +258,8 @@ export function computeReputationEventMultiplier(totalEvents: number): number {
  * F3: Computes wallet age penalty.
  *
  * New wallets (< 30 days) get a 0.5x multiplier on reputation.
- * This prevents wallet migration attacks: abandon bad wallet → create new → clean slate.
+ * This prevents wallet migration attacks: abandon bad wallet, create new,
+ * get a clean slate.
  *
  * At exactly 30 days, no penalty is applied.
  */
@@ -313,13 +321,17 @@ export function computeRecoveryFactor(
 export interface ReputationScoreOpts {
   /** Days since the wallet's last on-chain activity. Used for recency decay. */
   daysSinceLastActivity?: number;
-  /** Total on-chain transactions for this wallet. Used for event-to-transaction ratio cap. */
+  /**
+   * Total on-chain transactions for this wallet.
+   * Used for event-to-transaction ratio cap.
+   */
   totalOnChainTxns?: number;
   /** Account age in days. Used for wallet age penalty. */
   accountAgeDays?: number;
   /**
    * Event ages in days for time-weighting.
-   * Array length must match totalEvents. If not provided, no time-weighting applied.
+   * Array length must match totalEvents. If not provided, no time-weighting
+   * applied.
    */
   eventAgeDays?: number[];
   /**
@@ -336,8 +348,9 @@ export interface ReputationScoreOpts {
  *
  * Eight layers of defense:
  * 1. Event count multiplier — penalizes insufficient data (< 10 events)
- * 2. Recency decay — exponential decay after 180-day grace period (credit bureau standard)
- * 3. Event-to-transaction ratio cap — penalizes self-reporting farms (>10:1 ratio)
+ * 2. Recency decay — exponential decay after 180-day grace period
+ *    (credit bureau standard)
+ * 3. Event-to-transaction ratio cap — penalizes self-reporting farms (>10:1)
  * 4. Wallet age penalty — new wallets (< 30 days) get 0.5x multiplier
  * 5. Time-weighted events — recent events count more than old events
  * 6. Reputation recovery — positive events outweigh negatives over time
@@ -358,7 +371,8 @@ export function computeReputationScore(
     breakdown.refunds * EVENT_WEIGHTS.refund;
 
   if (positive + negative === 0) return 0;
-  let score = Math.round(Math.min(100, (positive / (positive + negative)) * 100) * 10) / 10;
+  const baseRatio = (positive / (positive + negative)) * 100;
+  let score = Math.round(Math.min(100, baseRatio) * 10) / 10;
 
   // DEFENSE 8: Self-report penalty — applied BEFORE the count multiplier so
   // unverified events get proportional weight, not flat-zero, and bounded by
@@ -370,14 +384,17 @@ export function computeReputationScore(
   }
 
   // DEFENSE 1: Event count multiplier — penalizes insufficient statistical data
-  score = Math.round(score * computeReputationEventMultiplier(breakdown.totalEvents) * 10) / 10;
+  const eventMul = computeReputationEventMultiplier(breakdown.totalEvents);
+  score = Math.round(score * eventMul * 10) / 10;
 
   // DEFENSE 2: Recency decay — exponential with 180-day grace, 1-year half-life
-  if (opts.daysSinceLastActivity !== undefined && opts.daysSinceLastActivity > 180) {
+  if (opts.daysSinceLastActivity !== undefined
+    && opts.daysSinceLastActivity > 180) {
     const staleDays = opts.daysSinceLastActivity - 180;
     const decayFactor = Math.max(0.1, Math.pow(0.5, staleDays / 365));
     score = Math.round(score * decayFactor * 10) / 10;
   }
+
 
   // DEFENSE 3: Event-to-transaction ratio cap — penalizes self-reporting farms
   if (opts.totalOnChainTxns !== undefined && breakdown.totalEvents > 0) {
@@ -396,7 +413,8 @@ export function computeReputationScore(
 
   // DEFENSE 5: Time-weighted events (recent events count more)
   if (opts.eventAgeDays !== undefined && opts.eventAgeDays.length > 0) {
-    const avgAge = opts.eventAgeDays.reduce((a, b) => a + b, 0) / opts.eventAgeDays.length;
+    const sum = opts.eventAgeDays.reduce((a, b) => a + b, 0);
+    const avgAge = sum / opts.eventAgeDays.length;
     const timeWeight = computeTimeWeight(avgAge);
     score = Math.round(score * timeWeight * 10) / 10;
   }
@@ -433,7 +451,9 @@ export function computeReputationConfidence(
   if (totalEvents >= 10) dataPoints++;
   if (totalEvents >= 5) dataPoints++;
   if (hasRecentActivity) dataPoints++;
-  return Math.round(Math.max(0.40, Math.min(0.95, 0.40 + dataPoints * 0.11)) * 100) / 100;
+  const base = 0.40 + dataPoints * 0.11;
+  const clamped = Math.max(0.40, Math.min(0.95, base));
+  return Math.round(clamped * 100) / 100;
 }
 
 export function generateReputationExplanation(
@@ -486,13 +506,17 @@ async function fetchBoxCount(
 
   try {
     const boxName = buildBoxKey(wallet, eventTypeChar);
-    const boxResponse = await algod.getApplicationBoxByName(REPUTATION_APP_ID, boxName).do();
+    const boxResponse = await algod.getApplicationBoxByName(
+      REPUTATION_APP_ID, boxName,
+    ).do();
     const boxValue = boxResponse.value;
 
     if (boxValue.length < 16) return { count: 0, amount: 0 };
 
-    const count = Number(Buffer.from(boxValue.slice(0, 8)).readBigUInt64BE(0));
-    const amount = Number(Buffer.from(boxValue.slice(8, 16)).readBigUInt64BE(0));
+    const countBuf = Buffer.from(boxValue.slice(0, 8));
+    const count = Number(countBuf.readBigUInt64BE(0));
+    const amountBuf = Buffer.from(boxValue.slice(8, 16));
+    const amount = Number(amountBuf.readBigUInt64BE(0));
     return { count, amount };
   } catch (e) {
     logger.warn('fetchBoxCount failed', { wallet, eventTypeChar, error: String(e) });
@@ -532,8 +556,10 @@ async function fetchReputationFromContract(
   const sponsorEndorsements = map.get('endorsement')?.count ?? 0;
   const serviceInteractions = map.get('service')?.count ?? 0;
 
-  const totalEvents = successfulPayments + successfulPurchases + disputes + refunds + sponsorEndorsements + serviceInteractions;
-  const positiveEvents = successfulPayments + successfulPurchases + sponsorEndorsements + serviceInteractions;
+  const totalEvents = successfulPayments + successfulPurchases + disputes
+    + refunds + sponsorEndorsements + serviceInteractions;
+  const positiveEvents = successfulPayments + successfulPurchases
+    + sponsorEndorsements + serviceInteractions;
   const negativeEvents = disputes + refunds;
 
   return {
@@ -555,7 +581,9 @@ async function fetchReputationFromContract(
  * F1: Validates that a counterparty has an on-chain presence.
  * Returns true if counterparty is a valid, funded Algorand address.
  */
-export async function verifyCounterparty(counterparty: string): Promise<boolean> {
+export async function verifyCounterparty(
+  counterparty: string,
+): Promise<boolean> {
   if (!isValidWallet(counterparty)) return false;
   try {
     const info = (await withTimeout(
@@ -659,7 +687,8 @@ export async function verifySelfReportedEvent(
       return txns.some((t) => t['tx-type'] === 'appl');
     }
 
-    // Disputes and refunds are verified separately (verifyDisputeEvent / verifyCounterparty)
+    // Disputes and refunds are verified separately
+    // (verifyDisputeEvent / verifyCounterparty)
     return true;
   } catch {
     return false;
@@ -691,9 +720,9 @@ export async function recordEvent(
     }
   }
 
-  // Counterparty verification — disputes/refunds require a verified counterparty.
-  // Without this guard an attacker could submit unlimited disputes/refunds against
-  // any wallet (DDoS the reputation score downward).
+  // Counterparty verification - disputes/refunds need a verified counterparty.
+  // Without this guard an attacker could submit unlimited disputes/refunds
+  // against any wallet (DDoS the reputation score downward).
   let counterpartyVerified = false;
   if (counterparty) {
     if (!isValidWallet(counterparty)) return null;
@@ -721,7 +750,9 @@ export async function recordEvent(
       logger.warn('Dispute rejected — must reference an on-chain round', { wallet, counterparty });
       return null;
     }
-    const disputeVerified = await verifyDisputeEvent(wallet, counterparty, round);
+    const disputeVerified = await verifyDisputeEvent(
+      wallet, counterparty, round,
+    );
     if (!disputeVerified) {
       logger.warn('Dispute rejected — no matching on-chain transaction', { wallet, counterparty, round });
       return null;
@@ -733,7 +764,9 @@ export async function recordEvent(
 
   // Deduplication by hash. Use a per-call salt (timestamp) so concurrent events
   // in the same round don't collide.
-  const eventHash = computeEventHash(wallet, eventType, currentRound, counterparty, Date.now());
+  const eventHash = computeEventHash(
+    wallet, eventType, currentRound, counterparty, Date.now(),
+  );
   if (isDuplicateEvent(eventHash)) {
     logger.warn('Duplicate event rejected', { wallet, eventType, eventHash });
     return null;
@@ -765,7 +798,9 @@ export async function recordEvent(
 
   const accounts = [wallet];
 
-  const txId = await submitApplicationCall(REPUTATION_APP_ID, appArgs, accounts);
+  const txId = await submitApplicationCall(
+    REPUTATION_APP_ID, appArgs, accounts,
+  );
   if (!txId) {
     logger.warn('Failed to submit reputation transaction — event recorded off-chain only', {
       wallet, eventType, eventHash,
@@ -791,7 +826,7 @@ export async function recordEvent(
 }
 
 export async function computeReputation(
-  wallet: string
+  wallet: string,
 ): Promise<ReputationResult | null> {
   if (!isValidWallet(wallet)) return null;
 
@@ -812,7 +847,9 @@ export async function computeReputation(
   const reputation = computeReputationScore(breakdown);
   const riskLevel = classifyReputationRisk(reputation);
   const hasRecentActivity = breakdown.totalEvents > 0;
-  const confidence = computeReputationConfidence(breakdown.totalEvents, hasRecentActivity);
+  const confidence = computeReputationConfidence(
+    breakdown.totalEvents, hasRecentActivity,
+  );
   const explanation = generateReputationExplanation(breakdown, reputation);
 
   return {
