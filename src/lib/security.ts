@@ -205,7 +205,7 @@ export function corsMiddleware(opts: { origin?: string } = {}) {
 export function requestIdMiddleware(req: Request, res: Response, next: NextFunction) {
   let requestId = req.headers['x-request-id'] as string | undefined;
 
-  
+  // P2 FIX: Validate client-provided request ID (must be UUID format or generate new)
   if (requestId) {
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(requestId)) {
