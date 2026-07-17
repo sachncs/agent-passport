@@ -13,7 +13,7 @@ import {
   applyFreshWalletCap,
   applySybilPenalty,
 } from '../trust-score';
-import { isValidWallet, WALLET_REGEX } from '../lib/constants';
+import { isValidWallet } from '../lib/constants';
 
 describe('Trust Score — Pure Math Functions', () => {
   describe('computeAgeScore', () => {

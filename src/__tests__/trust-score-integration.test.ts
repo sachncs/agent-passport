@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { scoreWallet, WalletTrustScore } from '../trust-score';
+import { scoreWallet } from '../trust-score';
 
 const TESTNET_WALLETS = [
   'GD64YIY3TWGDMCNPP553DZPPR6LDUSFQOIJVFDPPXWEG3FVOJCCDBBHU5A',
