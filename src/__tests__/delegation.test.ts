@@ -509,8 +509,10 @@ describe('Sponsor Trust Propagation Audit', () => {
   describe('Property 5: Deep Chain Attenuation', () => {
     it('trust decreases monotonically with depth in a chain', () => {
       const w = { depth: 0.35, quality: 0.30, count: 0.15, amount: 0.20 };
-      void w; // ponytail: weights are not asserted directly, only their sum
       const total = w.depth + w.quality + w.count + w.amount;
+      // The weights themselves are sanity-checked in the earlier test;
+      // here we just need the chain to flow through BFS.
+      expect(total).toBeCloseTo(1.0, 10);
 
       // Chain: A₁→A₂→...→A₇, all with same sponsor quality/count/amount
       const scores = [];
