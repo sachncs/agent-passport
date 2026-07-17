@@ -188,8 +188,8 @@ export function generatePassportSummary(
 /**
  * Computes a SHA-256 checksum over all deterministic passport fields.
  *
- * Determinism guarantee: Given the same wallet, blockRound, and computed scores,
- * this function produces the identical checksum every time.
+ * Determinism guarantee: Given the same wallet, blockRound, and computed
+ * scores, this function produces the identical checksum every time.
  *
  * What IS included: wallet, schemaVersion, blockRound, all computed scores,
  * on-chain profile, delegation profile, capabilities, data sources, summary.
@@ -279,8 +279,8 @@ export async function generatePassport(
     logger.warn('algod.status failed — passport will use 0 for blockRound', { wallet, error: String(e) });
   }
 
-  // Step 2: Fetch trust data first (used by both trust score AND credit estimation)
-  // Using scoreWalletFresh to bypass LRU cache
+  // Step 2: Fetch trust data first (used by both trust score AND credit
+  // estimation). Using scoreWalletFresh to bypass LRU cache.
   const [trustResult, delegationResult, sybilResult, reputationResult] =
     await Promise.all([
       scoreWalletFresh(wallet).catch(e => { logger.warn('scoreWalletFresh failed', { wallet, error: String(e) }); return null; }),
@@ -290,7 +290,8 @@ export async function generatePassport(
       computeReputation(wallet).catch(e => { logger.warn('computeReputation failed', { wallet, error: String(e) }); return null; }),
     ]);
 
-  // Step 3: Estimate credit using the SAME trust data (eliminates redundant fetch)
+  // Step 3: Estimate credit using the SAME trust data
+  // (eliminates redundant fetch)
   const creditResult = await estimateCreditWithTrust(wallet, trustResult)
     .catch(e => { logger.warn('estimateCreditWithTrust failed', { wallet, error: String(e) }); return null; });
 
@@ -353,7 +354,7 @@ export async function generatePassport(
     isTrustAnchor: delegationResult?.delegation.isTrustAnchor ?? false,
   };
 
-  // Capabilities — creditEligible derived from creditLimit (no requestedAmount context)
+  // Capabilities - creditEligible derived from creditLimit (no requestedAmount context)
   const creditEligible = creditLimit > 0;
   const capabilities = {
     trustScoring: trustResult !== null,
