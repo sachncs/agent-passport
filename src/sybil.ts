@@ -325,7 +325,11 @@ export function generateSybilExplanation(
 
 // ── On-chain data fetching ─────────────────────────────────────
 
-type SybilAccountInfo = { balance: number; createdRound: number; fundedBy?: string };
+interface SybilAccountInfo {
+  balance: number;
+  createdRound: number;
+  fundedBy?: string;
+}
 
 const sybilAccountInfoCache = new TTLCache<SybilAccountInfo>({ maxEntries: 500, ttlMs: 60_000 });
 

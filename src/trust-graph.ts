@@ -97,7 +97,10 @@ export function computeExposure(
 
 // ── On-chain data fetching ─────────────────────────────────────
 
-type GraphAccountInfo = { balance: number; trustScore: number };
+interface GraphAccountInfo {
+  balance: number;
+  trustScore: number;
+}
 
 const graphAccountInfoCache = new TTLCache<GraphAccountInfo>({ maxEntries: 200, ttlMs: 60_000 });
 

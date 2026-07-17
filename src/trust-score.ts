@@ -234,13 +234,13 @@ export function generateExplanation(
   return reasons;
 }
 
-type AccountInfo = {
+interface AccountInfo {
   amount: number;
   assetCount: number;
   appCount: number;
   createdRound: number;
   lastRound: number;
-};
+}
 
 const accountInfoCache = new TTLCache<AccountInfo>({ maxEntries: 200, ttlMs: 60_000 });
 
