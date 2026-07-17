@@ -1,11 +1,11 @@
 import { createHash } from 'crypto';
-import { scoreWallet, scoreWalletFresh } from './trust-score';
-import { scoreDelegationFresh } from './delegation';
 import { estimateCreditWithTrust } from './credit';
-import { detectSybilFresh } from './sybil';
+import { scoreDelegationFresh } from './delegation';
 import { computeReputation } from './reputation';
-import { logger } from './lib/logger';
+import { detectSybilFresh } from './sybil';
+import { scoreWallet, scoreWalletFresh } from './trust-score';
 import { isValidWallet } from './lib/constants';
+import { logger } from './lib/logger';
 
 export const PASSPORT_SCHEMA_VERSION = 1;
 

@@ -15,10 +15,10 @@
 
 import algosdk from 'algosdk';
 import { config } from './config';
-import { submitApplicationCall } from './lib/operator-wallet';
-import { recordContractEvent } from './lib/metrics';
-import { logger } from './lib/logger';
 import { isValidWallet } from './lib/constants';
+import { logger } from './lib/logger';
+import { recordContractEvent } from './lib/metrics';
+import { submitApplicationCall } from './lib/operator-wallet';
 
 const REGISTRY_APP_ID = config.registryAppId;
 
