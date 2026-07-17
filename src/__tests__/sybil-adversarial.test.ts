@@ -62,7 +62,8 @@ describe('Adversarial Sybil Simulation — Farm Detection', () => {
       // 20000 rounds > 14515 window, so only ~half in window
       const rounds = staggeredFarm(10, 100000, 2000);
       const clustering = computeCreationClustering(rounds, 100000);
-      // 7 of 10 in window (rounds 100000, 102000, 104000, 106000, 108000, 110000, 112000)
+      // 7 of 10 in window (rounds 100000, 102000, 104000, 106000, 108000,
+      // 110000, 112000)
       // Actually: |114000-100000|=14000 <= 14515 → in window
       // |116000-100000|=16000 > 14515 → out of window
       // So 8 of 10 in window: (8-1)/(10-1) = 0.78
@@ -157,7 +158,10 @@ describe('Adversarial Sybil Simulation — Farm Detection', () => {
       // Sponsor S creates 10 wallets, each receives delegation from S
       // Interaction density: all 10 wallets interact with S (internal)
       // But if only S→wallet txns exist, not wallet→wallet
-      const interactionDensity = computeInteractionDensity(10, 0); // all internal
+      const interactionDensity = computeInteractionDensity(
+        10,
+         0
+      ); // all internal
       expect(interactionDensity).toBe(1.0);
     });
 
@@ -202,7 +206,18 @@ describe('Adversarial Sybil Simulation — Farm Detection', () => {
     });
 
     it('evasion: wallets have different balances to reduce similarity', () => {
-      const balances = [10, 50, 120, 340, 890, 2100, 5500, 14000, 38000, 100000];
+      const balances = [
+        10,
+         50,
+         120,
+         340,
+         890,
+         2100,
+         5500,
+         14000,
+         38000,
+         100000
+      ];
       const balanceSim = computeBalanceSimilarity(balances);
       // Very different balances → low similarity
       expect(balanceSim).toBeLessThan(0.30);
@@ -252,7 +267,8 @@ describe('Sybil Detection Rate Analysis', () => {
   }
 
   it('naive farm detection: high recall, low FNR', () => {
-    // 100 sybil wallets with high creation clustering + interaction density + graph signals
+    // 100 sybil wallets with high creation clustering + interaction density +
+    // graph signals
     const sybilRisks = Array(100).fill(0).map((_, i) => {
       return computeSybilRisk({
         creationClustering: 0.9 + Math.random() * 0.1,
@@ -293,7 +309,8 @@ describe('Sybil Detection Rate Analysis', () => {
   });
 
   it('evasion farm: reduced recall due to staggered creation', () => {
-    // Farm that spreads creation over 30000 rounds, uses varied balances, no circular
+    // Farm that spreads creation over 30000 rounds, uses varied balances, no
+    // circular
     // Deterministic: evasion signals range from below to above threshold
     const sybilRisks = Array(100).fill(0).map((_, i) => {
       const base = 0.45 + (i % 20) * 0.015; // 0.45 → 0.735
@@ -418,7 +435,18 @@ describe('Sybil Detection — Known Vulnerabilities', () => {
     // 10 wallets each receive exactly 1.0 ALGO from the same source
     // This is a strong sybil signal but not detected
     // The system doesn't check if amounts are identical
-    const balances = [1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6]; // all 1 ALGO
+    const balances = [
+      1e6,
+       1e6,
+       1e6,
+       1e6,
+       1e6,
+       1e6,
+       1e6,
+       1e6,
+       1e6,
+       1e6
+    ]; // all 1 ALGO
     const similarity = computeBalanceSimilarity(balances.map(b => b / 1e6));
     // Balance similarity is high, but it's the only signal
     // Missing: amount fingerprinting, timing fingerprinting

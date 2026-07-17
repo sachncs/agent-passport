@@ -45,9 +45,21 @@ async function render(): Promise<string> {
 describe('Metrics System', () => {
   describe('Counter Metrics', () => {
     it('records HTTP request counts', async () => {
-      httpRequestsTotal.inc({ method: 'GET', path: '/score', status_class: '2xx' });
-      httpRequestsTotal.inc({ method: 'GET', path: '/score', status_class: '2xx' });
-      httpRequestsTotal.inc({ method: 'POST', path: '/counterparty-check', status_class: '2xx' });
+      httpRequestsTotal.inc({
+        method: 'GET',
+         path: '/score',
+         status_class: '2xx'
+      });
+      httpRequestsTotal.inc({
+        method: 'GET',
+         path: '/score',
+         status_class: '2xx'
+      });
+      httpRequestsTotal.inc({
+        method: 'POST',
+         path: '/counterparty-check',
+         status_class: '2xx'
+      });
 
       const output = await render();
       expect(output).toContain('agent_passport_http_requests_total');
@@ -69,7 +81,10 @@ describe('Metrics System', () => {
     });
 
     it('records x402 payment failures', async () => {
-      x402PaymentFailuresTotal.inc({ reason: 'verification_failed', path: '/score' });
+      x402PaymentFailuresTotal.inc({
+        reason: 'verification_failed',
+         path: '/score'
+      });
 
       const output = await render();
       expect(output).toContain('agent_passport_x402_payment_failures_total');
@@ -166,7 +181,11 @@ describe('Metrics System', () => {
 
   describe('Histogram Metrics', () => {
     it('records HTTP request durations', async () => {
-      httpRequestDurationSeconds.observe({ method: 'GET', path: '/score', status_class: '2xx' }, 0.5);
+      httpRequestDurationSeconds.observe({
+        method: 'GET',
+         path: '/score',
+         status_class: '2xx'
+      }, 0.5);
 
       const output = await render();
       expect(output).toContain('agent_passport_http_request_duration_seconds');
@@ -292,7 +311,11 @@ describe('Metrics System', () => {
     });
 
     it('includes HELP and TYPE headers', async () => {
-      httpRequestsTotal.inc({ method: 'GET', path: '/test', status_class: '2xx' });
+      httpRequestsTotal.inc({
+        method: 'GET',
+         path: '/test',
+         status_class: '2xx'
+      });
       const output = await render();
       expect(output).toContain('# HELP');
       expect(output).toContain('# TYPE');

@@ -32,7 +32,13 @@ describe('Trust Score — Integration Tests (Real Testnet)', () => {
     expect(typeof result!.breakdown.velocityScore).toBe('number');
     expect(typeof result!.breakdown.complianceScore).toBe('number');
 
-    for (const key of ['ageScore', 'activityScore', 'volumeScore', 'velocityScore', 'complianceScore'] as const) {
+    for (const key of [
+      'ageScore',
+       'activityScore',
+       'volumeScore',
+       'velocityScore',
+       'complianceScore'
+    ] as const) {
       expect(result!.breakdown[key]).toBeGreaterThanOrEqual(0);
       expect(result!.breakdown[key]).toBeLessThanOrEqual(100);
     }

@@ -9,7 +9,11 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import request from 'supertest';
 import { app, responseCache } from '../../app';
-import { KNOWN_TESTNET_WALLET, ALT_TESTNET_WALLET, randomIdempotencyKey } from './_fixtures';
+import {
+  KNOWN_TESTNET_WALLET,
+   ALT_TESTNET_WALLET,
+   randomIdempotencyKey
+} from './_fixtures';
 import { isE2ESkipped } from './_fixtures';
 
 const maybeDescribe = isE2ESkipped() ? describe.skip : describe;
@@ -19,7 +23,15 @@ beforeEach(() => {
 });
 
 maybeDescribe('Security: Input Validation', () => {
-  const wallets = ['/score', '/delegation', '/sybil-check', '/reputation', '/underwrite', '/trust-graph', '/passport'];
+  const wallets = [
+    '/score',
+     '/delegation',
+     '/sybil-check',
+     '/reputation',
+     '/underwrite',
+     '/trust-graph',
+     '/passport'
+  ];
 
   for (const endpoint of wallets) {
     it(`rejects missing wallet on ${endpoint}`, async () => {
@@ -120,7 +132,8 @@ maybeDescribe('Security: Headers', () => {
 maybeDescribe('Security: Rate Limiting', () => {
   it('exposes X-RateLimit-Limit header on non-exempt endpoint', async () => {
     const res = await request(app).get('/verify').query({ wallet: KNOWN_TESTNET_WALLET }).catch(() => null) || await request(app).get('/reputation').query({ wallet: KNOWN_TESTNET_WALLET });
-    // /reputation will 200 or 404, but rate limit headers should always be set on a rate-limited endpoint
+    // /reputation will 200 or 404, but rate limit headers should always be set
+    // on a rate-limited endpoint
     const limitedRes = await request(app).get(`/reputation?wallet=${KNOWN_TESTNET_WALLET}`);
     expect(limitedRes.headers['x-ratelimit-limit']).toBeDefined();
     // The default limit is 600 (was 60 pre-production)
@@ -158,7 +171,12 @@ maybeDescribe('Security: Payload Limits', () => {
     const res = await request(app)
       .post('/delegate')
       .set('Content-Type', 'application/json')
-      .send({ sponsor: KNOWN_TESTNET_WALLET, agent: ALT_TESTNET_WALLET, amount: 1000, _junk: large });
+      .send({
+        sponsor: KNOWN_TESTNET_WALLET,
+         agent: ALT_TESTNET_WALLET,
+         amount: 1000,
+         _junk: large
+      });
     expect(res.status).toBe(413);
   });
 
@@ -210,7 +228,11 @@ maybeDescribe('Security: Idempotency Edge Cases', () => {
     const res = await request(app)
       .post('/delegate')
       .set('Idempotency-Key', 'key with spaces')
-      .send({ sponsor: KNOWN_TESTNET_WALLET, agent: ALT_TESTNET_WALLET, amount: 1000 });
+      .send({
+        sponsor: KNOWN_TESTNET_WALLET,
+         agent: ALT_TESTNET_WALLET,
+         amount: 1000
+      });
     expect(res.status).toBe(400);
   });
 
@@ -218,7 +240,11 @@ maybeDescribe('Security: Idempotency Edge Cases', () => {
     const res = await request(app)
       .post('/delegate')
       .set('Idempotency-Key', 'short')
-      .send({ sponsor: KNOWN_TESTNET_WALLET, agent: ALT_TESTNET_WALLET, amount: 1000 });
+      .send({
+        sponsor: KNOWN_TESTNET_WALLET,
+         agent: ALT_TESTNET_WALLET,
+         amount: 1000
+      });
     expect(res.status).toBe(400);
   });
 
@@ -226,7 +252,11 @@ maybeDescribe('Security: Idempotency Edge Cases', () => {
     const res = await request(app)
       .post('/delegate')
       .set('Idempotency-Key', randomIdempotencyKey())
-      .send({ sponsor: KNOWN_TESTNET_WALLET, agent: ALT_TESTNET_WALLET, amount: 1000 });
+      .send({
+        sponsor: KNOWN_TESTNET_WALLET,
+         agent: ALT_TESTNET_WALLET,
+         amount: 1000
+      });
     expect([200, 201, 400, 503]).toContain(res.status);
   });
 });

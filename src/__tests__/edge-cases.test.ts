@@ -62,7 +62,13 @@ describe('Edge Cases', () => {
     });
 
     it('computeTrustScore handles equal weights', () => {
-      const breakdown = { ageScore: 50, activityScore: 50, volumeScore: 50, velocityScore: 50, complianceScore: 50 };
+      const breakdown = {
+        ageScore: 50,
+         activityScore: 50,
+         volumeScore: 50,
+         velocityScore: 50,
+         complianceScore: 50
+      };
       const score = Math.round(50 * 10) / 10;
       expect(score).toBe(50);
     });
@@ -87,49 +93,89 @@ describe('Edge Cases', () => {
 
     it('handles exact boundary for year history', () => {
       const reasons365 = generateExplanation(
-        { balanceAlgo: 10, totalTxns: 10, assetCount: 0, accountAgeDays: 365 }, 50
+        {
+          balanceAlgo: 10,
+           totalTxns: 10,
+           assetCount: 0,
+           accountAgeDays: 365
+        }, 50
       );
       expect(reasons365.some(r => r.includes('month wallet history'))).toBe(true);
 
       const reasons366 = generateExplanation(
-        { balanceAlgo: 10, totalTxns: 10, assetCount: 0, accountAgeDays: 366 }, 50
+        {
+          balanceAlgo: 10,
+           totalTxns: 10,
+           assetCount: 0,
+           accountAgeDays: 366
+        }, 50
       );
       expect(reasons366.some(r => r.includes('year wallet history'))).toBe(true);
     });
 
     it('handles exact boundary for active wallet', () => {
       const reasons100 = generateExplanation(
-        { balanceAlgo: 10, totalTxns: 100, assetCount: 0, accountAgeDays: 100 }, 50
+        {
+          balanceAlgo: 10,
+           totalTxns: 100,
+           assetCount: 0,
+           accountAgeDays: 100
+        }, 50
       );
       expect(reasons100.some(r => r.includes('moderate activity'))).toBe(true);
 
       const reasons101 = generateExplanation(
-        { balanceAlgo: 10, totalTxns: 101, assetCount: 0, accountAgeDays: 100 }, 50
+        {
+          balanceAlgo: 10,
+           totalTxns: 101,
+           assetCount: 0,
+           accountAgeDays: 100
+        }, 50
       );
       expect(reasons101.some(r => r.includes('active wallet'))).toBe(true);
     });
 
     it('handles exact boundary for balance tiers', () => {
       const reasons0_5 = generateExplanation(
-        { balanceAlgo: 0.5, totalTxns: 5, assetCount: 0, accountAgeDays: 30 }, 30
+        {
+          balanceAlgo: 0.5,
+           totalTxns: 5,
+           assetCount: 0,
+           accountAgeDays: 30
+        }, 30
       );
       expect(reasons0_5.some(r => r.includes('ALGO'))).toBe(true);
       expect(reasons0_5.some(r => r.includes('low balance'))).toBe(true);
 
       const reasons200 = generateExplanation(
-        { balanceAlgo: 200, totalTxns: 5, assetCount: 0, accountAgeDays: 30 }, 30
+        {
+          balanceAlgo: 200,
+           totalTxns: 5,
+           assetCount: 0,
+           accountAgeDays: 30
+        }, 30
       );
       expect(reasons200.some(r => r.includes('well-funded'))).toBe(true);
     });
 
     it('handles exact boundary for diverse portfolio', () => {
       const reasons5 = generateExplanation(
-        { balanceAlgo: 10, totalTxns: 5, assetCount: 5, accountAgeDays: 100 }, 50
+        {
+          balanceAlgo: 10,
+           totalTxns: 5,
+           assetCount: 5,
+           accountAgeDays: 100
+        }, 50
       );
       expect(reasons5.some(r => r.includes('diverse portfolio'))).toBe(false);
 
       const reasons6 = generateExplanation(
-        { balanceAlgo: 10, totalTxns: 5, assetCount: 6, accountAgeDays: 100 }, 50
+        {
+          balanceAlgo: 10,
+           totalTxns: 5,
+           assetCount: 6,
+           accountAgeDays: 100
+        }, 50
       );
       expect(reasons6.some(r => r.includes('diverse portfolio'))).toBe(true);
     });

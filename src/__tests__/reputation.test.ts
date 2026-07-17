@@ -235,7 +235,17 @@ describe('Reputation Layer — Pure Math Functions', () => {
     });
 
     it('is monotonically non-decreasing', () => {
-      const multipliers = [0, 1, 2, 3, 4, 5, 9, 10, 50].map(computeReputationEventMultiplier);
+      const multipliers = [
+        0,
+         1,
+         2,
+         3,
+         4,
+         5,
+         9,
+         10,
+         50
+      ].map(computeReputationEventMultiplier);
       for (let i = 1; i < multipliers.length; i++) {
         expect(multipliers[i]).toBeGreaterThanOrEqual(multipliers[i - 1]);
       }

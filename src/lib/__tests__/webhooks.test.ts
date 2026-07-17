@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { addSubscriber, removeSubscriber, listSubscribers, fireWebhook, clearSubscribers } from '../webhooks';
+import {
+  addSubscriber,
+   removeSubscriber,
+   listSubscribers,
+   fireWebhook,
+   clearSubscribers
+} from '../webhooks';
 
 describe('webhooks', () => {
   beforeEach(() => {

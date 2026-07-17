@@ -280,7 +280,12 @@ describe('Trust Score — Pure Math Functions', () => {
   describe('generateExplanation', () => {
     it('identifies year-old wallet', () => {
       const reasons = generateExplanation(
-        { balanceAlgo: 100, totalTxns: 50, assetCount: 3, accountAgeDays: 400 }, 70
+        {
+          balanceAlgo: 100,
+           totalTxns: 50,
+           assetCount: 3,
+           accountAgeDays: 400
+        }, 70
       );
       expect(reasons.some(r => r.includes('year wallet history'))).toBe(true);
     });
@@ -301,42 +306,72 @@ describe('Trust Score — Pure Math Functions', () => {
 
     it('identifies active wallet', () => {
       const reasons = generateExplanation(
-        { balanceAlgo: 10, totalTxns: 200, assetCount: 2, accountAgeDays: 100 }, 60
+        {
+          balanceAlgo: 10,
+           totalTxns: 200,
+           assetCount: 2,
+           accountAgeDays: 100
+        }, 60
       );
       expect(reasons.some(r => r.includes('active wallet'))).toBe(true);
     });
 
     it('identifies well-funded wallet', () => {
       const reasons = generateExplanation(
-        { balanceAlgo: 500, totalTxns: 10, assetCount: 1, accountAgeDays: 100 }, 60
+        {
+          balanceAlgo: 500,
+           totalTxns: 10,
+           assetCount: 1,
+           accountAgeDays: 100
+        }, 60
       );
       expect(reasons.some(r => r.includes('well-funded'))).toBe(true);
     });
 
     it('identifies diverse portfolio', () => {
       const reasons = generateExplanation(
-        { balanceAlgo: 10, totalTxns: 10, assetCount: 10, accountAgeDays: 100 }, 60
+        {
+          balanceAlgo: 10,
+           totalTxns: 10,
+           assetCount: 10,
+           accountAgeDays: 100
+        }, 60
       );
       expect(reasons.some(r => r.includes('diverse portfolio'))).toBe(true);
     });
 
     it('identifies strong profile', () => {
       const reasons = generateExplanation(
-        { balanceAlgo: 100, totalTxns: 200, assetCount: 5, accountAgeDays: 500 }, 80
+        {
+          balanceAlgo: 100,
+           totalTxns: 200,
+           assetCount: 5,
+           accountAgeDays: 500
+        }, 80
       );
       expect(reasons.some(r => r.includes('Strong overall'))).toBe(true);
     });
 
     it('identifies weak profile', () => {
       const reasons = generateExplanation(
-        { balanceAlgo: 0.001, totalTxns: 1, assetCount: 0, accountAgeDays: 2 }, 10
+        {
+          balanceAlgo: 0.001,
+           totalTxns: 1,
+           assetCount: 0,
+           accountAgeDays: 2
+        }, 10
       );
       expect(reasons.some(r => r.includes('Weak trust profile'))).toBe(true);
     });
 
     it('returns multiple reasons', () => {
       const reasons = generateExplanation(
-        { balanceAlgo: 500, totalTxns: 500, assetCount: 20, accountAgeDays: 1000 }, 90
+        {
+          balanceAlgo: 500,
+           totalTxns: 500,
+           assetCount: 20,
+           accountAgeDays: 1000
+        }, 90
       );
       expect(reasons.length).toBeGreaterThanOrEqual(4);
     });
@@ -418,7 +453,16 @@ describe('Trust Score — Pure Math Functions', () => {
     });
 
     it('is monotonically non-increasing', () => {
-      const penalties = [0, 180, 365, 545, 730, 910, 1825, 3650].map(computeStalenessPenalty);
+      const penalties = [
+        0,
+         180,
+         365,
+         545,
+         730,
+         910,
+         1825,
+         3650
+      ].map(computeStalenessPenalty);
       for (let i = 1; i < penalties.length; i++) {
         expect(penalties[i]).toBeLessThanOrEqual(penalties[i - 1]);
       }

@@ -1,11 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { checkSanctions, getSanctionsProvider, setSanctionsProvider } from '../sanctions';
+import {
+  checkSanctions,
+   getSanctionsProvider,
+   setSanctionsProvider
+} from '../sanctions';
 
 describe('sanctions', () => {
   beforeEach(() => {
     delete process.env.SANCTIONS_PROVIDER;
     delete process.env.SANCTIONS_EXTRA_DENY;
-    // Re-import default — but vitest hoists, so just reset to memory via setProvider.
+    // Re-import default — but vitest hoists, so just reset to memory via
+    // setProvider.
     setSanctionsProvider({
       name: 'memory',
       check: async (wallet) => ({

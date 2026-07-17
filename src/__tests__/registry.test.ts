@@ -13,7 +13,13 @@ vi.mock('../lib/metrics', () => ({
   recordContractEvent: vi.fn(),
 }));
 
-import { delegate, revoke, RegistryNotConfiguredError, RegistryValidationError, isRegistryConfigured } from '../registry';
+import {
+  delegate,
+   revoke,
+   RegistryNotConfiguredError,
+   RegistryValidationError,
+   isRegistryConfigured
+} from '../registry';
 import { submitApplicationCall } from '../lib/operator-wallet';
 import { recordContractEvent } from '../lib/metrics';
 

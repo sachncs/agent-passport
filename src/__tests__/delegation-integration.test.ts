@@ -32,7 +32,12 @@ describe('Delegation Trust — Integration Tests (Real Testnet)', () => {
     expect(typeof result!.breakdown.sponsorCountScore).toBe('number');
     expect(typeof result!.breakdown.amountScore).toBe('number');
 
-    for (const key of ['depthScore', 'sponsorQualityScore', 'sponsorCountScore', 'amountScore'] as const) {
+    for (const key of [
+      'depthScore',
+       'sponsorQualityScore',
+       'sponsorCountScore',
+       'amountScore'
+    ] as const) {
       expect(result!.breakdown[key]).toBeGreaterThanOrEqual(0);
       expect(result!.breakdown[key]).toBeLessThanOrEqual(100);
     }

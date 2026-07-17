@@ -19,7 +19,10 @@ import {
 
 // ── Helper functions ────────────────────────────────────────────
 
-function buildRandomAdjacencyList(V: number, E: number): Map<string, Set<string>> {
+function buildRandomAdjacencyList(
+  V: number,
+   E: number
+): Map<string, Set<string>> {
   const adj = new Map<string, Set<string>>();
   for (let i = 0; i < V; i++) adj.set(`W${i}`, new Set());
   for (let i = 0; i < E; i++) {
@@ -470,7 +473,7 @@ describe('Clustering Coefficient', () => {
     expect(avg).toBe(0);
   });
 
-  it('clustering coefficient ∈ [0, 1] for all inputs (test with random graphs)', () => {
+  it('clustering coefficient ∈ [0,1] for all inputs (test with random graphs)', () => {
     const adj = buildRandomAdjacencyList(30, 60);
     for (const [node] of adj) {
       const cc = computeClusteringCoefficient(adj, node);
@@ -604,7 +607,8 @@ describe('Intermediate Density', () => {
       ['C', new Set(['A', 'D'])],
       ['D', new Set(['B', 'C'])],
     ]);
-    // A's neighbors: B, C. No direct B-C edge. D is intermediary: B-D, D-C. → 1.0
+    // A's neighbors: B, C. No direct B-C edge. D is intermediary: B-D, D-C. →
+    // 1.0
     expect(computeIntermediateDensity(adj, 'A')).toBe(1);
   });
 
@@ -939,7 +943,7 @@ describe('Invariant Proofs', () => {
     expect(bfs(selfLoop, 'A').length).toBe(2);
   });
 
-  it('clustering coefficient ∈ [0, 1] for random graphs (test with V=20, random edges)', () => {
+  it('clustering coefficient ∈ [0,1] for random graphs (test with V=20, random edges)', () => {
     for (let trial = 0; trial < 10; trial++) {
       const V = 20;
       const E = Math.floor(Math.random() * 60) + 10;
@@ -994,7 +998,7 @@ describe('Invariant Proofs', () => {
     }
   });
 
-  it('computeGraphSignals output ∈ [0, 1] for all signals (test with random graphs)', () => {
+  it('computeGraphSignals output ∈ [0,1] for all signals (test with random graphs)', () => {
     const txns: GraphTransaction[] = [];
     const nodeCount = 25;
     const nodes = Array.from({ length: nodeCount }, (_, i) => `W${i}`);

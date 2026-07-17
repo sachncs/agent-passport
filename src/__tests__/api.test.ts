@@ -92,7 +92,10 @@ describe('POST /credit-estimate', () => {
   });
 
   it('rejects non-positive amount with 400', async () => {
-    const res = await request(app).post('/credit-estimate').send({ wallet: VALID_WALLET, amount: -100 });
+    const res = await request(app).post('/credit-estimate').send({
+      wallet: VALID_WALLET,
+       amount: -100
+    });
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/positive/);
   });
@@ -120,7 +123,10 @@ describe('POST /reputation/record', () => {
   });
 
   it('rejects invalid eventType with 400', async () => {
-    const res = await request(app).post('/reputation/record').send({ wallet: VALID_WALLET, eventType: 'unknown' });
+    const res = await request(app).post('/reputation/record').send({
+      wallet: VALID_WALLET,
+       eventType: 'unknown'
+    });
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/Invalid eventType/);
   });
@@ -193,12 +199,19 @@ describe('POST /delegate', () => {
   });
 
   it('rejects missing amount with 400', async () => {
-    const res = await request(app).post('/delegate').send({ sponsor: VALID_WALLET, agent: VALID_WALLET_2 });
+    const res = await request(app).post('/delegate').send({
+      sponsor: VALID_WALLET,
+       agent: VALID_WALLET_2
+    });
     expect(res.status).toBe(400);
   });
 
   it('rejects negative amount with 400', async () => {
-    const res = await request(app).post('/delegate').send({ sponsor: VALID_WALLET, agent: VALID_WALLET_2, amount: -1 });
+    const res = await request(app).post('/delegate').send({
+      sponsor: VALID_WALLET,
+       agent: VALID_WALLET_2,
+       amount: -1
+    });
     expect(res.status).toBe(400);
   });
 });

@@ -162,7 +162,18 @@ describe('Sybil Detection — Pure Math Functions', () => {
 
     it('returns high score for all identical amounts', () => {
       // 10 identical amounts: 1 - 1/10 = 0.9
-      expect(computeAmountFingerprint([100, 100, 100, 100, 100, 100, 100, 100, 100, 100])).toBe(0.9);
+      expect(computeAmountFingerprint([
+        100,
+         100,
+         100,
+         100,
+         100,
+         100,
+         100,
+         100,
+         100,
+         100
+      ])).toBe(0.9);
     });
 
     it('returns 0 for all different amounts', () => {
@@ -185,7 +196,18 @@ describe('Sybil Detection — Pure Math Functions', () => {
 
     it('returns high score for all same funder', () => {
       // 10 same funders: 1 - 1/10 = 0.9
-      expect(computeFundingCorrelation(['A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A'])).toBe(0.9);
+      expect(computeFundingCorrelation([
+        'A',
+         'A',
+         'A',
+         'A',
+         'A',
+         'A',
+         'A',
+         'A',
+         'A',
+         'A'
+      ])).toBe(0.9);
     });
 
     it('returns 0 for all different funders', () => {
@@ -437,17 +459,47 @@ describe('Sybil Detection — Pure Math Functions', () => {
     });
 
     it('reports bot-like timing patterns', () => {
-      const reasons = generateSybilExplanation(4, 0.9, 0.95, 0.85, 0.7, 0.91, 0.9, 0.8, 0.6);
+      const reasons = generateSybilExplanation(
+        4,
+         0.9,
+         0.95,
+         0.85,
+         0.7,
+         0.91,
+         0.9,
+         0.8,
+         0.6
+      );
       expect(reasons.some(r => r.includes('Bot-like timing'))).toBe(true);
     });
 
     it('reports uniform amounts', () => {
-      const reasons = generateSybilExplanation(4, 0.9, 0.95, 0.85, 0.7, 0.91, 0.9, 0.8, 0.6);
+      const reasons = generateSybilExplanation(
+        4,
+         0.9,
+         0.95,
+         0.85,
+         0.7,
+         0.91,
+         0.9,
+         0.8,
+         0.6
+      );
       expect(reasons.some(r => r.includes('Uniform transaction amounts'))).toBe(true);
     });
 
     it('reports common funding source', () => {
-      const reasons = generateSybilExplanation(4, 0.9, 0.95, 0.85, 0.7, 0.91, 0.9, 0.8, 0.6);
+      const reasons = generateSybilExplanation(
+        4,
+         0.9,
+         0.95,
+         0.85,
+         0.7,
+         0.91,
+         0.9,
+         0.8,
+         0.6
+      );
       expect(reasons.some(r => r.includes('Common funding source'))).toBe(true);
     });
   });

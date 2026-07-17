@@ -217,7 +217,8 @@ describe('Underwriting Decision Engine — Pure Math Functions', () => {
       const adjustedTrust = applySybilPenalty(70, 0.50);
       expect(adjustedTrust).toBe(56);
 
-      // New 4-factor architecture: Trust 0.35, Delegation 0.25, Sybil 0.20, Reputation 0.20
+      // New 4-factor architecture: Trust 0.35, Delegation 0.25, Sybil 0.20,
+      // Reputation 0.20
       const factors = [
         makeFactor({ name: 'Trust Score', score: adjustedTrust, weight: 0.35 }),
         makeFactor({ name: 'Delegation Trust', score: 60, weight: 0.25 }),
@@ -347,10 +348,34 @@ describe('Underwriting Decision Audit', () => {
   describe('Confidence Analysis', () => {
     it('all 4 factors present → confidence 0.95', () => {
       const factors = [
-        { name: 'T', score: 80, weight: 0.35, contribution: 28, status: 'positive' as const },
-        { name: 'D', score: 60, weight: 0.25, contribution: 15, status: 'neutral' as const },
-        { name: 'S', score: 70, weight: 0.20, contribution: 14, status: 'positive' as const },
-        { name: 'R', score: 50, weight: 0.20, contribution: 10, status: 'neutral' as const },
+        {
+          name: 'T',
+           score: 80,
+           weight: 0.35,
+           contribution: 28,
+           status: 'positive' as const
+        },
+        {
+          name: 'D',
+           score: 60,
+           weight: 0.25,
+           contribution: 15,
+           status: 'neutral' as const
+        },
+        {
+          name: 'S',
+           score: 70,
+           weight: 0.20,
+           contribution: 14,
+           status: 'positive' as const
+        },
+        {
+          name: 'R',
+           score: 50,
+           weight: 0.20,
+           contribution: 10,
+           status: 'neutral' as const
+        },
       ];
       expect(computeUnderwritingConfidence(factors)).toBe(0.95);
     });
@@ -361,13 +386,43 @@ describe('Underwriting Decision Audit', () => {
 
     it('confidence increases with more data', () => {
       const few = [
-        { name: 'T', score: 0, weight: 0.35, contribution: 0, status: 'negative' as const },
+        {
+          name: 'T',
+           score: 0,
+           weight: 0.35,
+           contribution: 0,
+           status: 'negative' as const
+        },
       ];
       const many = [
-        { name: 'T', score: 50, weight: 0.35, contribution: 17.5, status: 'neutral' as const },
-        { name: 'D', score: 50, weight: 0.25, contribution: 12.5, status: 'neutral' as const },
-        { name: 'S', score: 50, weight: 0.20, contribution: 10, status: 'neutral' as const },
-        { name: 'R', score: 50, weight: 0.20, contribution: 10, status: 'neutral' as const },
+        {
+          name: 'T',
+           score: 50,
+           weight: 0.35,
+           contribution: 17.5,
+           status: 'neutral' as const
+        },
+        {
+          name: 'D',
+           score: 50,
+           weight: 0.25,
+           contribution: 12.5,
+           status: 'neutral' as const
+        },
+        {
+          name: 'S',
+           score: 50,
+           weight: 0.20,
+           contribution: 10,
+           status: 'neutral' as const
+        },
+        {
+          name: 'R',
+           score: 50,
+           weight: 0.20,
+           contribution: 10,
+           status: 'neutral' as const
+        },
       ];
       expect(computeUnderwritingConfidence(many)).toBeGreaterThan(computeUnderwritingConfidence(few));
     });
@@ -384,7 +439,8 @@ describe('Underwriting Decision Audit', () => {
       resetSystemExposure();
       // Fill 6 distinct wallets up to their per-wallet share = 60k global used
       for (let i = 0; i < 6; i++) addSystemExposure(`WALLET_${i}`, 10_000);
-      // A 7th wallet can take up to min(60k requested, 40k remaining, 10k share) = 10k
+      // A 7th wallet can take up to min(60k requested, 40k remaining,
+      // 10k share) = 10k
       const capped = capToSystemCapacity('WALLET_NEW', 60_000);
       expect(capped).toBe(10_000);
     });
@@ -426,7 +482,12 @@ describe('Passport Decision Audit', () => {
       const lowRisk = computeOverallRisk('low', 0, 'low', 'low');
       const medRisk = computeOverallRisk('medium', 0.5, 'medium', 'medium');
       const highRisk = computeOverallRisk('high', 0.7, 'high', 'high');
-      const critRisk = computeOverallRisk('critical', 1.0, 'critical', 'critical');
+      const critRisk = computeOverallRisk(
+        'critical',
+         1.0,
+         'critical',
+         'critical'
+      );
 
       expect(lowRisk).toBe(7.5);
       expect(medRisk).toBe(38.8);

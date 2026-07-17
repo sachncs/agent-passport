@@ -87,7 +87,14 @@ describe('Delegation Trust — Pure Math Functions', () => {
     });
 
     it('increases with count at same quality', () => {
-      const scores = [0, 1, 2, 3, 4, 5].map(c => computeSponsorCountScore(c, 100));
+      const scores = [
+        0,
+         1,
+         2,
+         3,
+         4,
+         5
+      ].map(c => computeSponsorCountScore(c, 100));
       for (let i = 1; i < scores.length; i++) {
         expect(scores[i]).toBeGreaterThanOrEqual(scores[i - 1]);
       }
@@ -221,7 +228,14 @@ describe('Delegation Trust — Pure Math Functions', () => {
     });
 
     it('increases with score', () => {
-      const limits = [0, 20, 40, 60, 80, 100].map(computeDelegationRecommendedLimit);
+      const limits = [
+        0,
+         20,
+         40,
+         60,
+         80,
+         100
+      ].map(computeDelegationRecommendedLimit);
       for (let i = 1; i < limits.length; i++) {
         expect(limits[i]).toBeGreaterThanOrEqual(limits[i - 1]);
       }
@@ -275,12 +289,42 @@ describe('Sponsor Trust Propagation Audit', () => {
 
     it('is bounded [0, 100] for arbitrary inputs', () => {
       const inputs = [
-        { depthScore: 50, sponsorQualityScore: 50, sponsorCountScore: 50, amountScore: 50 },
-        { depthScore: 100, sponsorQualityScore: 0, sponsorCountScore: 0, amountScore: 0 },
-        { depthScore: 0, sponsorQualityScore: 100, sponsorCountScore: 0, amountScore: 0 },
-        { depthScore: 0, sponsorQualityScore: 0, sponsorCountScore: 100, amountScore: 0 },
-        { depthScore: 0, sponsorQualityScore: 0, sponsorCountScore: 0, amountScore: 100 },
-        { depthScore: 33, sponsorQualityScore: 67, sponsorCountScore: 12, amountScore: 89 },
+        {
+          depthScore: 50,
+           sponsorQualityScore: 50,
+           sponsorCountScore: 50,
+           amountScore: 50
+        },
+        {
+          depthScore: 100,
+           sponsorQualityScore: 0,
+           sponsorCountScore: 0,
+           amountScore: 0
+        },
+        {
+          depthScore: 0,
+           sponsorQualityScore: 100,
+           sponsorCountScore: 0,
+           amountScore: 0
+        },
+        {
+          depthScore: 0,
+           sponsorQualityScore: 0,
+           sponsorCountScore: 100,
+           amountScore: 0
+        },
+        {
+          depthScore: 0,
+           sponsorQualityScore: 0,
+           sponsorCountScore: 0,
+           amountScore: 100
+        },
+        {
+          depthScore: 33,
+           sponsorQualityScore: 67,
+           sponsorCountScore: 12,
+           amountScore: 89
+        },
       ];
       for (const input of inputs) {
         const score = computeDelegationTrustScore(input);
@@ -336,13 +380,15 @@ describe('Sponsor Trust Propagation Audit', () => {
       };
       const uncapped = computeDelegationTrustScore(breakdown);
       // The cap is applied in scoreDelegation(), not in computeDelegationTrustScore()
-      // So the raw score can exceed sponsor trust — the cap is in scoreDelegation
+      // So the raw score can exceed sponsor trust — the cap is in
+      // scoreDelegation
       // This test verifies the raw score CAN exceed, proving the cap is needed
       expect(uncapped).toBeGreaterThan(40);
     });
 
     it('depth-adjusted cap prevents relative amplification', () => {
-      // Wallet A (depth 2, 5 sponsors quality=90) vs Wallet B (depth 1, 1 sponsor quality=90)
+      // Wallet A (depth 2, 5 sponsors quality=90) vs Wallet B (depth 1,
+      // 1 sponsor quality=90)
       // Without cap: A=63.1 > B=59.3 (amplification)
       // With cap: A=min(63.1, 90-40)=50 < B=min(59.3, 90-20)=59.3
       const aRaw = computeDelegationTrustScore({
@@ -399,7 +445,13 @@ describe('Sponsor Trust Propagation Audit', () => {
       // fetchDelegations filters: d.delegatee !== wallet
       // So A→A never appears in the delegation list
       const delegations = [
-        { delegator: 'A', delegatee: 'A', amount: 1000, timestamp: 0, round: 0 },
+        {
+          delegator: 'A',
+           delegatee: 'A',
+           amount: 1000,
+           timestamp: 0,
+           round: 0
+        },
       ];
       const filtered = delegations.filter(d => d.delegatee !== d.delegator);
       expect(filtered.length).toBe(0);

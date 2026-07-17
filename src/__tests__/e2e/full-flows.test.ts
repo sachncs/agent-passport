@@ -24,7 +24,11 @@ import {
   isE2ESkipped,
 } from './_fixtures';
 import { clearIdempotencyStore } from '../../lib/idempotency';
-import { getUniqueWalletCount, registry as metricsRegistry, httpRequestsTotal } from '../../lib/metrics';
+import {
+  getUniqueWalletCount,
+   registry as metricsRegistry,
+   httpRequestsTotal
+} from '../../lib/metrics';
 
 const maybeDescribe = isE2ESkipped() ? describe.skip : describe;
 
@@ -38,7 +42,11 @@ async function fetchMetrics(): Promise<string> {
   return res.text;
 }
 
-function metricValue(metrics: string, name: string, labelMatch?: string): number {
+function metricValue(
+  metrics: string,
+   name: string,
+   labelMatch?: string
+): number {
   const lines = metrics.split('\n').filter(l => l.startsWith(name) && !l.startsWith('#'));
   for (const line of lines) {
     if (labelMatch && !line.includes(labelMatch)) continue;
@@ -48,7 +56,11 @@ function metricValue(metrics: string, name: string, labelMatch?: string): number
   return 0;
 }
 
-function histogramCount(metrics: string, name: string, labelMatch?: string): number {
+function histogramCount(
+  metrics: string,
+   name: string,
+   labelMatch?: string
+): number {
   const regex = new RegExp(`^${name}_count\\{[^}]*${labelMatch ?? ''}[^}]*\\}\\s+([\\d.eE+-]+)$`, 'm');
   const match = metrics.match(regex);
   return match ? parseFloat(match[1]) : 0;
@@ -133,7 +145,11 @@ maybeDescribe('Flow 2: Endorse Agent (on-chain delegation)', () => {
   it('rejects 503 when REGISTRY_APP_ID is 0 (strictly on-chain mode)', async () => {
     const res = await request(app)
       .post('/delegate')
-      .send({ sponsor: KNOWN_TESTNET_WALLET, agent: ALT_TESTNET_WALLET, amount: 1000 });
+      .send({
+        sponsor: KNOWN_TESTNET_WALLET,
+         agent: ALT_TESTNET_WALLET,
+         amount: 1000
+      });
     expect(res.status).toBe(503);
     expect(res.body.code).toBe('REGISTRY_NOT_CONFIGURED');
   });
@@ -164,28 +180,44 @@ maybeDescribe('Flow 2: Endorse Agent (on-chain delegation)', () => {
   it('rejects 400 when amount is non-positive', async () => {
     const res = await request(app)
       .post('/delegate')
-      .send({ sponsor: KNOWN_TESTNET_WALLET, agent: ALT_TESTNET_WALLET, amount: -100 });
+      .send({
+        sponsor: KNOWN_TESTNET_WALLET,
+         agent: ALT_TESTNET_WALLET,
+         amount: -100
+      });
     expect(res.status).toBe(400);
   });
 
   it('rejects 400 when amount is zero', async () => {
     const res = await request(app)
       .post('/delegate')
-      .send({ sponsor: KNOWN_TESTNET_WALLET, agent: ALT_TESTNET_WALLET, amount: 0 });
+      .send({
+        sponsor: KNOWN_TESTNET_WALLET,
+         agent: ALT_TESTNET_WALLET,
+         amount: 0
+      });
     expect(res.status).toBe(400);
   });
 
   it('rejects 400 when amount is not a number', async () => {
     const res = await request(app)
       .post('/delegate')
-      .send({ sponsor: KNOWN_TESTNET_WALLET, agent: ALT_TESTNET_WALLET, amount: 'lots' });
+      .send({
+        sponsor: KNOWN_TESTNET_WALLET,
+         agent: ALT_TESTNET_WALLET,
+         amount: 'lots'
+      });
     expect(res.status).toBe(400);
   });
 
   it('rejects 400 when sponsor equals agent (self-delegation)', async () => {
     const res = await request(app)
       .post('/delegate')
-      .send({ sponsor: KNOWN_TESTNET_WALLET, agent: KNOWN_TESTNET_WALLET, amount: 1000 });
+      .send({
+        sponsor: KNOWN_TESTNET_WALLET,
+         agent: KNOWN_TESTNET_WALLET,
+         amount: 1000
+      });
     expect(res.status).toBe(400);
   });
 
@@ -303,12 +335,20 @@ maybeDescribe('Flow 4: Record Success Event', () => {
   });
 
   it('accepts all valid event types at the validation layer', async () => {
-    const types = ['payment', 'purchase', 'dispute', 'refund', 'endorsement', 'service'];
+    const types = [
+      'payment',
+       'purchase',
+       'dispute',
+       'refund',
+       'endorsement',
+       'service'
+    ];
     for (const et of types) {
       const res = await request(app)
         .post('/reputation/record')
         .send({ wallet: KNOWN_TESTNET_WALLET, eventType: et, amount: 1 });
-      // 200 = recorded, 400/404 = counterparty/chain not verified, 500 = Algorand upstream flaky, 503 = registry not configured
+      // 200 = recorded, 400/404 = counterparty/chain not verified, 500 =
+      // Algorand upstream flaky, 503 = registry not configured
       expect([200, 400, 404, 500, 503]).toContain(res.status);
     }
   });
@@ -329,14 +369,24 @@ maybeDescribe('Flow 5: Record Dispute Event', () => {
   it('rejects 400 for dispute with invalid counterparty format', async () => {
     const res = await request(app)
       .post('/reputation/record')
-      .send({ wallet: KNOWN_TESTNET_WALLET, eventType: 'dispute', counterparty: 'X', amount: 1 });
+      .send({
+        wallet: KNOWN_TESTNET_WALLET,
+         eventType: 'dispute',
+         counterparty: 'X',
+         amount: 1
+      });
     expect(res.status).toBe(400);
   });
 
   it('rejects 400 for dispute with negative amount', async () => {
     const res = await request(app)
       .post('/reputation/record')
-      .send({ wallet: KNOWN_TESTNET_WALLET, eventType: 'dispute', counterparty: ALT_TESTNET_WALLET, amount: -5 });
+      .send({
+        wallet: KNOWN_TESTNET_WALLET,
+         eventType: 'dispute',
+         counterparty: ALT_TESTNET_WALLET,
+         amount: -5
+      });
     expect(res.status).toBe(400);
   });
 });
@@ -377,7 +427,12 @@ maybeDescribe('Flow 7: Verify Counterparty', () => {
     if (res.status === 200) {
       expect(typeof res.body.allow).toBe('boolean');
       expect(typeof res.body.confidence).toBe('number');
-      expect(['low', 'medium', 'high', 'critical']).toContain(res.body.riskLevel);
+      expect([
+        'low',
+         'medium',
+         'high',
+         'critical'
+      ]).toContain(res.body.riskLevel);
     }
   });
 
@@ -498,7 +553,11 @@ maybeDescribe('Flow 10: Settlement Verification', () => {
 maybeDescribe('Flow 11: Replay Protection', () => {
   it('idempotency-key serves cached response on replay', async () => {
     const key = randomIdempotencyKey();
-    const body = { sponsor: KNOWN_TESTNET_WALLET, agent: ALT_TESTNET_WALLET, amount: 1000 };
+    const body = {
+      sponsor: KNOWN_TESTNET_WALLET,
+       agent: ALT_TESTNET_WALLET,
+       amount: 1000
+    };
     const r1 = await request(app).post('/delegate').set('Idempotency-Key', key).send(body);
     const r2 = await request(app).post('/delegate').set('Idempotency-Key', key).send(body);
     expect(r1.status).toBe(r2.status);
@@ -506,12 +565,21 @@ maybeDescribe('Flow 11: Replay Protection', () => {
 
   it('idempotency-key with different body returns 409', async () => {
     const key = randomIdempotencyKey();
-    const body1 = { sponsor: KNOWN_TESTNET_WALLET, agent: ALT_TESTNET_WALLET, amount: 1000 };
-    const body2 = { sponsor: KNOWN_TESTNET_WALLET, agent: ALT_TESTNET_WALLET, amount: 2000 };
+    const body1 = {
+      sponsor: KNOWN_TESTNET_WALLET,
+       agent: ALT_TESTNET_WALLET,
+       amount: 1000
+    };
+    const body2 = {
+      sponsor: KNOWN_TESTNET_WALLET,
+       agent: ALT_TESTNET_WALLET,
+       amount: 2000
+    };
     await request(app).post('/delegate').set('Idempotency-Key', key).send(body1);
     const r2 = await request(app).post('/delegate').set('Idempotency-Key', key).send(body2);
     // Since /delegate returns 503 (registry not configured), the first call doesn't get cached.
-    // The second call also returns 503, no conflict because no successful response was cached.
+    // The second call also returns 503, no conflict because no successful
+    // response was cached.
     // 429 is acceptable if rate limit triggers before the second call.
     expect([409, 503, 429]).toContain(r2.status);
   });
@@ -520,7 +588,11 @@ maybeDescribe('Flow 11: Replay Protection', () => {
     const res = await request(app)
       .post('/delegate')
       .set('Idempotency-Key', 'x')
-      .send({ sponsor: KNOWN_TESTNET_WALLET, agent: ALT_TESTNET_WALLET, amount: 1000 });
+      .send({
+        sponsor: KNOWN_TESTNET_WALLET,
+         agent: ALT_TESTNET_WALLET,
+         amount: 1000
+      });
     expect(res.status).toBe(400);
   });
 });
@@ -533,7 +605,11 @@ maybeDescribe('Flow 12: Idempotency', () => {
   it('server generates a key when none is provided', async () => {
     const res = await request(app)
       .post('/delegate')
-      .send({ sponsor: KNOWN_TESTNET_WALLET, agent: ALT_TESTNET_WALLET, amount: 1000 });
+      .send({
+        sponsor: KNOWN_TESTNET_WALLET,
+         agent: ALT_TESTNET_WALLET,
+         amount: 1000
+      });
     // Expect 503 (registry not configured) but the server should have generated a key
     expect([503, 200, 201]).toContain(res.status);
     const serverKey = res.headers['idempotency-key'];
@@ -548,7 +624,11 @@ maybeDescribe('Flow 12: Idempotency', () => {
     const res = await request(app)
       .post('/delegate')
       .set('Idempotency-Key', key)
-      .send({ sponsor: KNOWN_TESTNET_WALLET, agent: ALT_TESTNET_WALLET, amount: 1000 });
+      .send({
+        sponsor: KNOWN_TESTNET_WALLET,
+         agent: ALT_TESTNET_WALLET,
+         amount: 1000
+      });
     expect([503, 200, 201, 409]).toContain(res.status);
   });
 });
@@ -581,14 +661,22 @@ maybeDescribe('Flow 13: Contract Event Processing', () => {
   it('increments http_requests_total after a request', async () => {
     await request(app).get('/health');
     const m = await fetchMetrics();
-    const val = metricValue(m, 'agent_passport_http_requests_total', 'method="GET"');
+    const val = metricValue(
+      m,
+       'agent_passport_http_requests_total',
+       'method="GET"'
+    );
     expect(val).toBeGreaterThan(0);
   });
 
   it('increments http_request_errors_total on 4xx', async () => {
     await request(app).get('/score');
     const m = await fetchMetrics();
-    const val = metricValue(m, 'agent_passport_http_request_errors_total', 'error_type="client_error"');
+    const val = metricValue(
+      m,
+       'agent_passport_http_request_errors_total',
+       'error_type="client_error"'
+    );
     expect(val).toBeGreaterThan(0);
   });
 });
