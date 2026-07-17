@@ -121,7 +121,8 @@ export function getTrackedWalletCount(): number {
 export function addSystemExposure(wallet: string, amount: number): number {
   if (amount <= 0 || !wallet) return 0;
 
-  const globalRemaining = Math.max(0, MAX_SYSTEM_EXPOSURE - totalSystemExposure);
+  const maxExposure = MAX_SYSTEM_EXPOSURE - totalSystemExposure;
+  const globalRemaining = Math.max(0, maxExposure);
   if (globalRemaining <= 0) return 0;
 
   const walletCurrent = walletExposure.get(wallet) ?? 0;
@@ -153,7 +154,7 @@ export function resetSystemExposure(): void {
   saveToDisk();
 }
 
-/** Sets the system exposure to a specific value (for restoring from persistent storage). */
+/** Sets the system exposure (for restoring from persistent storage). */
 export function setSystemExposure(amount: number): void {
   totalSystemExposure = Math.max(0, Number.isFinite(amount) ? amount : 0);
   saveToDisk();
@@ -162,13 +163,15 @@ export function setSystemExposure(amount: number): void {
 /**
  * Caps a recommended limit to the available system capacity AND the
  * wallet's per-wallet share. Formula:
- *   min(recommendedLimit, MAX_SYSTEM_EXPOSURE - total, MAX_WALLET_SHARE - current)
+ *   min(recommendedLimit, MAX_SYSTEM_EXPOSURE - total,
+ *       MAX_WALLET_SHARE - current)
  */
 export function capToSystemCapacity(
   wallet: string,
   recommendedLimit: number,
 ): number {
-  const globalRemaining = Math.max(0, MAX_SYSTEM_EXPOSURE - totalSystemExposure);
+  const maxExposure = MAX_SYSTEM_EXPOSURE - totalSystemExposure;
+  const globalRemaining = Math.max(0, maxExposure);
   const walletCurrent = walletExposure.get(wallet) ?? 0;
   const walletRemaining = Math.max(0, MAX_WALLET_SHARE - walletCurrent);
   const minCap = Math.min(recommendedLimit, globalRemaining, walletRemaining);

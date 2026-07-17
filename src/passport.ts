@@ -354,7 +354,8 @@ export async function generatePassport(
     isTrustAnchor: delegationResult?.delegation.isTrustAnchor ?? false,
   };
 
-  // Capabilities - creditEligible derived from creditLimit (no requestedAmount context)
+  // Capabilities - creditEligible derived from creditLimit
+  // (no requestedAmount context)
   const creditEligible = creditLimit > 0;
   const capabilities = {
     trustScoring: trustResult !== null,

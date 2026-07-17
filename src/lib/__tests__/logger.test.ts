@@ -2,7 +2,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { logger } from '../logger';
 
 describe('Logger', () => {
-  let consoleSpy: { log: ReturnType<typeof vi.spyOn>; error: ReturnType<typeof vi.spyOn>; warn: ReturnType<typeof vi.spyOn>; debug: ReturnType<typeof vi.spyOn> };
+  let consoleSpy: {
+    log: ReturnType<typeof vi.spyOn>;
+    error: ReturnType<typeof vi.spyOn>;
+    warn: ReturnType<typeof vi.spyOn>;
+    debug: ReturnType<typeof vi.spyOn>;
+  };
 
   beforeEach(() => {
     vi.restoreAllMocks();
@@ -69,7 +74,9 @@ describe('Logger request-scoped usage', () => {
   it('attaches requestId via meta', () => {
     logger.info('test', { requestId: 'req-123' });
     expect(console.log).toHaveBeenCalled();
-    const output = JSON.parse((console.log as ReturnType<typeof vi.fn>).mock.calls[0][0]);
+    type LogCall = ReturnType<typeof vi.fn>;
+    const calls = (console.log as LogCall).mock.calls as Array<[string]>;
+    const output = JSON.parse(calls[0]![0]);
     expect(output.requestId).toBe('req-123');
   });
 });

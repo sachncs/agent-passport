@@ -472,7 +472,9 @@ async function scoreWalletInternal(
   const stalenessAdjusted = Math.round(adjusted * 10) / 10;
 
   // Apply fresh wallet cap: new wallets cannot achieve high trust
-  const adjustedTrustScore = applyFreshWalletCap(stalenessAdjusted, accountAgeDays);
+  const adjustedTrustScore = applyFreshWalletCap(
+    stalenessAdjusted, accountAgeDays,
+  );
 
   const riskLevel = classifyRisk(adjustedTrustScore);
   const recommendedLimit = computeRecommendedLimit(adjustedTrustScore);

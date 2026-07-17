@@ -70,7 +70,8 @@ export function computeRiskPenalty(
  * - Prevents double-counting: delegation is used ONLY in underwriting
  *   as a quality multiplier on the credit limit, not as a capacity component
  *
- * Formula: clamp(0, 1350, balanceCapacity + activityBonus + ageBonus - riskPenalty)
+ * Formula: clamp(0, 1350, balanceCapacity + activityBonus
+ *   + ageBonus - riskPenalty)
  */
 export function computeCreditLimit(breakdown: {
   balanceCapacity: number;

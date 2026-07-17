@@ -161,7 +161,8 @@ export function generateUnderwritingExplanation(
  * Underwrites a wallet for credit.
  *
  * Factor architecture (post-audit, no double-counting):
- *   Trust Score (0.35) - on-chain quality, includes activity/age/volume/velocity/compliance
+ *   Trust Score (0.35) - on-chain quality, includes
+ *     activity/age/volume/velocity/compliance
  *   Delegation (0.25)     — endorsement network quality
  *   Sybil Resistance (0.20) — resistance to coordinated fake accounts
  *   Reputation (0.20)     — on-chain event reputation
@@ -222,7 +223,8 @@ export async function underwrite(
     status: delegationScore >= 70 ? 'positive' : delegationScore >= 40 ? 'neutral' : 'negative',
   });
 
-  // Factor 3: Sybil Resistance (weight: 0.20) - inverted (low sybil = high score)
+  // Factor 3: Sybil Resistance (weight: 0.20) - inverted
+  // (low sybil = high score)
   const sybilScore = sybilResult ? (1 - sybilResult.sybilRisk) * 100 : 50;
   factors.push({
     name: 'Sybil Resistance',
@@ -265,7 +267,8 @@ export async function underwrite(
       )
     : 0;
 
-  // System capacity guard: cap to remaining system exposure AND per-wallet share
+  // System capacity guard: cap to remaining system exposure AND
+  // per-wallet share
   // ponytail: capToSystemCapacity + addSystemExposure are serialized in
   // system-exposure.ts via a promise queue, so concurrent /underwrite calls
   // cannot exceed MAX_SYSTEM_EXPOSURE or MAX_WALLET_SHARE.
