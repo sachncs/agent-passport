@@ -119,10 +119,12 @@ export function settlementVerificationMiddleware(
   // The x402 middleware checks the payment proof shape but does NOT verify the
   // on-chain settlement — that is a separate defense against replay and
   // double-spend.
-  verifySettlement(
-    paymentHeader,
-    { price: String(route.price), payTo: config.x402PaymentRecipient, network: config.x402Network },
-  ).then(result => {
+  const requirements = {
+    price: String(route.price),
+    payTo: config.x402PaymentRecipient,
+    network: config.x402Network,
+  };
+  verifySettlement(paymentHeader, requirements).then(result => {
     if (!result.verified) {
       res.status(402).json({
         error: 'Payment settlement not verified',

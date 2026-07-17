@@ -21,7 +21,8 @@ import { join, dirname } from 'path';
 import { logger } from './logger';
 
 export const MAX_SYSTEM_EXPOSURE = 100_000;
-export const MAX_WALLET_SHARE = MAX_SYSTEM_EXPOSURE / 10; // 10k — no single wallet gets more than 10% of the cap
+export const MAX_WALLET_SHARE = MAX_SYSTEM_EXPOSURE / 10;
+// 10k — no single wallet gets more than 10% of the cap
 
 let totalSystemExposure = 0;
 const walletExposure = new Map<string, number>();
@@ -64,7 +65,8 @@ function loadFromDisk(): void {
 // ponytail: in-process mutex; remove when this moves to Redis.
 let writeQueue: Promise<void> = Promise.resolve();
 function enqueueWrite(task: () => void): void {
-  writeQueue = writeQueue.then(task).catch(() => { /* swallow — logged inside task */ });
+  // In-process mutex; remove when this moves to Redis.
+  writeQueue = writeQueue.then(task).catch(() => { /* logged in task */ });
 }
 
 function saveToDisk(): void {
@@ -76,7 +78,12 @@ function saveToDisk(): void {
     try {
       const dir = dirname(PERSISTENCE_PATH);
       if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-      writeFileSync(PERSISTENCE_PATH, JSON.stringify({ ...snapshot, updatedAt: new Date().toISOString() }, null, 2), { mode: 0o600 });
+      const payload = JSON.stringify(
+        { ...snapshot, updatedAt: new Date().toISOString() },
+        null,
+        2,
+      );
+      writeFileSync(PERSISTENCE_PATH, payload, { mode: 0o600 });
     } catch (e) {
       logger.warn('Failed to persist system exposure to disk', { error: String(e) });
     }
@@ -120,11 +127,14 @@ export function addSystemExposure(wallet: string, amount: number): number {
   const walletCurrent = walletExposure.get(wallet) ?? 0;
   const walletRemaining = Math.max(0, MAX_WALLET_SHARE - walletCurrent);
   if (walletRemaining <= 0) {
-    logger.warn('Wallet has reached per-wallet exposure cap', { wallet, cap: MAX_WALLET_SHARE });
+    logger.warn('Wallet has reached per-wallet exposure cap', {
+      wallet, cap: MAX_WALLET_SHARE,
+    });
     return 0;
   }
 
-  const reserved = Math.round(Math.min(amount, globalRemaining, walletRemaining) * 100) / 100;
+  const minCap = Math.min(amount, globalRemaining, walletRemaining);
+  const reserved = Math.round(minCap * 100) / 100;
   if (reserved <= 0) return 0;
 
   totalSystemExposure += reserved;
@@ -152,11 +162,15 @@ export function setSystemExposure(amount: number): void {
 /**
  * Caps a recommended limit to the available system capacity AND the
  * wallet's per-wallet share. Formula:
- *   min(recommendedLimit, MAX_SYSTEM_EXPOSURE - total, MAX_WALLET_SHARE - walletCurrent)
+ *   min(recommendedLimit, MAX_SYSTEM_EXPOSURE - total, MAX_WALLET_SHARE - current)
  */
-export function capToSystemCapacity(wallet: string, recommendedLimit: number): number {
+export function capToSystemCapacity(
+  wallet: string,
+  recommendedLimit: number,
+): number {
   const globalRemaining = Math.max(0, MAX_SYSTEM_EXPOSURE - totalSystemExposure);
   const walletCurrent = walletExposure.get(wallet) ?? 0;
   const walletRemaining = Math.max(0, MAX_WALLET_SHARE - walletCurrent);
-  return Math.round(Math.min(recommendedLimit, globalRemaining, walletRemaining) * 100) / 100;
+  const minCap = Math.min(recommendedLimit, globalRemaining, walletRemaining);
+  return Math.round(minCap * 100) / 100;
 }

@@ -41,7 +41,9 @@ export interface GraphTransaction {
 
 // ── Adjacency List ──────────────────────────────────────────────
 
-export function buildAdjacencyList(transactions: GraphTransaction[]): Map<string, Set<string>> {
+export function buildAdjacencyList(
+  transactions: GraphTransaction[],
+): Map<string, Set<string>> {
   const adj = new Map<string, Set<string>>();
   for (const t of transactions) {
     if (t.from === t.to) continue; // skip self-transactions
@@ -53,7 +55,10 @@ export function buildAdjacencyList(transactions: GraphTransaction[]): Map<string
   return adj;
 }
 
-export function getNeighbors(adj: Map<string, Set<string>>, node: string): Set<string> {
+export function getNeighbors(
+  adj: Map<string, Set<string>>,
+  node: string,
+): Set<string> {
   return adj.get(node) || new Set();
 }
 
@@ -211,11 +216,11 @@ export function computeMaxHubScore(
  *
  * For each pair (u, v) of the wallet's direct neighbors:
  *   - If u↔v is a direct edge → not intermediate (direct interaction)
- *   - If ∃w ∉ {u,v,node} : (u,w)∈E ∧ (w,v)∈E → intermediate (2-hop via w)
+ *   - If ∃w ∉ {u,v,node}: (u,w)∈E ∧ (w,v)∈E → intermediate (2-hop via w)
  *   - Otherwise → no interaction
  *
- * High density → counterparties interact through intermediaries → sybil evasion.
- * Low density  → counterparties interact directly or not at all.
+ * High density -> counterparties interact via intermediaries -> sybil evasion.
+ * Low density  -> counterparties interact directly or not at all.
  *
  * Time: O(k² × d) per node where k = degree, d = avg degree.
  * For k=25, d=20: O(12,500) per node — fast.
@@ -393,7 +398,7 @@ export function computeTemporalCorrelation(
       }
 
       if (intersection > 0) {
-        // Jaccard: |intersection| / |union| = |intersection| / (|A| + |B| - |intersection|)
+        // Jaccard: |intersection| / |union|
         const union = roundsA.size + roundsB.size - intersection;
         totalSimilarity += intersection / union;
         pairsWithOverlap++;
@@ -402,7 +407,8 @@ export function computeTemporalCorrelation(
   }
 
   if (pairsWithOverlap === 0) return 0;
-  return Math.round(Math.min(1, totalSimilarity / pairsWithOverlap) * 100) / 100;
+  const ratio = Math.min(1, totalSimilarity / pairsWithOverlap);
+  return Math.round(ratio * 100) / 100;
 }
 
 // ── Combined Signal Computation ─────────────────────────────────
