@@ -207,8 +207,10 @@ describe('Credit Capacity Audit — Invariants', () => {
         makeFactor({ name: 'Sybil', score: 70, weight: 0.20 }),
         makeFactor({ name: 'Reputation', score: 60, weight: 0.20 }),
       ];
-      // Same factors → same compositeScore regardless of creditLimit
-      expect(computeCompositeScore(factors1)).toBe(computeCompositeScore(factors2));
+      // Same factors -> same compositeScore regardless of creditLimit
+      expect(
+        computeCompositeScore(factors1),
+      ).toBe(computeCompositeScore(factors2));
     });
 
     it('credit components are additive (no cross-terms)', () => {
@@ -353,14 +355,21 @@ describe('Credit Capacity Audit — Component Bounds', () => {
 
     it('never exceeds 1350', () => {
       expect(computeCreditLimit({
-        balanceCapacity: 1000, activityBonus: 200, ageBonus: 150, riskPenalty: 0,
+        balanceCapacity: 1000, activityBonus: 200,
+        ageBonus: 150, riskPenalty: 0,
       })).toBe(1350);
     });
 
     it('additive components', () => {
-      const a = computeCreditLimit({ balanceCapacity: 100, activityBonus: 0, ageBonus: 0, riskPenalty: 0 });
-      const b = computeCreditLimit({ balanceCapacity: 0, activityBonus: 100, ageBonus: 0, riskPenalty: 0 });
-      const c = computeCreditLimit({ balanceCapacity: 100, activityBonus: 100, ageBonus: 0, riskPenalty: 0 });
+      const a = computeCreditLimit({
+        balanceCapacity: 100, activityBonus: 0, ageBonus: 0, riskPenalty: 0,
+      });
+      const b = computeCreditLimit({
+        balanceCapacity: 0, activityBonus: 100, ageBonus: 0, riskPenalty: 0,
+      });
+      const c = computeCreditLimit({
+        balanceCapacity: 100, activityBonus: 100, ageBonus: 0, riskPenalty: 0,
+      });
       expect(a + b).toBe(c);
     });
   });
@@ -422,7 +431,8 @@ describe('Credit Capacity Audit — Delegation Independence', () => {
     });
 
     // Raw scores can exceed caps (cap is applied in scoreDelegation, not here)
-    // But raw scores should still decrease with depth (due to depthScore component)
+    // But raw scores should still decrease with depth
+    // (due to depthScore component)
     expect(depth2Raw).toBeLessThan(depth1Raw);
 
     // Depth-adjusted caps (applied in scoreDelegation):
@@ -666,7 +676,8 @@ describe('Credit Capacity Audit — Numerical Simulations', () => {
 
   it('credit limit with max risk penalty → 1200', () => {
     const limit = computeCreditLimit({
-      balanceCapacity: 1000, activityBonus: 200, ageBonus: 150, riskPenalty: 150,
+      balanceCapacity: 1000, activityBonus: 200,
+      ageBonus: 150, riskPenalty: 150,
     });
     expect(limit).toBe(1200);
   });
@@ -687,7 +698,8 @@ describe('Credit Capacity Audit — Numerical Simulations', () => {
 
   it('sybil penalty: sybilRisk=0.70 → 50% reduction', () => {
     const limit = computeUnderwritingLimit(50, 1000, 0.70, 0);
-    // scoreMultiplier=1.0, sybilMultiplier=1-0.49=0.51, reputationMultiplier=1.0
+    // scoreMultiplier=1.0, sybilMultiplier=1-0.49=0.51,
+    // reputationMultiplier=1.0
     // raw = 1000 × 1.0 × 0.51 × 1.0 = 510
     expect(limit).toBe(510);
   });
@@ -722,9 +734,11 @@ describe('Credit Capacity Audit — System Capacity Guard', () => {
 
   it('capToSystemCapacity respects existing global exposure', () => {
     resetSystemExposure();
-    // 6 distinct wallets, each capped at their per-wallet share = 60k global used.
+    // 6 distinct wallets, each capped at their per-wallet share = 60k global
+    // used.
     for (let i = 0; i < 6; i++) addSystemExposure(`WALLET_${i}`, 10_000);
-    // A new wallet's cap is min(requested, 40k remaining global, 10k share) = 10k.
+    // A new wallet's cap is min(requested, 40k remaining global, 10k share)
+    // = 10k.
     const capped = capToSystemCapacity('WALLET_NEW', 60_000);
     expect(capped).toBe(10_000);
   });
@@ -741,13 +755,15 @@ describe('Credit Capacity Audit — System Capacity Guard', () => {
     resetSystemExposure();
     expect(getSystemExposure()).toBe(0);
 
-    // capToSystemCapacity returns min(requested, global_remaining, wallet_share_remaining).
+    // capToSystemCapacity returns min(requested, global_remaining,
+    // wallet_share_remaining).
     // Fresh wallet, fresh global — only the per-wallet share binds first.
     const limit1 = capToSystemCapacity('WALLET_A', 30_000);
     expect(limit1).toBe(10_000); // MAX_WALLET_SHARE = 10k for any single wallet
     addSystemExposure('WALLET_A', limit1);
 
-    // A's per-wallet share is now fully consumed. Cap is min(requested, 90k global, 0 wallet) = 0.
+    // A's per-wallet share is now fully consumed. Cap is min(requested,
+    // 90k global, 0 wallet) = 0.
     const limit2 = capToSystemCapacity('WALLET_A', 40_000);
     expect(limit2).toBe(0);
 
@@ -818,10 +834,18 @@ describe('Credit Capacity Audit — No Synthetic Capacity', () => {
 
   it('credit components are independent (no cross-terms)', () => {
     // Each component contributes independently
-    const balance = computeCreditLimit({ balanceCapacity: 100, activityBonus: 0, ageBonus: 0, riskPenalty: 0 });
-    const activity = computeCreditLimit({ balanceCapacity: 0, activityBonus: 100, ageBonus: 0, riskPenalty: 0 });
-    const age = computeCreditLimit({ balanceCapacity: 0, activityBonus: 0, ageBonus: 100, riskPenalty: 0 });
-    const combined = computeCreditLimit({ balanceCapacity: 100, activityBonus: 100, ageBonus: 100, riskPenalty: 0 });
+    const balance = computeCreditLimit({
+      balanceCapacity: 100, activityBonus: 0, ageBonus: 0, riskPenalty: 0,
+    });
+    const activity = computeCreditLimit({
+      balanceCapacity: 0, activityBonus: 100, ageBonus: 0, riskPenalty: 0,
+    });
+    const age = computeCreditLimit({
+      balanceCapacity: 0, activityBonus: 0, ageBonus: 100, riskPenalty: 0,
+    });
+    const combined = computeCreditLimit({
+      balanceCapacity: 100, activityBonus: 100, ageBonus: 100, riskPenalty: 0,
+    });
     expect(balance + activity + age).toBe(combined);
   });
 
@@ -870,12 +894,26 @@ describe('Credit Capacity Audit — Formal Invariant Proofs', () => {
 
   it('INVARIANT 1: creditLimit ≤ 1350 for all inputs', () => {
     const testCases = [
-      { balanceCapacity: 2000, activityBonus: 500, ageBonus: 300, riskPenalty: -100 },
-      { balanceCapacity: 0, activityBonus: 0, ageBonus: 0, riskPenalty: 0 },
-      { balanceCapacity: 1000, activityBonus: 200, ageBonus: 150, riskPenalty: 0 },
-      { balanceCapacity: 999, activityBonus: 199, ageBonus: 149, riskPenalty: 0 },
-      { balanceCapacity: 500, activityBonus: 100, ageBonus: 75, riskPenalty: 0 },
-      { balanceCapacity: 100, activityBonus: 50, ageBonus: 30, riskPenalty: 150 },
+      {
+        balanceCapacity: 2000, activityBonus: 500, ageBonus: 300,
+        riskPenalty: -100,
+      },
+      {
+        balanceCapacity: 0, activityBonus: 0, ageBonus: 0, riskPenalty: 0,
+      },
+      {
+        balanceCapacity: 1000, activityBonus: 200, ageBonus: 150,
+        riskPenalty: 0,
+      },
+      {
+        balanceCapacity: 999, activityBonus: 199, ageBonus: 149, riskPenalty: 0,
+      },
+      {
+        balanceCapacity: 500, activityBonus: 100, ageBonus: 75, riskPenalty: 0,
+      },
+      {
+        balanceCapacity: 100, activityBonus: 50, ageBonus: 30, riskPenalty: 150,
+      },
     ];
     for (const tc of testCases) {
       expect(computeCreditLimit(tc)).toBeLessThanOrEqual(1350);
@@ -884,9 +922,15 @@ describe('Credit Capacity Audit — Formal Invariant Proofs', () => {
 
   it('INVARIANT 2: creditLimit ≥ 0 for all inputs', () => {
     const testCases = [
-      { balanceCapacity: 0, activityBonus: 0, ageBonus: 0, riskPenalty: 1000 },
-      { balanceCapacity: 0, activityBonus: 0, ageBonus: 0, riskPenalty: 150 },
-      { balanceCapacity: 50, activityBonus: 20, ageBonus: 10, riskPenalty: 200 },
+      {
+        balanceCapacity: 0, activityBonus: 0, ageBonus: 0, riskPenalty: 1000,
+      },
+      {
+        balanceCapacity: 0, activityBonus: 0, ageBonus: 0, riskPenalty: 150,
+      },
+      {
+        balanceCapacity: 50, activityBonus: 20, ageBonus: 10, riskPenalty: 200,
+      },
     ];
     for (const tc of testCases) {
       expect(computeCreditLimit(tc)).toBeGreaterThanOrEqual(0);
@@ -924,7 +968,8 @@ describe('Credit Capacity Audit — Formal Invariant Proofs', () => {
   it('INVARIANT 4: recommendedLimit is O(creditLimit), not O(creditLimit²)', () => {
     // Fix compositeScore, vary creditLimit
     const compositeScore = 60;
-    const results: Array<{ creditLimit: number; recommendedLimit: number }> = [];
+    const results: Array<{ creditLimit: number; recommendedLimit: number }> =
+      [];
     for (const cl of [100, 200, 300, 400, 500]) {
       const rl = computeUnderwritingLimit(compositeScore, cl, 0, 0);
       results.push({ creditLimit: cl, recommendedLimit: rl });
