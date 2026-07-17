@@ -102,9 +102,15 @@ interface GraphAccountInfo {
   trustScore: number;
 }
 
-const graphAccountInfoCache = new TTLCache<GraphAccountInfo>({ maxEntries: 200, ttlMs: 60_000 });
+const graphAccountInfoCache = new TTLCache<GraphAccountInfo>({
+  maxEntries: 200,
+  ttlMs: 60_000,
+});
 
-async function fetchAccountInfo(wallet: string, fresh = false): Promise<GraphAccountInfo | null> {
+async function fetchAccountInfo(
+  wallet: string,
+  fresh = false,
+): Promise<GraphAccountInfo | null> {
   if (!fresh) {
     const cached = graphAccountInfoCache.get(wallet);
     if (cached) return cached;
@@ -133,7 +139,10 @@ interface TrustGraphIndexerResponse {
   transactions?: TrustGraphIndexerTransaction[];
 }
 
-async function fetchDelegationEdges(wallet: string, limit = 100): Promise<GraphEdge[]> {
+async function fetchDelegationEdges(
+  wallet: string,
+  limit = 100,
+): Promise<GraphEdge[]> {
   try {
     const url = `${INDEXER_URL}/v2/accounts/${wallet}/transactions?limit=${limit}&tx-type=pay`;
     const res = await fetchWithTimeout(url, { timeoutMs: 10_000 });
@@ -169,8 +178,12 @@ export async function analyzeTrustGraph(
 
   const allEdges: GraphEdge[] = [];
   const visited = new Map<string, GraphNode>();
-  const queue: Array<{ address: string; depth: number }> = [{ address: wallet, depth: 0 }];
-  visited.set(wallet, { address: wallet, trustScore: 0, balanceAlgo: 0, depth: 0 });
+  const queue: Array<{ address: string; depth: number }> = [
+    { address: wallet, depth: 0 },
+  ];
+  visited.set(wallet, {
+    address: wallet, trustScore: 0, balanceAlgo: 0, depth: 0,
+  });
 
   // BFS traversal
   while (queue.length > 0) {
@@ -183,7 +196,8 @@ export async function analyzeTrustGraph(
     allEdges.push(...edges);
 
     // Collect unique unseen targets, limit to 10 per depth level
-    const newTargets: { edge: GraphEdge; info: { balance: number; trustScore: number } | null }[] = [];
+    type TargetInfo = { balance: number; trustScore: number } | null;
+    const newTargets: { edge: GraphEdge; info: TargetInfo }[] = [];
     const seenTargets = new Set<string>();
     for (const edge of edges) {
       if (!visited.has(edge.to) && !seenTargets.has(edge.to)) {
@@ -219,7 +233,9 @@ export async function analyzeTrustGraph(
     }
   });
   const trustScoreResults = await Promise.all(trustScorePromises);
-  const trustScoreMap = new Map(trustScoreResults.map(r => [r.address, r.trustScore]));
+  const trustScoreMap = new Map(
+    trustScoreResults.map(r => [r.address, r.trustScore]),
+  );
 
   // Update nodes with actual trust scores
   for (const node of nodes) {
@@ -250,10 +266,15 @@ export async function analyzeTrustGraph(
   // What-if analysis: what happens if each direct sponsor disappears
   const whatIfs: WhatIfResult[] = [];
   for (const edge of directEdges) {
-    const remainingEdges = allEdges.filter(e => !(e.from === wallet && e.to === edge.to));
+    const remainingEdges = allEdges.filter(
+      e => !(e.from === wallet && e.to === edge.to),
+    );
     const remainingExposure = computeExposure(remainingEdges, wallet);
     const scoreImpact = edge.amount > 0
-      ? Math.round((remainingExposure.totalExposure / Math.max(1, exposure.totalExposure)) * 100) / 100
+      ? Math.round(
+        (remainingExposure.totalExposure / Math.max(1, exposure.totalExposure))
+        * 100,
+      ) / 100
       : 1;
 
     whatIfs.push({
@@ -313,7 +334,9 @@ export async function simulateSponsorLoss(
   if (!base) return null;
 
   // Zero out edges where the lost sponsor is the source or a path hop.
-  const filteredEdges = base.edges.filter(e => e.from !== lostSponsor && e.to !== lostSponsor);
+  const filteredEdges = base.edges.filter(
+    e => e.from !== lostSponsor && e.to !== lostSponsor,
+  );
   const filteredExposure = computeExposure(filteredEdges, wallet);
 
   return {
