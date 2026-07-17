@@ -28,7 +28,10 @@ export function inflightDelete(key: string): void {
 }
 
 /** Convenience: run `loader` once even if `key` is requested concurrently. */
-export async function singleflight<T>(key: string, loader: () => Promise<T>): Promise<T> {
+export async function singleflight<T>(
+  key: string,
+  loader: () => Promise<T>,
+): Promise<T> {
   const existing = inflight.get(key);
   if (existing) return existing as Promise<T>;
 
