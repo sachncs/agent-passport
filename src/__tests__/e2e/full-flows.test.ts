@@ -18,23 +18,12 @@ import { app, responseCache } from '../../app';
 import {
   KNOWN_TESTNET_WALLET,
   ALT_TESTNET_WALLET,
-  FRESH_WALLET,
-  freshWallet,
   randomIdempotencyKey,
   isE2ESkipped,
 } from './_fixtures';
 import { clearIdempotencyStore } from '../../lib/idempotency';
-import {
-  getUniqueWalletCount,
-   registry as metricsRegistry,
-   httpRequestsTotal
-} from '../../lib/metrics';
 
 const maybeDescribe = isE2ESkipped() ? describe.skip : describe;
-
-function isAlphanumeric(s: string): boolean {
-  return /^[A-Z2-7]{58}$/.test(s);
-}
 
 async function fetchMetrics(): Promise<string> {
   const res = await request(app).get('/metrics');
@@ -44,10 +33,12 @@ async function fetchMetrics(): Promise<string> {
 
 function metricValue(
   metrics: string,
-   name: string,
-   labelMatch?: string
+  name: string,
+  labelMatch?: string,
 ): number {
-  const lines = metrics.split('\n').filter(l => l.startsWith(name) && !l.startsWith('#'));
+  const lines = metrics.split('\n').filter(
+    l => l.startsWith(name) && !l.startsWith('#'),
+  );
   for (const line of lines) {
     if (labelMatch && !line.includes(labelMatch)) continue;
     const match = line.match(/\s+([\d.eE+-]+)$/);
