@@ -42,7 +42,8 @@ function formatMs(ms: number): string {
   return ms.toFixed(1);
 }
 
-function formatTable(results: { capability: string; mode: string; result: BenchmarkResult }[]): string {
+type TableRow = { capability: string; mode: string; result: BenchmarkResult };
+function formatTable(results: TableRow[]): string {
   const header = [
     'Capability'.padEnd(22),
     'Mode'.padEnd(10),
@@ -183,10 +184,13 @@ describe('1K Wallet Benchmark', () => {
   }, 300000);
 
   it('Counterparty — Concurrent(10)', async () => {
-    const res = await measureConcurrent(checkCounterparty, wallets, CONCURRENCY);
+    const res = await measureConcurrent(
+      checkCounterparty, wallets, CONCURRENCY,
+    );
     expect(res.totalMs).toBeGreaterThan(0);
     expect(res.throughput).toBeGreaterThan(0);
-    console.log(formatTable([{ capability: 'Counterparty', mode: `Conc(${CONCURRENCY})`, result: res }]));
+    const row = { capability: 'Counterparty', mode: `Conc(${CONCURRENCY})`, result: res };
+    console.log(formatTable([row]));
   }, 300000);
 
   it('Credit — Sequential', async () => {
@@ -232,7 +236,9 @@ describe('1K Wallet Benchmark', () => {
   }, 300000);
 
   it('Reputation — Concurrent(10)', async () => {
-    const res = await measureConcurrent(computeReputation, wallets, CONCURRENCY);
+    const res = await measureConcurrent(
+      computeReputation, wallets, CONCURRENCY,
+    );
     expect(res.totalMs).toBeGreaterThan(0);
     expect(res.throughput).toBeGreaterThan(0);
     console.log(formatTable([{ capability: 'Reputation', mode: `Conc(${CONCURRENCY})`, result: res }]));

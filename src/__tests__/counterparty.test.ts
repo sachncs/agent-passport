@@ -229,8 +229,9 @@ describe('Decision Engine Audit', () => {
     });
 
     it('on-chain is 1.5x more sensitive than delegation', () => {
-      const onChainDelta = computeCombinedScore(51, 50) - computeCombinedScore(50, 50);
-      const delegationDelta = computeCombinedScore(50, 51) - computeCombinedScore(50, 50);
+      const baseline = computeCombinedScore(50, 50);
+      const onChainDelta = computeCombinedScore(51, 50) - baseline;
+      const delegationDelta = computeCombinedScore(50, 51) - baseline;
       expect(onChainDelta / delegationDelta).toBeCloseTo(1.5, 0);
     });
 
@@ -393,7 +394,10 @@ describe('Decision Engine Audit', () => {
         [0, 0, 0, false, 0.30],
       ];
       for (const args of inputs) {
-        const reasons = generateCounterpartyExplanation(args[0] as number, args[1] as number, args[2] as number, args[3] as boolean, args[4] as number);
+        const reasons = generateCounterpartyExplanation(
+          args[0] as number, args[1] as number, args[2] as number,
+          args[3] as boolean, args[4] as number,
+        );
         expect(reasons.length).toBe(3);
       }
     });

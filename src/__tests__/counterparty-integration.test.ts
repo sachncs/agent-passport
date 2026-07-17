@@ -34,7 +34,8 @@ describe('Counterparty Verification — Integration Tests (Real Testnet)', () =>
     const result = await checkCounterparty(TESTNET_WALLET);
 
     expect(result).not.toBeNull();
-    const expected = Math.round((0.6 * result!.onChainScore + 0.4 * result!.delegationScore) * 10) / 10;
+    const weighted = 0.6 * result!.onChainScore + 0.4 * result!.delegationScore;
+    const expected = Math.round(weighted * 10) / 10;
     expect(result!.trustScore).toBe(expected);
   }, 30000);
 
