@@ -286,7 +286,7 @@ async function fetchAccountInfoImpl(wallet: string, fresh: boolean): Promise<Acc
 // ponytail: singleflight around fetchAccountInfo — 100 concurrent /score
 // requests on the same wallet share one algod round-trip instead of
 // stampeding the indexer.
-async function fetchAccountInfo(wallet: string, fresh: boolean = false): Promise<AccountInfo | null> {
+async function fetchAccountInfo(wallet: string, fresh = false): Promise<AccountInfo | null> {
   if (fresh) return fetchAccountInfoImpl(wallet, fresh);
   return singleflight(`acctinfo:${wallet}`, () => fetchAccountInfoImpl(wallet, fresh));
 }
@@ -300,7 +300,7 @@ interface TrustScoreIndexerResponse {
   'next-token'?: string;
 }
 
-async function fetchTransactionHistory(wallet: string, fresh: boolean = false): Promise<{
+async function fetchTransactionHistory(wallet: string, fresh = false): Promise<{
   totalTxns: number;
   firstRound: number;
   lastRound: number;

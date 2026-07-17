@@ -104,7 +104,7 @@ interface GraphAccountInfo {
 
 const graphAccountInfoCache = new TTLCache<GraphAccountInfo>({ maxEntries: 200, ttlMs: 60_000 });
 
-async function fetchAccountInfo(wallet: string, fresh: boolean = false): Promise<GraphAccountInfo | null> {
+async function fetchAccountInfo(wallet: string, fresh = false): Promise<GraphAccountInfo | null> {
   if (!fresh) {
     const cached = graphAccountInfoCache.get(wallet);
     if (cached) return cached;
@@ -133,7 +133,7 @@ interface TrustGraphIndexerResponse {
   transactions?: TrustGraphIndexerTransaction[];
 }
 
-async function fetchDelegationEdges(wallet: string, limit: number = 100): Promise<GraphEdge[]> {
+async function fetchDelegationEdges(wallet: string, limit = 100): Promise<GraphEdge[]> {
   try {
     const url = `${INDEXER_URL}/v2/accounts/${wallet}/transactions?limit=${limit}&tx-type=pay`;
     const res = await fetchWithTimeout(url, { timeoutMs: 10_000 });
@@ -163,7 +163,7 @@ async function fetchDelegationEdges(wallet: string, limit: number = 100): Promis
 
 export async function analyzeTrustGraph(
   wallet: string,
-  maxDepth: number = 5
+  maxDepth = 5,
 ): Promise<TrustGraphResult | null> {
   if (!isValidWallet(wallet)) return null;
 

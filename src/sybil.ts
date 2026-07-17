@@ -37,7 +37,7 @@ export interface SybilResult {
 export function computeCreationClustering(
   creationRounds: number[],
   referenceRound: number,
-  windowRounds: number = 14515  // ~48h at 3.3s/round
+  windowRounds = 14515,  // ~48h at 3.3s/round
 ): number {
   if (creationRounds.length <= 1) return 0;
   const inWindow = creationRounds.filter(
@@ -335,7 +335,7 @@ const sybilAccountInfoCache = new TTLCache<SybilAccountInfo>({ maxEntries: 500, 
 
 const SYBIL_INDEXER_PAGE_SIZE = 2000;
 
-async function fetchAccountInfo(wallet: string, fresh: boolean = false): Promise<SybilAccountInfo | null> {
+async function fetchAccountInfo(wallet: string, fresh = false): Promise<SybilAccountInfo | null> {
   if (!fresh) {
     const cached = sybilAccountInfoCache.get(wallet);
     if (cached) return cached;
@@ -371,7 +371,7 @@ interface SybilIndexerResponse {
   'next-token'?: string;
 }
 
-async function fetchTransactions(wallet: string, fresh: boolean = false): Promise<{
+async function fetchTransactions(wallet: string, fresh = false): Promise<{
   transactions: { from: string; to: string; round: number; amount: number }[];
   counterpartyCounts: Map<string, number>;
   fundingSources: Map<string, string>;

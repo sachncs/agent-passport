@@ -9,7 +9,7 @@ const DEFAULT_TIMEOUT_MS = 10_000;
  */
 export async function withTimeout<T>(
   promise: Promise<T>,
-  ms: number = DEFAULT_TIMEOUT_MS,
+  ms = DEFAULT_TIMEOUT_MS,
   label?: string,
 ): Promise<T> {
   let timeoutId: ReturnType<typeof setTimeout>;

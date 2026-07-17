@@ -85,7 +85,7 @@ export function computeEventHash(
   eventType: EventType,
   round: number,
   counterparty?: string,
-  salt: number = 0,
+  salt = 0,
 ): string {
   const key = `${wallet}:${eventType}:${counterparty ?? ''}:${round}:${salt}`;
   return createHash('sha256').update(key).digest('hex').slice(0, 16);
@@ -676,9 +676,9 @@ export async function verifySelfReportedEvent(
 export async function recordEvent(
   wallet: string,
   eventType: EventType,
-  amount: number = 0,
+  amount = 0,
   counterparty?: string,
-  round: number = 0,
+  round = 0,
 ): Promise<ReputationEvent | null> {
   if (!isValidWallet(wallet)) return null;
   if (!EVENT_TYPES.includes(eventType)) return null;

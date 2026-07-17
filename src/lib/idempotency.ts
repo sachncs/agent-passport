@@ -100,7 +100,7 @@ export function setIdempotencyRecord(
   bodyHash: string,
   status: number,
   body: unknown,
-  ttlMs: number = DEFAULT_TTL_MS,
+  ttlMs = DEFAULT_TTL_MS,
 ): IdempotencyRecord {
   const now = Date.now();
   const rec: IdempotencyRecord = {

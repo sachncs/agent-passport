@@ -46,7 +46,7 @@ export function computeConfidence(combinedScore: number): number {
  *   to make a reliable decision — deny and request more data
  * - Combined threshold ensures both signal strength AND signal reliability
  */
-export function decideAllow(combinedScore: number, confidence: number = 1.0): boolean {
+export function decideAllow(combinedScore: number, confidence = 1.0): boolean {
   return combinedScore >= 40 && confidence >= 0.45;
 }
 

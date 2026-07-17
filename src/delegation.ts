@@ -89,7 +89,7 @@ export function computeSponsorQualityScore(sponsorScore: number): number {
  *   5 sponsors, quality=0   → min(100, 100 × 0.1) = 10
  *   1 sponsor,  quality=100 → min(100, 20 × 1.0)  = 20
  */
-export function computeSponsorCountScore(count: number, avgQuality: number = 100): number {
+export function computeSponsorCountScore(count: number, avgQuality = 100): number {
   const raw = count * 20;
   const qualityMultiplier = Math.max(0.1, avgQuality / 100);
   return Math.max(0, Math.min(100, Math.round(raw * qualityMultiplier * 10) / 10));
@@ -195,7 +195,7 @@ export function clearDelegationCache(): void {
 async function findDelegationPath(
   wallet: string,
   trustAnchors: Set<string>,
-  maxDepth: number = 10
+  maxDepth = 10,
 ): Promise<DelegationPath | null> {
   if (trustAnchors.has(wallet)) {
     return { path: [wallet], depth: 0, totalAmount: 0 };
@@ -241,7 +241,7 @@ async function findDelegationPath(
 async function findAllTrustedAncestors(
   wallet: string,
   trustAnchors: Set<string>,
-  maxDepth: number = 10
+  maxDepth = 10,
 ): Promise<string[]> {
   const ancestors: string[] = [];
   const visited = new Set<string>();
