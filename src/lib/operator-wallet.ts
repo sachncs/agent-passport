@@ -1,9 +1,10 @@
 /**
  * Operator Wallet
  *
- * Handles signing and submitting Algorand transactions for the Agent Passport system.
- * The operator wallet is a pre-funded account that pays transaction fees and submits
- * state changes to the delegation registry and reputation contracts.
+ * Handles signing and submitting Algorand transactions for the Agent
+ * Passport system. The operator wallet is a pre-funded account that pays
+ * transaction fees and submits state changes to the delegation registry
+ * and reputation contracts.
  *
  * Configuration:
  *   OPERATOR_MNEMONIC — 25-word Algorand mnemonic for the operator wallet

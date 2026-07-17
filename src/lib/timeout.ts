@@ -33,8 +33,9 @@ export async function fetchWithTimeout(
   options?: RequestInit & { timeoutMs?: number },
 ): Promise<Response> {
   const { timeoutMs = DEFAULT_TIMEOUT_MS, ...fetchOptions } = options ?? {};
-  // Ponytail: AbortSignal.timeout() is the stdlib way. The extra AbortController
-  // dance below is kept for callers that need to attach additional abort
+  // Ponytail: AbortSignal.timeout() is the stdlib way. The extra
+  // AbortController dance below is kept for callers that need to attach
+  // additional abort
   // reasons (rare).
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);

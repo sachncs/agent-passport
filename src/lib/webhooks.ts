@@ -45,7 +45,10 @@ export function listSubscribers(wallet?: string): WebhookSubscriber[] {
 }
 
 /** Fire-and-forget POST to all subscribers of a wallet. */
-export async function fireWebhook(wallet: string, payload: unknown): Promise<void> {
+export async function fireWebhook(
+  wallet: string,
+  payload: unknown,
+): Promise<void> {
   const subs = listSubscribers(wallet);
   if (subs.length === 0) return;
 
