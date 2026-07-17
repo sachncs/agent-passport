@@ -22,6 +22,7 @@ import {
 import {
   computeRiskPenalty,
   computeCreditLimit,
+  classifyCreditRisk,
 } from '../credit';
 import {
   computeCompositeScore,

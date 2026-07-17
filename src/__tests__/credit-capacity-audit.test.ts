@@ -1,5 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
+  computeBalanceCapacity,
+  computeActivityBonus,
+  computeAgeBonus,
   computeRiskPenalty,
   computeCreditLimit,
 } from '../credit';
@@ -16,6 +19,7 @@ import {
 } from '../underwriting';
 import type { UnderwritingFactor } from '../underwriting';
 import {
+  getSystemExposure,
   resetSystemExposure,
   capToSystemCapacity,
   addSystemExposure,

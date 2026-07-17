@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   computeAgeScore,
   computeComplianceScore,
+  computeTrustScore,
   classifyRisk,
   generateExplanation,
 } from '../trust-score';
