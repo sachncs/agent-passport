@@ -40,7 +40,8 @@ export function computeCompositeScore(factors: UnderwritingFactor[]): number {
   const totalWeight = factors.reduce((sum, f) => sum + f.weight, 0);
   if (totalWeight === 0) return 0;
   const weightedSum = factors.reduce((sum, f) => sum + f.score * f.weight, 0);
-  return Math.round(Math.max(0, Math.min(100, weightedSum / totalWeight)) * 10) / 10;
+  const score = Math.max(0, Math.min(100, weightedSum / totalWeight));
+  return Math.round(score * 10) / 10;
 }
 
 export function classifyUnderwritingRisk(
@@ -57,7 +58,8 @@ export function classifyUnderwritingRisk(
  *
  * Design rationale (post-audit):
  * - creditLimit is the base (backed by on-chain collateral)
- * - compositeScore multiplier scales quality: better wallets get more of their capacity
+ * - compositeScore multiplier scales quality: better wallets get more of
+ *   their capacity
  * - sybilMultiplier penalizes coordinated inauthentic behavior
  * - reputationMultiplier rewards positive on-chain reputation
  * - NO delegation double-count: delegation appears ONLY in compositeScore
@@ -115,7 +117,8 @@ export function computeUnderwritingConfidence(
   const totalFactors = factors.length;
   if (totalFactors === 0) return 0.40;
   const coverage = factorsWithData / totalFactors;
-  return Math.round(Math.max(0.40, Math.min(0.95, 0.40 + coverage * 0.55)) * 100) / 100;
+  const score = Math.max(0.40, Math.min(0.95, 0.40 + coverage * 0.55));
+  return Math.round(score * 100) / 100;
 }
 
 export function generateUnderwritingExplanation(
@@ -158,7 +161,7 @@ export function generateUnderwritingExplanation(
  * Underwrites a wallet for credit.
  *
  * Factor architecture (post-audit, no double-counting):
- *   Trust Score (0.35)    — on-chain quality, includes activity/age/volume/velocity/compliance
+ *   Trust Score (0.35) - on-chain quality, includes activity/age/volume/velocity/compliance
  *   Delegation (0.25)     — endorsement network quality
  *   Sybil Resistance (0.20) — resistance to coordinated fake accounts
  *   Reputation (0.20)     — on-chain event reputation
@@ -169,8 +172,9 @@ export function generateUnderwritingExplanation(
  * - Sybil Resistance: cluster analysis of related wallets
  * - Reputation: event-based track record
  *
- * Credit capacity (creditLimit) is used ONLY as the base in computeUnderwritingLimit.
- * It does NOT appear in compositeScore, preventing self-referential O(creditLimit²).
+ * Credit capacity (creditLimit) is used ONLY as the base in
+ * computeUnderwritingLimit. It does NOT appear in compositeScore,
+ * preventing self-referential O(creditLimit^2).
  */
 export async function underwrite(
   wallet: string
@@ -218,7 +222,7 @@ export async function underwrite(
     status: delegationScore >= 70 ? 'positive' : delegationScore >= 40 ? 'neutral' : 'negative',
   });
 
-  // Factor 3: Sybil Resistance (weight: 0.20) — inverted (low sybil = high score)
+  // Factor 3: Sybil Resistance (weight: 0.20) - inverted (low sybil = high score)
   const sybilScore = sybilResult ? (1 - sybilResult.sybilRisk) * 100 : 50;
   factors.push({
     name: 'Sybil Resistance',
@@ -256,10 +260,12 @@ export async function underwrite(
   // Recommended limit (creditLimit as base, NOT in compositeScore)
   const creditLimit = creditResult?.estimatedLimit ?? 0;
   let recommendedLimit = approved
-    ? computeUnderwritingLimit(compositeScore, creditLimit, sybilRisk, reputation)
+    ? computeUnderwritingLimit(
+        compositeScore, creditLimit, sybilRisk, reputation,
+      )
     : 0;
 
-  // System capacity guard: cap to remaining system exposure AND per-wallet share.
+  // System capacity guard: cap to remaining system exposure AND per-wallet share
   // ponytail: capToSystemCapacity + addSystemExposure are serialized in
   // system-exposure.ts via a promise queue, so concurrent /underwrite calls
   // cannot exceed MAX_SYSTEM_EXPOSURE or MAX_WALLET_SHARE.
