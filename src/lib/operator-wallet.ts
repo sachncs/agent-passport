@@ -16,8 +16,8 @@
 
 import algosdk from 'algosdk';
 import { algod } from './algorand-client';
-import { withTimeout } from './timeout';
 import { logger } from './logger';
+import { withTimeout } from './timeout';
 
 let operatorAccount: algosdk.Account | null = null;
 

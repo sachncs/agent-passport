@@ -1,5 +1,5 @@
-import { Request, Response, NextFunction } from 'express';
 import { createHash, randomUUID } from 'crypto';
+import { Request, NextFunction, Response } from 'express';
 import { recordIdempotencyConflict } from './metrics';
 
 const KEY_MIN_LENGTH = 8;

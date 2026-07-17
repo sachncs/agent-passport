@@ -6,7 +6,7 @@
  * handlers don't hit the filesystem.
  */
 
-import { readFileSync, existsSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 
 interface BuildInfo {

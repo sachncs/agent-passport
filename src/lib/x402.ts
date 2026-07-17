@@ -1,7 +1,7 @@
-import { Request, Response, NextFunction } from 'express';
-import { HTTPFacilitatorClient } from '@x402/core/server';
 import type { RoutesConfig } from '@x402/core/server';
+import { HTTPFacilitatorClient } from '@x402/core/server';
 import { paymentMiddlewareFromConfig } from '@x402/express';
+import { NextFunction, Request, Response } from 'express';
 import { config } from '../config';
 import { X402_PRICING } from './constants';
 import { logger } from './logger';
