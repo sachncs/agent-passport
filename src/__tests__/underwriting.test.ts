@@ -12,9 +12,7 @@ import { applySybilPenalty } from '../trust-score';
 import {
   capToSystemCapacity,
   addSystemExposure,
-  getSystemExposure,
   resetSystemExposure,
-  MAX_SYSTEM_EXPOSURE,
 } from '../lib/system-exposure';
 import {
   computeIdentityStrength,
@@ -486,7 +484,6 @@ describe('Passport Decision Audit', () => {
     it('riskMap values are 10/35/65/90 for low/medium/high/critical', () => {
       const lowRisk = computeOverallRisk('low', 0, 'low', 'low');
       const medRisk = computeOverallRisk('medium', 0.5, 'medium', 'medium');
-      const highRisk = computeOverallRisk('high', 0.7, 'high', 'high');
       const critRisk = computeOverallRisk(
         'critical',
          1.0,
