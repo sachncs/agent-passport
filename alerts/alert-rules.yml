@@ -34,28 +34,49 @@ groups:
           runbook_url: "alerts/runbooks/x402-verification-failure.md"
 
       # P0: Contract Indexing Failure
+      # Only meaningful when contracts are deployed AND there is production
+      # traffic. A testnet with no REGISTRY_APP_ID will report zero forever,
+      # so this alert is gated on the underlying counter being non-zero.
       - alert: ContractIndexingFailure
-        expr: rate(agent_passport_contract_disputes_total[10m]) > 5
-        for: 5m
+        expr: agent_passport_contract_endorsements_total > 0 and rate(agent_passport_contract_endorsements_total[1h]) == 0 and rate(agent_passport_contract_disputes_total[1h]) == 0
+        for: 30m
         labels:
           severity: critical
           team: blockchain
         annotations:
           summary: "Contract indexing failure detected"
-          description: "Dispute event rate is elevated, indicating potential indexing issues."
+          description: "No contract events recorded in 30+ minutes despite prior activity. Check REGISTRY_APP_ID / REPUTATION_APP_ID."
           runbook_url: "alerts/runbooks/contract-indexing-failure.md"
 
-      # P0: High Error Rate
-      - alert: HighErrorRate
-        expr: rate(agent_passport_http_request_errors_total[5m]) / rate(agent_passport_http_requests_total[5m]) > 0.05
+      # P0: High 5xx Error Rate (critical)
+      - alert: High5xxRate
+        expr: |
+          (
+            sum(rate(agent_passport_http_request_errors_total{error_type="server_error"}[5m]))
+            /
+            sum(rate(agent_passport_http_requests_total[5m]))
+          ) > 0.05
         for: 3m
         labels:
           severity: critical
           team: platform
         annotations:
-          summary: "High HTTP error rate detected"
-          description: "Error rate is above 5% for 3 minutes. Current value: {{ $value }}"
+          summary: "High 5xx error rate"
+          description: "5xx error rate above 5% for 3 minutes."
           runbook_url: "alerts/runbooks/elevated-error-rate.md"
+
+      # P0: Algorand Dependency Down
+      - alert: AlgorandDependencyDown
+        expr: |
+          sum(rate(agent_passport_http_request_errors_total{error_type="server_error", path="/health"}[5m])) > 0.1
+        for: 2m
+        labels:
+          severity: critical
+          team: blockchain
+        annotations:
+          summary: "Algorand dependency down"
+          description: "Health check is failing, indicating Algorand endpoint connectivity issues."
+          runbook_url: "alerts/runbooks/agent-passport-api-down.md"
 
   - name: agent_passport_warning
     rules:
@@ -83,16 +104,22 @@ groups:
           description: "P99 request latency is above 3 seconds for 5 minutes. Testnet floor is 2.27s under 1000 VU."
           runbook_url: "alerts/runbooks/elevated-latency.md"
 
-      # P1: Elevated Error Rate — testnet baseline is 0.45% under 1000 VU
-      - alert: ElevatedErrorRate
-        expr: rate(agent_passport_http_request_errors_total[5m]) / rate(agent_passport_http_request_errors_total[5m] + rate(agent_passport_http_requests_total[5m])) > 0.02
-        for: 5m
+      # P1: Elevated 4xx Error Rate (warning) — separate from 5xx so that
+      # client misbehavior and infrastructure failure don't trip the same rule.
+      - alert: ElevatedClientErrorRate
+        expr: |
+          (
+            sum(rate(agent_passport_http_request_errors_total{error_type="client_error"}[5m]))
+            /
+            sum(rate(agent_passport_http_requests_total[5m]))
+          ) > 0.10
+        for: 10m
         labels:
           severity: warning
           team: platform
         annotations:
-          summary: "Elevated error rate"
-          description: "Error rate is above 2% for 5 minutes. Testnet baseline is 0.45% under 1000 VU."
+          summary: "Elevated 4xx error rate"
+          description: "4xx error rate above 10% for 10 minutes. May indicate SDK regression or abuse."
           runbook_url: "alerts/runbooks/elevated-error-rate.md"
 
       # P1: Replay Attack Spike
@@ -143,17 +170,20 @@ groups:
           description: "Request rate is above 100 req/s for 10 minutes."
           runbook_url: "alerts/runbooks/unusual-traffic.md"
 
-      # P2: Unusual Graph Growth
-      - alert: UnusualGraphGrowth
-        expr: rate(agent_passport_graph_traversal_depth_sum[1h]) > 50
-        for: 30m
-        labels:
-          severity: info
-          team: platform
-        annotations:
-          summary: "Unusual graph growth detected"
-          description: "Average graph traversal depth is increasing abnormally."
-          runbook_url: "alerts/runbooks/graph-growth.md"
+      # P2: Unusual Graph Growth — depends on a graph-depth histogram that the
+      # service does not export today. The underlying data exists in the
+      # trust-graph module's logs; add the histogram when this becomes a
+      # real production signal.
+      # - alert: UnusualGraphGrowth
+      #   expr: rate(agent_passport_graph_traversal_depth_sum[1h]) > 50
+      #   for: 30m
+      #   labels:
+      #     severity: info
+      #     team: platform
+      #   annotations:
+      #     summary: "Unusual graph growth detected"
+      #     description: "Average graph traversal depth is increasing abnormally."
+      #     runbook_url: "alerts/runbooks/graph-growth.md"
 
       # P2: Cache Hit Rate Drop
       - alert: CacheHitRateDrop
@@ -166,61 +196,36 @@ groups:
           summary: "Cache hit rate has dropped"
           description: "Cache hit rate is below 50% for 15 minutes."
 
-      # P2: High Memory Usage
+      # High Memory Usage — alert on rss (resident set size) because that's
+      # what the OOM killer sees. Heap used/total only matter when V8 GC is
+      # under pressure, which usually resolves itself.
       - alert: HighMemoryUsage
-        expr: agent_passport_process_memory_usage_bytes{type="heapUsed"} / agent_passport_process_memory_usage_bytes{type="heapTotal"} > 0.85
+        expr: agent_passport_process_memory_usage_bytes{type="rss"} > 1.5e9
         for: 10m
         labels:
           severity: info
           team: platform
         annotations:
           summary: "High memory usage detected"
-          description: "Heap usage is above 85% for 10 minutes."
+          description: "RSS is above 1.5 GB for 10 minutes. Investigate before the OOM killer hits."
 
-      # P2: Unique Wallet Spike
+      # P2: Unique Wallet Spike — tracked via underwriting decisions (the only
+      # counter that has a wallet context today). Replace with a proper gauge
+      # when the request-logging middleware exports a unique-IP rollup.
       - alert: UniqueWalletSpike
-        expr: rate(agent_passport_unique_wallets[1h]) > 1000
+        expr: rate(agent_passport_underwriting_decisions_total[1h]) > 1000
         for: 30m
         labels:
           severity: info
           team: business
         annotations:
-          summary: "Unusual number of unique wallets"
-          description: "More than 1000 unique wallets per hour for 30 minutes."
+          summary: "Unusual underwriting volume"
+          description: "More than 1000 underwriting decisions per hour for 30 minutes. May indicate unique-wallet spike or bot traffic."
 
-      # P0: 5xx Error Rate
-      - alert: High5xxRate
-        expr: |
-          (
-            sum(rate(agent_passport_http_request_errors_total{error_type="server_error"}[5m]))
-            /
-            sum(rate(agent_passport_http_requests_total[5m]))
-          ) > 0.01
-        for: 3m
-        labels:
-          severity: critical
-          team: platform
-        annotations:
-          summary: "High 5xx error rate"
-          description: "5xx error rate above 1% for 3 minutes."
-          runbook_url: "alerts/runbooks/elevated-error-rate.md"
-
-      # P0: Algorand Dependency Down
-      - alert: AlgorandDependencyDown
-        expr: |
-          sum(rate(agent_passport_http_request_errors_total{error_type="server_error", path="/health"}[5m])) > 0.1
-        for: 2m
-        labels:
-          severity: critical
-          team: blockchain
-        annotations:
-          summary: "Algorand dependency down"
-          description: "Health check is failing, indicating Algorand endpoint connectivity issues."
-          runbook_url: "alerts/runbooks/agent-passport-api-down.md"
-
-      # P1: Contract Event Stall
+      # P1: Contract Event Stall — gated on prior activity to avoid firing
+      # on a fresh deploy that has never recorded an event.
       - alert: ContractEventStall
-        expr: agent_passport_contract_event_stall_seconds > 14400
+        expr: (agent_passport_contract_endorsements_total > 0 or agent_passport_contract_disputes_total > 0) and (time() - agent_passport_contract_endorsements_total_created_timestamp) > 14400 and (time() - agent_passport_contract_disputes_total_created_timestamp) > 14400
         for: 5m
         labels:
           severity: warning
@@ -230,16 +235,17 @@ groups:
           description: "Contract indexing may be stalled. Check REGISTRY_APP_ID / REPUTATION_APP_ID."
           runbook_url: "alerts/runbooks/contract-indexing-failure.md"
 
-      # P1: High CPU usage
-      - alert: HighCPUUsage
-        expr: agent_passport_process_cpu_usage_ratio > 0.85
-        for: 10m
-        labels:
-          severity: warning
-          team: platform
-        annotations:
-          summary: "High CPU usage"
-          description: "Process CPU usage above 85% for 10 minutes."
+      # P1: High CPU usage — node's process.cpuUsage() is not exported today.
+      # Remove the comment when process_cpu_usage_ratio is registered.
+      # - alert: HighCPUUsage
+      #   expr: agent_passport_process_cpu_usage_ratio > 0.85
+      #   for: 10m
+      #   labels:
+      #     severity: warning
+      #     team: platform
+      #   annotations:
+      #     summary: "High CPU usage"
+      #     description: "Process CPU usage above 85% for 10 minutes."
 
       # P2: Idempotency conflict spike
       - alert: IdempotencyConflictSpike

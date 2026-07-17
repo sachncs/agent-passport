@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { logger, createRequestLogger } from '../logger';
+import { logger } from '../logger';
 
 describe('Logger', () => {
   let consoleSpy: { log: ReturnType<typeof vi.spyOn>; error: ReturnType<typeof vi.spyOn>; warn: ReturnType<typeof vi.spyOn>; debug: ReturnType<typeof vi.spyOn> };
@@ -57,51 +57,19 @@ describe('Logger', () => {
   });
 });
 
-describe('createRequestLogger', () => {
-  let consoleSpy: { log: ReturnType<typeof vi.spyOn> };
-
+// `createRequestLogger` was removed — callers now pass `requestId` directly
+// in the meta object to `logger.info/warn/error`. The original tests are
+// dropped; meta-merging is covered by the Logger tests above.
+describe('Logger request-scoped usage', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
-    consoleSpy = {
-      log: vi.spyOn(console, 'log').mockImplementation(() => {}),
-    };
+    vi.spyOn(console, 'log').mockImplementation(() => {});
   });
 
-  it('includes requestId in log entries', () => {
-    const reqLogger = createRequestLogger('req-123');
-    reqLogger.info('test');
-    expect(consoleSpy.log).toHaveBeenCalled();
-    const output = JSON.parse(consoleSpy.log.mock.calls[0][0]);
+  it('attaches requestId via meta', () => {
+    logger.info('test', { requestId: 'req-123' });
+    expect(console.log).toHaveBeenCalled();
+    const output = JSON.parse((console.log as ReturnType<typeof vi.fn>).mock.calls[0][0]);
     expect(output.requestId).toBe('req-123');
-  });
-
-  it('includes additional meta', () => {
-    const reqLogger = createRequestLogger('req-456');
-    reqLogger.info('action', { wallet: 'ABC' });
-    const output = JSON.parse(consoleSpy.log.mock.calls[0][0]);
-    expect(output.requestId).toBe('req-456');
-    expect(output.wallet).toBe('ABC');
-  });
-
-  it('supports warn level', () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const reqLogger = createRequestLogger('req-789');
-    reqLogger.warn('warning');
-    expect(warnSpy).toHaveBeenCalled();
-    const output = JSON.parse(warnSpy.mock.calls[0][0]);
-    expect(output.requestId).toBe('req-789');
-    expect(output.level).toBe('warn');
-    warnSpy.mockRestore();
-  });
-
-  it('supports error level', () => {
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const reqLogger = createRequestLogger('req-err');
-    reqLogger.error('failure', { code: 500 });
-    expect(errorSpy).toHaveBeenCalled();
-    const output = JSON.parse(errorSpy.mock.calls[0][0]);
-    expect(output.requestId).toBe('req-err');
-    expect(output.code).toBe(500);
-    errorSpy.mockRestore();
   });
 });

@@ -692,44 +692,54 @@ describe('Credit Capacity Audit — System Capacity Guard', () => {
     expect(getSystemExposure()).toBe(0);
   });
 
-  it('capToSystemCapacity limits to remaining capacity', () => {
+  it('capToSystemCapacity limits to remaining global capacity', () => {
     resetSystemExposure();
-    const capped = capToSystemCapacity(5000);
+    const capped = capToSystemCapacity('WALLET_A', 5000);
     expect(capped).toBe(5000);
   });
 
-  it('capToSystemCapacity respects existing exposure', () => {
+  it('capToSystemCapacity respects existing global exposure', () => {
     resetSystemExposure();
-    addSystemExposure(60000);
-
-    const capped = capToSystemCapacity(60000);
-    expect(capped).toBe(40000); // 100000 - 60000 = 40000
+    // 6 distinct wallets, each capped at their per-wallet share = 60k global used.
+    for (let i = 0; i < 6; i++) addSystemExposure(`WALLET_${i}`, 10_000);
+    // A new wallet's cap is min(requested, 40k remaining global, 10k share) = 10k.
+    const capped = capToSystemCapacity('WALLET_NEW', 60_000);
+    expect(capped).toBe(10_000);
   });
 
   it('capToSystemCapacity returns 0 when fully exposed', () => {
     resetSystemExposure();
-    addSystemExposure(100000);
-
-    const capped = capToSystemCapacity(10000);
+    // 10 wallets × 10k each = 100k — global cap exhausted.
+    for (let i = 0; i < 10; i++) addSystemExposure(`WALLET_${i}`, 10_000);
+    const capped = capToSystemCapacity('WALLET_NEW', 10_000);
     expect(capped).toBe(0);
   });
 
-  it('system exposure tracks cumulative approved credit', () => {
+  it('system exposure tracks cumulative approved credit per wallet', () => {
     resetSystemExposure();
     expect(getSystemExposure()).toBe(0);
 
-    // Simulate 3 approvals — capToSystemCapacity doesn't add exposure,
-    // only underwrite() does. So we manually track here.
-    const limit1 = capToSystemCapacity(30000);
-    expect(limit1).toBe(30000);
-    addSystemExposure(limit1);
+    // capToSystemCapacity returns min(requested, global_remaining, wallet_share_remaining).
+    // Fresh wallet, fresh global — only the per-wallet share binds first.
+    const limit1 = capToSystemCapacity('WALLET_A', 30_000);
+    expect(limit1).toBe(10_000); // MAX_WALLET_SHARE = 10k for any single wallet
+    addSystemExposure('WALLET_A', limit1);
 
-    const limit2 = capToSystemCapacity(40000);
-    expect(limit2).toBe(40000);
-    addSystemExposure(limit2);
+    // A's per-wallet share is now fully consumed. Cap is min(requested, 90k global, 0 wallet) = 0.
+    const limit2 = capToSystemCapacity('WALLET_A', 40_000);
+    expect(limit2).toBe(0);
 
-    const limit3 = capToSystemCapacity(40000);
-    expect(limit3).toBe(30000); // only 30000 remaining
+    // A different wallet has a fresh share.
+    const limit3 = capToSystemCapacity('WALLET_B', 40_000);
+    expect(limit3).toBe(10_000); // B's full per-wallet share
+  });
+
+  it('per-wallet share prevents one wallet exhausting the global cap', () => {
+    resetSystemExposure();
+    // Single wallet can only consume MAX_WALLET_SHARE, not the whole cap.
+    const reserved = addSystemExposure('WALLET_A', 100_000);
+    expect(reserved).toBe(10_000); // MAX_WALLET_SHARE
+    expect(getSystemExposure()).toBe(10_000);
   });
 });
 

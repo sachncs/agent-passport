@@ -15,7 +15,6 @@
  */
 
 import algosdk from 'algosdk';
-import { config } from '../config';
 import { algod } from './algorand-client';
 import { withTimeout } from './timeout';
 import { logger } from './logger';
@@ -55,6 +54,11 @@ export function initOperatorWallet(): boolean {
  */
 export function getOperatorAccount(): algosdk.Account | null {
   return operatorAccount;
+}
+
+/** Whether initOperatorWallet() has successfully loaded an account. */
+export function isOperatorInitialized(): boolean {
+  return operatorAccount !== null;
 }
 
 /**

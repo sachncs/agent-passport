@@ -372,24 +372,44 @@ describe('Underwriting Decision Audit', () => {
   });
 
   describe('System Capacity Guard', () => {
-    it('capToSystemCapacity limits to remaining', () => {
+    it('capToSystemCapacity limits to remaining global capacity', () => {
       resetSystemExposure();
-      const capped = capToSystemCapacity(5000);
+      const capped = capToSystemCapacity('WALLET_A', 5000);
       expect(capped).toBe(5000);
     });
 
-    it('capToSystemCapacity respects existing exposure', () => {
+    it('capToSystemCapacity respects existing global exposure', () => {
       resetSystemExposure();
-      addSystemExposure(60000);
-      const capped = capToSystemCapacity(60000);
-      expect(capped).toBe(40000); // 100000 - 60000 = 40000
+      // Fill 6 distinct wallets up to their per-wallet share = 60k global used
+      for (let i = 0; i < 6; i++) addSystemExposure(`WALLET_${i}`, 10_000);
+      // A 7th wallet can take up to min(60k requested, 40k remaining, 10k share) = 10k
+      const capped = capToSystemCapacity('WALLET_NEW', 60_000);
+      expect(capped).toBe(10_000);
     });
 
-    it('capToSystemCapacity returns 0 when fully exposed', () => {
+    it('capToSystemCapacity returns 0 when global cap exhausted', () => {
       resetSystemExposure();
-      addSystemExposure(100000);
-      const capped = capToSystemCapacity(10000);
+      // Fill the global cap with 10 wallets each at MAX_WALLET_SHARE
+      for (let i = 0; i < 10; i++) addSystemExposure(`WALLET_${i}`, 10_000);
+      const capped = capToSystemCapacity('WALLET_NEW', 10_000);
       expect(capped).toBe(0);
+    });
+
+    it('per-wallet share caps a single wallet to MAX_WALLET_SHARE', () => {
+      resetSystemExposure();
+      // 10 wallets each get 10k = 100k (full global cap, per-wallet share = 10k)
+      for (let i = 0; i < 9; i++) {
+        addSystemExposure(`WALLET_${i}`, 10_000);
+      }
+      // The 10th wallet can still get up to 10k, but not more.
+      const capped = capToSystemCapacity('WALLET_NEW', 25_000);
+      expect(capped).toBe(10_000); // per-wallet share, not the requested 25k
+    });
+
+    it('per-wallet share is enforced on addSystemExposure', () => {
+      resetSystemExposure();
+      const reserved = addSystemExposure('WALLET_X', 50_000);
+      expect(reserved).toBe(10_000); // MAX_WALLET_SHARE
     });
   });
 });

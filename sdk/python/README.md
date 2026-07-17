@@ -15,7 +15,7 @@ pip install agent-passport-sdk
 ```python
 from agent_passport import AgentPassportClient
 client = AgentPassportClient(base_url="http://localhost:3000")
-print(client.get_score("GD64YIY3TWGDMCNPP553DZPPR6LDUSFBBHU5AAAAA7XBICTFJ7BY7C55XX"))
+print(client.get_score("GD64YIY3TWGDMCNPP553DZPPR6LDUSFQOIJVFDPPXWEG3FVOJCCDBBHU5A"))
 ```
 
 ## License

@@ -175,7 +175,7 @@ async function fetchWalletTrustScore(wallet: string): Promise<number> {
 
 // ── Graph traversal ────────────────────────────────────────────
 
-// P1 FIX: Cache delegation data during BFS to avoid N+1 network calls
+
 const delegationCache = new Map<string, Delegation[]>();
 
 async function fetchDelegationCached(wallet: string): Promise<Delegation[]> {
@@ -293,7 +293,7 @@ export async function scoreDelegation(wallet: string): Promise<DelegationTrustSc
 }
 
 /**
- * P2 FIX: Scores delegation trust using fresh data (for passport/underwriting).
+ *
  * Clears the BFS delegation cache to guarantee fresh data.
  */
 export async function scoreDelegationFresh(wallet: string): Promise<DelegationTrustScore | null> {

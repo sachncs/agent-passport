@@ -284,7 +284,7 @@ export async function generatePassport(
   const [trustResult, delegationResult, sybilResult, reputationResult] =
     await Promise.all([
       scoreWalletFresh(wallet).catch(e => { logger.warn('scoreWalletFresh failed', { wallet, error: String(e) }); return null; }),
-      // P2 FIX: Use scoreDelegationFresh for passport (bypasses BFS cache)
+      
       scoreDelegationFresh(wallet).catch(e => { logger.warn('scoreDelegationFresh failed', { wallet, error: String(e) }); return null; }),
       detectSybilFresh(wallet).catch(e => { logger.warn('detectSybilFresh failed', { wallet, error: String(e) }); return null; }),
       computeReputation(wallet).catch(e => { logger.warn('computeReputation failed', { wallet, error: String(e) }); return null; }),

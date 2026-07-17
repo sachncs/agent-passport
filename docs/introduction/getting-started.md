@@ -54,7 +54,7 @@ curl -i http://localhost:3000/health
 ### Trust score
 
 ```bash
-curl -s "http://localhost:3000/score?wallet=GD64YIY3TWGDMCNPP553DZPPR6LDUSFBBHU5AAAAA7XBICTFJ7BY7C55XX" | jq
+curl -s "http://localhost:3000/score?wallet=GD64YIY3TWGDMCNPP553DZPPR6LDUSFQOIJVFDPPXWEG3FVOJCCDBBHU5A" | jq
 ```
 
 You will get back a JSON object with a `trustScore` (0–100), a
@@ -66,7 +66,7 @@ math.
 ### Full passport
 
 ```bash
-curl -s "http://localhost:3000/passport?wallet=GD64YIY3TWGDMCNPP553DZPPR6LDUSFBBHU5AAAAA7XBICTFJ7BY7C55XX" | jq
+curl -s "http://localhost:3000/passport?wallet=GD64YIY3TWGDMCNPP553DZPPR6LDUSFQOIJVFDPPXWEG3FVOJCCDBBHU5A" | jq
 ```
 
 The passport bundles trust, delegation, sybil, reputation, credit,
@@ -76,7 +76,7 @@ on-chain context, and a tamper-evident SHA-256 checksum. See
 ### Underwriting decision
 
 ```bash
-curl -s "http://localhost:3000/underwrite?wallet=GD64YIY3TWGDMCNPP553DZPPR6LDUSFBBHU5AAAAA7XBICTFJ7BY7C55XX" | jq
+curl -s "http://localhost:3000/underwrite?wallet=GD64YIY3TWGDMCNPP553DZPPR6LDUSFQOIJVFDPPXWEG3FVOJCCDBBHU5A" | jq
 ```
 
 ### Health & metrics
@@ -107,7 +107,7 @@ const client = new AgentPassportClient({
 });
 
 const score = await client.getScore(
-  'GD64YIY3TWGDMCNPP553DZPPR6LDUSFBBHU5AAAAA7XBICTFJ7BY7C55XX',
+  'GD64YIY3TWGDMCNPP553DZPPR6LDUSFQOIJVFDPPXWEG3FVOJCCDBBHU5A',
 );
 
 console.log('Trust score:', score.trustScore, score.riskLevel);
@@ -134,7 +134,7 @@ from agent_passport import AgentPassportClient
 
 client = AgentPassportClient(base_url="http://localhost:3000")
 score = client.get_score(
-    "GD64YIY3TWGDMCNPP553DZPPR6LDUSFBBHU5AAAAA7XBICTFJ7BY7C55XX"
+    "GD64YIY3TWGDMCNPP553DZPPR6LDUSFQOIJVFDPPXWEG3FVOJCCDBBHU5A"
 )
 print("Trust score:", score["trustScore"], score["riskLevel"])
 ```

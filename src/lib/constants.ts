@@ -1,7 +1,13 @@
+import algosdk from 'algosdk';
+
+// ponytail: syntactic length check first as a cheap fast-path, then delegate
+// to algosdk for the base32 checksum. Two checks, one cheap, one authoritative.
 export const WALLET_REGEX = /^[A-Z2-7]{58}$/;
 
 export function isValidWallet(wallet: string): boolean {
-  return typeof wallet === 'string' && WALLET_REGEX.test(wallet);
+  return typeof wallet === 'string'
+    && WALLET_REGEX.test(wallet)
+    && algosdk.isValidAddress(wallet);
 }
 
 export const MICRO_ALGO = 1_000_000;

@@ -264,7 +264,7 @@ export function computeIntermediateDensity(
 
 /**
  * Average intermediate density across all cluster nodes.
- * F4 FIX: Previous version only computed for nodes[0].
+ *
  */
 export function computeAverageIntermediateDensity(
   adj: Map<string, Set<string>>,

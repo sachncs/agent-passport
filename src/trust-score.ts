@@ -2,7 +2,8 @@ import { config } from './config';
 import { withTimeout, fetchWithTimeout } from './lib/timeout';
 import { algod } from './lib/algorand-client';
 import { MICRO_ALGO, SECONDS_PER_BLOCK, SECONDS_PER_DAY, TESTNET_GENESIS_ROUND, MAX_ROUNDS_LOOKBACK, isValidWallet } from './lib/constants';
-import { LRUCache } from './lib/cache';
+import { TTLCache } from './lib/cache';
+import { singleflight } from './lib/singleflight';
 import { logger } from './lib/logger';
 
 const INDEXER_URL = config.indexerUrl;
@@ -241,19 +242,18 @@ type AccountInfo = {
   lastRound: number;
 };
 
-const accountInfoCache = new LRUCache<AccountInfo>(200, 60_000);
+const accountInfoCache = new TTLCache<AccountInfo>({ maxEntries: 200, ttlMs: 60_000 });
 
 const INDEXER_PAGE_SIZE = 2000;
-const MAX_TRANSACTION_PAGES = 10; // P1 FIX: Cap at 20K transactions to prevent memory exhaustion
+const MAX_TRANSACTION_PAGES = 10;
 
-async function fetchAccountInfo(wallet: string, fresh: boolean = false): Promise<AccountInfo | null> {
+async function fetchAccountInfoImpl(wallet: string, fresh: boolean): Promise<AccountInfo | null> {
   if (!fresh) {
     const cached = accountInfoCache.get(wallet);
     if (cached) return cached;
   }
 
   try {
-    // P0 FIX: Only fetch algod.status() when not cached, or use cached lastRound
     const info = (await withTimeout(
       algod.accountInformation(wallet).do(),
       10_000,
@@ -265,16 +265,8 @@ async function fetchAccountInfo(wallet: string, fresh: boolean = false): Promise
       createdAtRound?: number;
     };
 
-    // Fetch current round — reuse if available from cache, otherwise fetch fresh
-    let lastRound: number;
-    if (!fresh) {
-      // For non-fresh requests, try to get round from a lightweight status call
-      const status = await withTimeout(algod.status().do(), 10_000, 'algod.status');
-      lastRound = Number(status.lastRound || 0);
-    } else {
-      const status = await withTimeout(algod.status().do(), 10_000, 'algod.status');
-      lastRound = Number(status.lastRound || 0);
-    }
+    const status = await withTimeout(algod.status().do(), 10_000, 'algod.status');
+    const lastRound = Number(status.lastRound || 0);
 
     const result: AccountInfo = {
       amount: Number(info.amount || 0n),
@@ -289,6 +281,14 @@ async function fetchAccountInfo(wallet: string, fresh: boolean = false): Promise
     logger.warn('fetchAccountInfo failed', { wallet, error: String(e) });
     return null;
   }
+}
+
+// ponytail: singleflight around fetchAccountInfo — 100 concurrent /score
+// requests on the same wallet share one algod round-trip instead of
+// stampeding the indexer.
+async function fetchAccountInfo(wallet: string, fresh: boolean = false): Promise<AccountInfo | null> {
+  if (fresh) return fetchAccountInfoImpl(wallet, fresh);
+  return singleflight(`acctinfo:${wallet}`, () => fetchAccountInfoImpl(wallet, fresh));
 }
 
 interface TrustScoreIndexerTransaction {

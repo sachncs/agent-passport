@@ -1,5 +1,7 @@
 import express from 'express';
 import helmet from 'helmet';
+import algosdk from 'algosdk';
+import { join } from 'path';
 import { config } from './config';
 import { scoreWallet } from './trust-score';
 import { scoreDelegation } from './delegation';
@@ -8,7 +10,7 @@ import { estimateCredit } from './credit';
 import { detectSybil } from './sybil';
 import { recordEvent, computeReputation, EVENT_TYPES } from './reputation';
 import { underwrite } from './underwriting';
-import { analyzeTrustGraph } from './trust-graph';
+import { analyzeTrustGraph, simulateSponsorLoss, simulateSponsorAdd } from './trust-graph';
 import { generatePassport } from './passport';
 import { delegate as delegateOnChain, revoke as revokeOnChain, RegistryNotConfiguredError, RegistryValidationError, isRegistryConfigured } from './registry';
 import { logger } from './lib/logger';
@@ -16,15 +18,20 @@ import { isValidWallet } from './lib/constants';
 import { x402Middleware, settlementVerificationMiddleware } from './lib/x402';
 import { rateLimiter, corsMiddleware, requestIdMiddleware, requestLoggingMiddleware } from './lib/security';
 import { algod } from './lib/algorand-client';
-import { LRUCache } from './lib/cache';
-import { metricsMiddleware, metricsEndpoint, recordUnderwritingDecision, recordCounterpartyCheck, recordIdempotencyConflict, recordVerifyCheck, recordDiscoverySearch } from './lib/metrics';
+import { TTLCache } from './lib/cache';
+import { metricsMiddleware, metricsEndpoint, recordUnderwritingDecision, recordCounterpartyCheck, recordVerifyCheck, recordDiscoverySearch } from './lib/metrics';
 import { idempotencyMiddleware } from './lib/idempotency';
-import { startMetricsCollectors, stopMetricsCollectors } from './lib/metrics-collectors';
+import { startMetricsCollectors } from './lib/metrics-collectors';
+import { isOperatorInitialized } from './lib/operator-wallet';
+import { getSanctionsProvider } from './lib/sanctions';
+import { openApiSpec } from './lib/openapi';
+import { addSubscriber, removeSubscriber, listSubscribers, fireWebhook } from './lib/webhooks';
+import { packageVersion, buildInfo } from './lib/build-info';
 
 export const app = express();
 
-// P1 FIX: Response cache for wallet lookups (60s TTL, 500 entries)
-export const responseCache = new LRUCache<unknown>(500, 60_000);
+
+export const responseCache = new TTLCache<unknown>({ maxEntries: 500, ttlMs: 60_000 });
 
 // Security: trust proxy for correct IP behind load balancers
 app.set('trust proxy', 1);
@@ -87,7 +94,7 @@ app.get('/score', async (req, res) => {
   const wallet = requireWallet(req, res);
   if (!wallet) return;
 
-  // P1 FIX: Check response cache first
+  
   const cacheKey = `score:${wallet}`;
   const cached = responseCache.get(cacheKey);
   if (cached) {
@@ -204,7 +211,7 @@ app.post('/reputation/record', async (req, res) => {
   const wallet = requireBodyWallet(req, res);
   if (!wallet) return;
 
-  const { eventType, amount, counterparty } = req.body || {};
+  const { eventType, amount, counterparty, round } = req.body || {};
 
   if (!eventType) {
     res.status(400).json({ error: 'Missing required field: eventType' });
@@ -225,20 +232,33 @@ app.post('/reputation/record', async (req, res) => {
     }
   }
 
-  if (counterparty !== undefined && counterparty !== null && !isValidWallet(counterparty)) {
-    res.status(400).json({ error: 'Invalid counterparty wallet address.' });
-    return;
+  if (counterparty !== undefined && counterparty !== null) {
+    if (!isValidWallet(counterparty) || !algosdk.isValidAddress(counterparty)) {
+      res.status(400).json({ error: 'Invalid counterparty wallet address.' });
+      return;
+    }
+  }
+
+  // Disputes must reference the specific on-chain transaction being disputed
+  // — without this, the verifyDisputeEvent check degenerates to "any past tx
+  // exists" and an attacker can DDoS a wallet's reputation with disputes.
+  if (eventType === 'dispute') {
+    if (typeof round !== 'number' || !Number.isFinite(round) || round <= 0) {
+      res.status(400).json({ error: 'Dispute events require a positive numeric "round" referencing the disputed transaction.' });
+      return;
+    }
   }
 
   try {
-    const result = await recordEvent(wallet, eventType, amount || 0, counterparty);
+    const result = await recordEvent(wallet, eventType, amount || 0, counterparty, round ?? 0);
     if (!result) {
       res.status(400).json({ error: 'Failed to record event' });
       return;
     }
-    // P1 FIX: Invalidate response cache for this wallet after reputation change
     responseCache.delete(`passport:${wallet}`);
     responseCache.delete(`score:${wallet}`);
+    // Fire-and-forget webhook delivery to subscribers of this wallet.
+    fireWebhook(wallet, result).catch(e => logger.warn('webhook dispatch failed', { error: String(e) }));
     res.json(result);
   } catch (error) {
     logger.error('Failed to record reputation event', { wallet, error: String(error) });
@@ -267,8 +287,20 @@ app.get('/trust-graph', async (req, res) => {
   const wallet = requireWallet(req, res);
   if (!wallet) return;
 
+  // Optional what-if: simulate one sponsor going bad. Returns the same
+  // graph structure but with the sponsor's contribution zeroed out, so a
+  // caller can see how their exposure changes.
+  const simulateLost = typeof req.query.simulateSponsorLost === 'string'
+    ? req.query.simulateSponsorLost : undefined;
+  if (simulateLost && !isValidWallet(simulateLost)) {
+    res.status(400).json({ error: 'Invalid simulateSponsorLost wallet' });
+    return;
+  }
+
   try {
-    const result = await analyzeTrustGraph(wallet);
+    const result = simulateLost
+      ? await simulateSponsorLoss(wallet, simulateLost)
+      : await analyzeTrustGraph(wallet);
     if (!result) { res.status(404).json({ error: 'Wallet not found on testnet' }); return; }
     res.json(result);
   } catch (error) {
@@ -348,7 +380,7 @@ app.get('/passport', async (req, res) => {
   const wallet = requireWallet(req, res);
   if (!wallet) return;
 
-  // P1 FIX: Check response cache first
+  
   const cacheKey = `passport:${wallet}`;
   const cached = responseCache.get(cacheKey);
   if (cached) {
@@ -395,7 +427,7 @@ app.get('/verify', async (req, res) => {
       flags.active = (info.totalAppsOptedIn || 0) > 0 || (info.totalAssetsOptedIn || 0) > 0;
       flags.empty = Number(info.amount || 0n) === 0;
       responseCache.set(cacheKey, { flags });
-    } catch (e) {
+    } catch {
       // Wallet not found on chain is still a valid Algorand address format
       flags.lookup_failed = true;
     }
@@ -457,19 +489,80 @@ app.get('/discovery/search', async (req, res) => {
 // ── Prometheus Metrics ────────────────────────────────────────
 app.get('/metrics', metricsEndpoint);
 
+// ── Build metadata ────────────────────────────────────────────
+app.get('/version', (_req, res) => {
+  res.json({
+    service: 'Agent Passport',
+    version: packageVersion,
+    node: process.version,
+    startedAt: buildInfo.startedAt,
+    network: config.algoNetwork,
+    x402: config.x402Enabled,
+    sanctionsProvider: getSanctionsProvider().name,
+    uptime: Math.floor(process.uptime()),
+  });
+});
+
+// ── OpenAPI self-describe ─────────────────────────────────────
+app.get('/openapi.json', (_req, res) => {
+  res.json(openApiSpec);
+});
+
+// ── Reputation webhook subscribe/unsubscribe ──────────────────
+app.post('/reputation/subscribe', (req, res) => {
+  const { wallet, url } = req.body || {};
+  if (!wallet || !isValidWallet(wallet)) {
+    res.status(400).json({ error: 'Invalid or missing wallet' });
+    return;
+  }
+  if (!url || typeof url !== 'string' || !/^https?:\/\//.test(url)) {
+    res.status(400).json({ error: 'Invalid url — must be http(s)' });
+    return;
+  }
+  const sub = addSubscriber(wallet, url);
+  res.status(201).json(sub);
+});
+
+app.delete('/reputation/subscribe/:id', (req, res) => {
+  const ok = removeSubscriber(req.params.id);
+  res.status(ok ? 204 : 404).end();
+});
+
+app.get('/reputation/subscribers', (req, res) => {
+  const wallet = typeof req.query.wallet === 'string' ? req.query.wallet : undefined;
+  res.json({ subscribers: listSubscribers(wallet) });
+});
+
+// ── Dashboard static (no auth, public HTML) ──────────────────
+app.get('/dashboard', (_req, res) => {
+  res.sendFile(join(process.cwd(), 'public', 'dashboard.html'));
+});
+
+app.get('/', (_req, res) => {
+  res.json({
+    service: 'Agent Passport',
+    version: packageVersion,
+    docs: '/openapi.json',
+    dashboard: '/dashboard',
+    health: '/health',
+    ready: '/ready',
+    metrics: '/metrics',
+  });
+});
+
 // ── Health (liveness) ─────────────────────────────────────────
 app.get('/health', (_req, res) => {
   res.json({
     status: 'ok',
     service: 'Agent Passport',
-    version: '0.1.0',
+    version: packageVersion,
     network: config.algoNetwork,
     x402: config.x402Enabled,
     timestamp: new Date().toISOString(),
   });
 });
 
-// ── Readiness (deep probe — checks Algorand connectivity) ──────
+// ── Readiness (deep probe — checks Algorand + operator wallet) ─
 app.get('/ready', async (_req, res) => {
   const health: Record<string, unknown> = {
     status: 'ok',
@@ -492,12 +585,24 @@ app.get('/ready', async (_req, res) => {
     };
   }
 
+  health.operator = {
+    initialized: isOperatorInitialized(),
+    registryConfigured: isRegistryConfigured(),
+  };
+
+  // An uninitialized operator means /delegate, /revoke, /reputation/record
+  // are no-ops. Surface this in readiness so k8s probes can hold traffic.
+  if (!isOperatorInitialized() && (config.registryAppId > 0 || config.reputationAppId > 0)) {
+    health.status = 'degraded';
+  }
+
   const statusCode = health.status === 'ok' ? 200 : 503;
   res.status(statusCode).json(health);
 });
 
-// ── Backwards-compat: /health still reports Algorand status ──
-// but always returns 200 unless the process is severely broken.
+// ── Deep health check — used by load tests + ops dashboards ──
+// Returns 503 when Algorand is unreachable (matches /ready semantics so
+// callers don't have to special-case which probe to use).
 app.get('/health/deep', async (_req, res) => {
   const health: Record<string, unknown> = {
     status: 'ok',
@@ -515,20 +620,19 @@ app.get('/health/deep', async (_req, res) => {
       round: Number(status.lastRound || 0),
     };
   } catch (e) {
+    health.status = 'degraded';
     health.algorand = {
       connected: false,
       error: String(e),
     };
   }
 
-  // Always 200 — the process is alive; Algorand status is informational
-  res.json(health);
+  res.status(health.status === 'ok' ? 200 : 503).json(health);
 });
 
 // ── Background Workers ────────────────────────────────────────
-// Start metrics collectors at module load. Stop gracefully on shutdown.
+// Start metrics collectors at module load. SIGTERM/SIGINT handlers in index.ts
+// own the stop call so ordering with server.close is deterministic.
 if (process.env.NODE_ENV !== 'test') {
   startMetricsCollectors();
-  process.once('SIGTERM', () => { stopMetricsCollectors(); });
-  process.once('SIGINT', () => { stopMetricsCollectors(); });
 }

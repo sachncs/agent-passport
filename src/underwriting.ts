@@ -1,10 +1,11 @@
-import { scoreWallet, scoreWalletFresh, applySybilPenalty } from './trust-score';
+import { scoreWalletFresh, applySybilPenalty } from './trust-score';
 import { scoreDelegationFresh } from './delegation';
 import { estimateCreditWithTrust } from './credit';
-import { detectSybil, detectSybilFresh } from './sybil';
+import { detectSybilFresh } from './sybil';
 import { computeReputation } from './reputation';
 import { logger } from './lib/logger';
 import { isValidWallet } from './lib/constants';
+import { checkSanctions } from './lib/sanctions';
 import {
   MAX_SYSTEM_EXPOSURE,
   getSystemExposure,
@@ -33,6 +34,12 @@ export interface UnderwritingDecision {
   compositeScore: number;
   factors: UnderwritingFactor[];
   explanation: string[];
+  /** Sanctions screening outcome. When denied, approved=false. */
+  sanctions?: {
+    status: 'allowed' | 'denied' | 'unknown';
+    reason?: string;
+    provider: string;
+  };
 }
 
 // ── Pure math functions (exported for testing) ─────────────────
@@ -179,7 +186,7 @@ export async function underwrite(
 ): Promise<UnderwritingDecision | null> {
   if (!isValidWallet(wallet)) return null;
 
-  // P1 FIX: Fetch trust data first (needed for credit estimation), then fetch others in parallel
+  
   const trustResult = await scoreWalletFresh(wallet)
     .catch(e => { logger.warn('scoreWalletFresh failed', { wallet, error: String(e) }); return null; });
 
@@ -187,7 +194,7 @@ export async function underwrite(
   const [delegationResult, creditResult, sybilResult, reputationResult] =
     await Promise.all([
       scoreDelegationFresh(wallet).catch(e => { logger.warn('scoreDelegationFresh failed', { wallet, error: String(e) }); return null; }),
-      // P1 FIX: Use estimateCreditWithTrust to prevent redundant fetch and ensure consistency
+      
       estimateCreditWithTrust(wallet, trustResult).catch(e => { logger.warn('estimateCreditWithTrust failed', { wallet, error: String(e) }); return null; }),
       detectSybilFresh(wallet).catch(e => { logger.warn('detectSybilFresh failed', { wallet, error: String(e) }); return null; }),
       computeReputation(wallet).catch(e => { logger.warn('computeReputation failed', { wallet, error: String(e) }); return null; }),
@@ -243,10 +250,16 @@ export async function underwrite(
   // Compute composite score (no self-reference — creditLimit NOT included)
   const compositeScore = computeCompositeScore(factors);
 
+  // Sanctions screening — fail-closed. A denied wallet is auto-rejected
+  // regardless of score; an unknown screening status (provider outage)
+  // also denies to avoid silent approvals.
+  const sanctions = await checkSanctions(wallet);
+
   // Decision
   const sybilRisk = sybilResult?.sybilRisk ?? 0;
   const reputation = reputationResult?.reputation ?? 0;
-  const approved = decideApproval(compositeScore, sybilRisk, reputation);
+  const baseApproved = decideApproval(compositeScore, sybilRisk, reputation);
+  const approved = baseApproved && sanctions.status === 'allowed';
   const riskLevel = classifyUnderwritingRisk(compositeScore);
 
   // Recommended limit (creditLimit as base, NOT in compositeScore)
@@ -255,12 +268,20 @@ export async function underwrite(
     ? computeUnderwritingLimit(compositeScore, creditLimit, sybilRisk, reputation)
     : 0;
 
-  // System capacity guard: cap to remaining system exposure
-  recommendedLimit = capToSystemCapacity(recommendedLimit);
+  // System capacity guard: cap to remaining system exposure AND per-wallet share.
+  // ponytail: capToSystemCapacity + addSystemExposure are serialized in
+  // system-exposure.ts via a promise queue, so concurrent /underwrite calls
+  // cannot exceed MAX_SYSTEM_EXPOSURE or MAX_WALLET_SHARE.
+  recommendedLimit = capToSystemCapacity(wallet, recommendedLimit);
 
-  // Track system exposure
-  if (recommendedLimit > 0) {
-    addSystemExposure(recommendedLimit);
+  // Only commit exposure when the wallet was actually approved AND we still
+  // have non-zero capacity. Read-only underwrite calls (no approval, or cap
+  // exhausted) must not inflate the global counter — otherwise an attacker
+  // can hammer the endpoint to starve other wallets.
+  if (approved && recommendedLimit > 0) {
+    recommendedLimit = addSystemExposure(wallet, recommendedLimit);
+  } else {
+    recommendedLimit = 0;
   }
 
   // Confidence
@@ -280,5 +301,10 @@ export async function underwrite(
     compositeScore,
     factors,
     explanation,
+    sanctions: {
+      status: sanctions.status,
+      reason: sanctions.reason,
+      provider: sanctions.provider,
+    },
   };
 }

@@ -1,58 +1,64 @@
-interface CacheEntry<T> {
-  value: T;
-  expiresAt: number;
+/**
+ * Tiny TTL+LRU cache built on Map insertion order.
+ *
+ * Why not lru-cache or similar: ponytail — Map already maintains insertion
+ * order, so eviction is `cache.delete(key); cache.set(key, ...)` and LRU is
+ * `cache.delete(key); cache.set(key, cache.get(key)!)`. A 30-line class
+ * beats a 3rd-party dep for one feature.
+ *
+ * Thread-safety: single-process, single-thread (Node). Multi-replica needs
+ * a shared store.
+ */
+
+export interface TTLCacheOptions {
+  /** Max entries before LRU eviction kicks in. */
+  maxEntries: number;
+  /** Per-entry lifetime in ms. */
+  ttlMs: number;
 }
 
-export interface CacheStats {
-  hits: number;
-  misses: number;
-  evictions: number;
-  size: number;
+interface Entry<V> {
+  v: V;
+  exp: number; // unix ms
 }
 
-export class LRUCache<T> {
-  private store = new Map<string, CacheEntry<T>>();
-  private maxSize: number;
-  private ttlMs: number;
-  private stats = { hits: 0, misses: 0, evictions: 0 };
+export class TTLCache<V> {
+  private readonly store = new Map<string, Entry<V>>();
+  private hits = 0;
+  private misses = 0;
+  private evictions = 0;
 
-  constructor(maxSize: number = 100, ttlMs: number = 60_000) {
-    this.maxSize = maxSize;
-    this.ttlMs = ttlMs;
-  }
+  constructor(private readonly opts: TTLCacheOptions) {}
 
-  get(key: string): T | undefined {
+  get(key: string): V | undefined {
     const entry = this.store.get(key);
     if (!entry) {
-      this.stats.misses++;
+      this.misses++;
       return undefined;
     }
-    if (Date.now() > entry.expiresAt) {
+    if (entry.exp <= Date.now()) {
       this.store.delete(key);
-      this.stats.misses++;
+      this.misses++;
       return undefined;
     }
-    // Move to end (most recently used)
+    // Refresh LRU position by re-inserting.
     this.store.delete(key);
     this.store.set(key, entry);
-    this.stats.hits++;
-    return entry.value;
+    this.hits++;
+    return entry.v;
   }
 
-  set(key: string, value: T, ttlMs?: number): void {
-    if (this.store.has(key)) {
-      this.store.delete(key);
-    } else if (this.store.size >= this.maxSize) {
-      // Evict oldest (first entry)
-      const firstKey = this.store.keys().next().value!;
-      this.store.delete(firstKey);
-      this.stats.evictions++;
+  set(key: string, value: V, ttlMs?: number): void {
+    const exp = Date.now() + (ttlMs ?? this.opts.ttlMs);
+    if (this.store.has(key)) this.store.delete(key);
+    this.store.set(key, { v: value, exp });
+    while (this.store.size > this.opts.maxEntries) {
+      // Map iteration is in insertion order — the first key is the LRU.
+      const oldest = this.store.keys().next().value;
+      if (oldest === undefined) break;
+      this.store.delete(oldest);
+      this.evictions++;
     }
-    this.store.set(key, { value, expiresAt: Date.now() + (ttlMs ?? this.ttlMs) });
-  }
-
-  has(key: string): boolean {
-    return this.get(key) !== undefined;
   }
 
   delete(key: string): boolean {
@@ -61,14 +67,13 @@ export class LRUCache<T> {
 
   clear(): void {
     this.store.clear();
-    this.stats = { hits: 0, misses: 0, evictions: 0 };
-  }
-
-  getStats(): CacheStats {
-    return { ...this.stats, size: this.store.size };
   }
 
   get size(): number {
     return this.store.size;
+  }
+
+  stats(): { hits: number; misses: number; evictions: number; size: number } {
+    return { hits: this.hits, misses: this.misses, evictions: this.evictions, size: this.store.size };
   }
 }

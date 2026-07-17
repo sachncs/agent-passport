@@ -43,9 +43,9 @@ truth for architecture, algorithms, operations, and contributing.
 - **Stateless service** — every request fetches from Algorand and caches
   in-memory for 60 s. No database, no message queue, no shared state.
   Scale horizontally by adding pods.
-- **Production-grade observability** — 38 Prometheus metrics, 24+ alert
-  rules, 17-panel Grafana dashboard, 8 runbooks, two SLO profiles. See
-  [docs/operations/observability.md](docs/operations/observability.md).
+- **Production-grade observability** — Prometheus metrics, 21 alert
+  rules, 17-panel Grafana dashboard, runbooks per alert, two SLO profiles.
+  See [docs/operations/observability.md](docs/operations/observability.md).
 - **First-class SDKs** — TypeScript (`@agent-passport/sdk`) and Python
   (`agent-passport-sdk`), both with typed errors, idempotency helpers,
   and x402 payment callbacks. See
@@ -88,8 +88,8 @@ npm run dev
 ### From Docker
 
 ```bash
-docker build -t agent-passport:0.1.3 .
-docker run --rm -p 3000:3000 --env-file .env agent-passport:0.1.3
+docker build -t agent-passport:0.1.0 .
+docker run --rm -p 3000:3000 --env-file .env agent-passport:0.1.0
 ```
 
 For production deployment, see
@@ -112,13 +112,13 @@ curl http://localhost:3000/health
 
 ```bash
 # Trust score
-curl -s "http://localhost:3000/score?wallet=GD64YIY3TWGDMCNPP553DZPPR6LDUSFBBHU5AAAAA7XBICTFJ7BY7C55XX" | jq
+curl -s "http://localhost:3000/score?wallet=GD64YIY3TWGDMCNPP553DZPPR6LDUSFQOIJVFDPPXWEG3FVOJCCDBBHU5A" | jq
 
 # Full passport document
-curl -s "http://localhost:3000/passport?wallet=GD64YIY3TWGDMCNPP553DZPPR6LDUSFBBHU5AAAAA7XBICTFJ7BY7C55XX" | jq
+curl -s "http://localhost:3000/passport?wallet=GD64YIY3TWGDMCNPP553DZPPR6LDUSFQOIJVFDPPXWEG3FVOJCCDBBHU5A" | jq
 
 # Underwriting decision
-curl -s "http://localhost:3000/underwrite?wallet=GD64YIY3TWGDMCNPP553DZPPR6LDUSFBBHU5AAAAA7XBICTFJ7BY7C55XX" | jq
+curl -s "http://localhost:3000/underwrite?wallet=GD64YIY3TWGDMCNPP553DZPPR6LDUSFQOIJVFDPPXWEG3FVOJCCDBBHU5A" | jq
 ```
 
 A 5-minute walkthrough is in
@@ -137,7 +137,7 @@ import { AgentPassportClient } from '@agent-passport/sdk';
 const client = new AgentPassportClient({ baseUrl: 'http://localhost:3000' });
 
 // Fetch a trust score
-const score = await client.getScore('GD64YIY3TWGDMCNPP553DZPPR6LDUSFBBHU5AAAAA7XBICTFJ7BY7C55XX');
+const score = await client.getScore('GD64YIY3TWGDMCNPP553DZPPR6LDUSFQOIJVFDPPXWEG3FVOJCCDBBHU5A');
 console.log(score.trustScore, score.riskLevel);
 ```
 
@@ -151,7 +151,7 @@ pip install agent-passport-sdk
 from agent_passport import AgentPassportClient
 
 client = AgentPassportClient(base_url="http://localhost:3000")
-print(client.get_score("GD64YIY3TWGDMCNPP553DZPPR6LDUSFBBHU5AAAAA7XBICTFJ7BY7C55XX"))
+print(client.get_score("GD64YIY3TWGDMCNPP553DZPPR6LDUSFQOIJVFDPPXWEG3FVOJCCDBBHU5A"))
 ```
 
 Full SDK reference:
@@ -227,21 +227,26 @@ at [docs/operations/environment-variables.md](docs/operations/environment-variab
 
 ## API
 
-| Symbol | Type | Description |
+| Method | Path | Description |
 |--------|------|-------------|
-| `GET /score` | HTTP endpoint | Composite trust score (0–100) for a wallet |
-| `GET /passport` | HTTP endpoint | Full passport document with sub-scores |
-| `GET /underwrite` | HTTP endpoint | Underwriting decision and credit capacity |
-| `GET /delegate` | HTTP endpoint | Delegated trust graph |
-| `GET /sybil` | HTTP endpoint | Sybil-detection signal report |
-| `GET /credit` | HTTP endpoint | Credit capacity estimation |
-| `GET /reputation` | HTTP endpoint | On-chain reputation events |
-| `GET /counterparty` | HTTP endpoint | Merchant counterparty risk check |
-| `GET /trust-graph` | HTTP endpoint | Trust graph analytics & what-ifs |
-| `POST /registry/delegate` | HTTP endpoint | On-chain delegate registration |
-| `POST /registry/revoke` | HTTP endpoint | On-chain delegation revocation |
-| `GET /health` | HTTP endpoint | Service health probe |
-| `GET /metrics` | HTTP endpoint | Prometheus metrics scrape |
+| GET    | `/score`              | Composite trust score (0–100) for a wallet |
+| GET    | `/delegation`         | Delegated trust graph for a wallet |
+| POST   | `/counterparty-check` | Merchant counterparty risk check |
+| POST   | `/credit-estimate`    | Credit capacity estimation (optional `amount`) |
+| GET    | `/sybil-check`        | Sybil-detection signal report |
+| GET    | `/reputation`         | On-chain reputation events |
+| POST   | `/reputation/record`  | Record an on-chain reputation event |
+| GET    | `/underwrite`         | Underwriting decision and credit capacity |
+| GET    | `/trust-graph`        | Trust graph analytics & what-ifs |
+| GET    | `/passport`           | Full passport document with sub-scores |
+| POST   | `/delegate`           | Submit on-chain delegation (requires `OPERATOR_MNEMONIC` + `REGISTRY_APP_ID`) |
+| POST   | `/revoke`             | Submit on-chain revocation |
+| GET    | `/registry/status`    | Whether the registry contract is configured |
+| GET    | `/verify`             | Lightweight wallet verification flags |
+| GET    | `/discovery/search`   | Bazaar discovery (`?q=`) |
+| GET    | `/health`             | Liveness probe (always 200 unless process is dead) |
+| GET    | `/ready`              | Readiness probe — returns 503 when Algorand is unreachable |
+| GET    | `/metrics`            | Prometheus metrics scrape |
 
 ---
 
@@ -250,7 +255,7 @@ at [docs/operations/environment-variables.md](docs/operations/environment-variab
 ### CLI: Check a wallet's trust score
 
 ```bash
-curl -s "http://localhost:3000/score?wallet=GD64YIY3TWGDMCNPP553DZPPR6LDUSFBBHU5AAAAA7XBICTFJ7BY7C55XX" | jq
+curl -s "http://localhost:3000/score?wallet=GD64YIY3TWGDMCNPP553DZPPR6LDUSFQOIJVFDPPXWEG3FVOJCCDBBHU5A" | jq
 ```
 
 ### TypeScript SDK
@@ -259,7 +264,7 @@ curl -s "http://localhost:3000/score?wallet=GD64YIY3TWGDMCNPP553DZPPR6LDUSFBBHU5
 import { AgentPassportClient } from '@agent-passport/sdk';
 
 const client = new AgentPassportClient({ baseUrl: 'http://localhost:3000' });
-const score = await client.getScore('GD64YIY3TWGDMCNPP553DZPPR6LDUSFBBHU5AAAAA7XBICTFJ7BY7C55XX');
+const score = await client.getScore('GD64YIY3TWGDMCNPP553DZPPR6LDUSFQOIJVFDPPXWEG3FVOJCCDBBHU5A');
 console.log(`Trust: ${score.trustScore} (${score.riskLevel})`);
 ```
 
@@ -269,7 +274,7 @@ console.log(`Trust: ${score.trustScore} (${score.riskLevel})`);
 from agent_passport import AgentPassportClient
 
 client = AgentPassportClient(base_url="http://localhost:3000")
-score = client.get_score("GD64YIY3TWGDMCNPP553DZPPR6LDUSFBBHU5AAAAA7XBICTFJ7BY7C55XX")
+score = client.get_score("GD64YIY3TWGDMCNPP553DZPPR6LDUSFQOIJVFDPPXWEG3FVOJCCDBBHU5A")
 print(f"Trust: {score.trust_score} ({score.risk_level})")
 ```
 
@@ -426,8 +431,8 @@ tighter SLOs (P95 < 500 ms), use a low-latency endpoint.
 
 ## Observability
 
-38 Prometheus metrics exposed at `/metrics`. Full inventory in
-[docs/operations/observability.md](docs/operations/observability.md).
+Prometheus metrics exposed at `/metrics`. Full inventory in
+  [docs/operations/observability.md](docs/operations/observability.md).
 Two SLO profiles:
 
 - `alerts/slo-prod-relaxed.yml` — default (P95<1.5s, 99% availability)
@@ -461,7 +466,7 @@ Grafana dashboard JSON in `alerts/grafana-dashboard.json` (17 panels).
 
 ## Roadmap
 
-- **v0.1.3** (shipped) — stateless trust scoring, TypeScript + Python SDKs,
+- **v0.1.0** (shipped) — stateless trust scoring, TypeScript + Python SDKs,
   on-chain delegation registry, x402 pay-per-query, Prometheus metrics +
   Alertmanager rules + Grafana dashboard, k6 load tests, production
   deployment guide, idempotency middleware (24 h TTL, body-hash dedup,

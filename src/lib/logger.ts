@@ -51,59 +51,41 @@ function formatEntry(entry: LogEntry): string {
 }
 
 function writeOutput(line: string, level: LogLevel): void {
-  if (logStream) {
-    logStream.write(line + '\n');
-  }
-  if (errorStream && (level === 'error' || level === 'warn')) {
-    errorStream.write(line + '\n');
-  }
-  if (level === 'error') {
-    console.error(line);
-  } else if (level === 'warn') {
-    console.warn(line);
-  } else if (level === 'debug') {
-    console.debug(line);
-  } else {
-    console.log(line);
-  }
+  if (logStream) logStream.write(line + '\n');
+  if (errorStream && (level === 'error' || level === 'warn')) errorStream.write(line + '\n');
+  if (level === 'error') console.error(line);
+  else if (level === 'warn') console.warn(line);
+  else if (level === 'debug') console.debug(line);
+  else console.log(line);
 }
 
 export const logger = {
   debug(message: string, meta?: Record<string, unknown>) {
     if (shouldLog('debug')) {
-      const line = formatEntry({ level: 'debug', message, timestamp: new Date().toISOString(), ...meta });
-      writeOutput(line, 'debug');
+      writeOutput(formatEntry({ level: 'debug', message, timestamp: new Date().toISOString(), ...meta }), 'debug');
     }
   },
   info(message: string, meta?: Record<string, unknown>) {
     if (shouldLog('info')) {
-      const line = formatEntry({ level: 'info', message, timestamp: new Date().toISOString(), ...meta });
-      writeOutput(line, 'info');
+      writeOutput(formatEntry({ level: 'info', message, timestamp: new Date().toISOString(), ...meta }), 'info');
     }
   },
   warn(message: string, meta?: Record<string, unknown>) {
     if (shouldLog('warn')) {
-      const line = formatEntry({ level: 'warn', message, timestamp: new Date().toISOString(), ...meta });
-      writeOutput(line, 'warn');
+      writeOutput(formatEntry({ level: 'warn', message, timestamp: new Date().toISOString(), ...meta }), 'warn');
     }
   },
   error(message: string, meta?: Record<string, unknown>) {
     if (shouldLog('error')) {
-      const line = formatEntry({ level: 'error', message, timestamp: new Date().toISOString(), ...meta });
-      writeOutput(line, 'error');
+      writeOutput(formatEntry({ level: 'error', message, timestamp: new Date().toISOString(), ...meta }), 'error');
     }
   },
 };
 
-export function createRequestLogger(requestId: string) {
-  return {
-    info: (message: string, meta?: Record<string, unknown>) =>
-      logger.info(message, { requestId, ...meta }),
-    warn: (message: string, meta?: Record<string, unknown>) =>
-      logger.warn(message, { requestId, ...meta }),
-    error: (message: string, meta?: Record<string, unknown>) =>
-      logger.error(message, { requestId, ...meta }),
-    debug: (message: string, meta?: Record<string, unknown>) =>
-      logger.debug(message, { requestId, ...meta }),
-  };
+/** Closes the file streams. Call from graceful shutdown. */
+export function closeLoggerStreams(): void {
+  logStream?.end();
+  errorStream?.end();
+  logStream = null;
+  errorStream = null;
 }

@@ -4,14 +4,6 @@ function safeParseInt(value: string | undefined, fallback: number): number {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
-function requireEnv(name: string, fallback?: string): string {
-  const value = process.env[name] ?? fallback;
-  if (value === undefined || value === '') {
-    throw new Error(`Missing required environment variable: ${name}`);
-  }
-  return value;
-}
-
 function validateConfig() {
   const errors: string[] = [];
 
@@ -19,8 +11,11 @@ function validateConfig() {
     errors.push('X402_PAYMENT_RECIPIENT is required when X402_ENABLED=true');
   }
 
-  if (process.env.LOG_LEVEL && !['debug', 'info', 'warn', 'error'].includes(process.env.LOG_LEVEL)) {
-    errors.push(`Invalid LOG_LEVEL: ${process.env.LOG_LEVEL}. Must be debug|info|warn|error`);
+  if (process.env.LOG_LEVEL) {
+    const normalized = process.env.LOG_LEVEL.toLowerCase();
+    if (!['debug', 'info', 'warn', 'error'].includes(normalized)) {
+      errors.push(`Invalid LOG_LEVEL: ${process.env.LOG_LEVEL}. Must be debug|info|warn|error`);
+    }
   }
 
   if (errors.length > 0) {
@@ -47,7 +42,7 @@ export const config = {
 
   corsAllowedOrigins: process.env.CORS_ALLOWED_ORIGINS || '*',
 
-  logLevel: (process.env.LOG_LEVEL || 'info') as 'debug' | 'info' | 'warn' | 'error',
+  logLevel: ((process.env.LOG_LEVEL || 'info').toLowerCase()) as 'debug' | 'info' | 'warn' | 'error',
   logFile: process.env.LOG_FILE,
   logErrorFile: process.env.LOG_ERROR_FILE,
 } as const;

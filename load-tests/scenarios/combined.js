@@ -4,12 +4,12 @@
 import http from 'k6/http';
 import { check, sleep, group } from 'k6';
 import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.3/index.js';
-import { BASE_URL, pickWallet, VALID_WALLET, ALT_WALLET } from '../lib/config.js';
+import { BASE_URL, pickWallet, VALID_WALLET } from '../lib/config.js';
 import {
   errorRate,
   requestDuration,
   passportDuration,
-  trustScoreDuration,
+  scoreDuration,
   counterpartyDuration,
   graphTraversalLatency,
   recordResponse,
@@ -86,7 +86,7 @@ export function scenarioB() {
       passportDuration.add(res.timings.duration);
     } else if (choice < 0.6) {
       res = http.get(`${BASE_URL}/score?wallet=${VALID_WALLET}`);
-      trustScoreDuration.add(res.timings.duration);
+      scoreDuration.add(res.timings.duration);
     } else if (choice < 0.85) {
       res = http.get(`${BASE_URL}/underwrite?wallet=${VALID_WALLET}`);
     } else {
@@ -115,7 +115,7 @@ export function scenarioD() {
   group('D: 10k/day sustained', () => {
     const wallet = pickWallet(__VU * 7 + __ITER);
     const res = http.get(`${BASE_URL}/score?wallet=${wallet}`);
-    trustScoreDuration.add(res.timings.duration);
+    scoreDuration.add(res.timings.duration);
     recordResponse(res);
   });
 }

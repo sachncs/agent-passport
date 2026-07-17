@@ -3,12 +3,12 @@
 
 import http from 'k6/http';
 import { check, sleep, group } from 'k6';
-import { BASE_URL, pickWallet, VALID_WALLET, ALT_WALLET } from '../lib/config.js';
+import { BASE_URL, VALID_WALLET } from '../lib/config.js';
 import {
   errorRate,
   requestDuration,
   passportDuration,
-  trustScoreDuration,
+  scoreDuration,
   counterpartyDuration,
   graphTraversalLatency,
   recordResponse,
@@ -50,7 +50,7 @@ export default function () {
 
     switch (choice.type) {
       case 'passport': passportDuration.add(res.timings.duration); break;
-      case 'trustScore': trustScoreDuration.add(res.timings.duration); break;
+      case 'trustScore': scoreDuration.add(res.timings.duration); break;
       case 'counterparty': counterpartyDuration.add(res.timings.duration); break;
       case 'graph': graphTraversalLatency.add(res.timings.duration); break;
     }

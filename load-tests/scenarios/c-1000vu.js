@@ -8,7 +8,7 @@ import {
   errorRate,
   requestDuration,
   passportDuration,
-  trustScoreDuration,
+  scoreDuration,
   recordResponse,
 } from '../lib/metrics.js';
 
@@ -26,7 +26,7 @@ export default function () {
   const wallet = pickWallet(__VU);
 
   const r1 = http.get(`${BASE_URL}/score?wallet=${wallet}`);
-  trustScoreDuration.add(r1.timings.duration);
+  scoreDuration.add(r1.timings.duration);
   recordResponse(r1);
 
   const r2 = http.get(`${BASE_URL}/passport?wallet=${wallet}`);

@@ -1,3 +1,9 @@
+# Agent Passport Alertmanager config.
+#
+# All URLs/keys are templated via ${VAR} placeholders. Operators replace
+# these via `envsubst` or render through their secret manager before
+# shipping to Alertmanager. The previous hardcoded EXAMPLE_* values would
+# silently route alerts nowhere if shipped as-is.
 global:
   resolve_timeout: 5m
 
@@ -38,17 +44,17 @@ route:
 receivers:
   - name: 'default'
     slack_configs:
-      - api_url: 'https://hooks.slack.com/services/EXAMPLE/EXAMPLE/EXAMPLE'
+      - api_url: '${SLACK_WEBHOOK_DEFAULT}'
         channel: '#agent-passport-alerts'
         send_resolved: true
 
   - name: 'pagerduty-critical'
     pagerduty_configs:
-      - service_key: 'EXAMPLE_PAGERDUTY_SERVICE_KEY'
+      - service_key: '${PAGERDUTY_SERVICE_KEY_CRITICAL}'
         severity: 'critical'
         send_resolved: true
     slack_configs:
-      - api_url: 'https://hooks.slack.com/services/EXAMPLE/EXAMPLE/EXAMPLE'
+      - api_url: '${SLACK_WEBHOOK_CRITICAL}'
         channel: '#agent-passport-critical'
         send_resolved: true
         title: '🚨 CRITICAL: {{ .GroupLabels.alertname }}'
@@ -61,20 +67,20 @@ receivers:
 
   - name: 'pagerduty-slo'
     pagerduty_configs:
-      - service_key: 'EXAMPLE_PAGERDUTY_SLO_KEY'
+      - service_key: '${PAGERDUTY_SERVICE_KEY_SLO}'
         severity: 'error'
         send_resolved: true
 
   - name: 'slack-warnings'
     slack_configs:
-      - api_url: 'https://hooks.slack.com/services/EXAMPLE/EXAMPLE/EXAMPLE'
+      - api_url: '${SLACK_WEBHOOK_WARNINGS}'
         channel: '#agent-passport-warnings'
         send_resolved: true
         title: '⚠️ WARNING: {{ .GroupLabels.alertname }}'
 
   - name: 'slack-info'
     slack_configs:
-      - api_url: 'https://hooks.slack.com/services/EXAMPLE/EXAMPLE/EXAMPLE'
+      - api_url: '${SLACK_WEBHOOK_INFO}'
         channel: '#agent-passport-info'
         send_resolved: true
 

@@ -17,7 +17,7 @@ A one- or two-sentence description of the bug.
 
 ```bash
 # Minimal curl / SDK snippet that reproduces the issue
-curl -i "http://localhost:3000/score?wallet=GD64YIY3TWGDMCNPP553DZPPR6LDUSFBBHU5AAAAA7XBICTFJ7BY7C55XX"
+curl -i "http://localhost:3000/score?wallet=GD64YIY3TWGDMCNPP553DZPPR6LDUSFQOIJVFDPPXWEG3FVOJCCDBBHU5A"
 ```
 
 ### Expected Behaviour

@@ -15,7 +15,7 @@ npm install @agent-passport/sdk
 ```typescript
 import { AgentPassportClient } from '@agent-passport/sdk';
 const client = new AgentPassportClient({ baseUrl: 'http://localhost:3000' });
-const score = await client.getScore('GD64YIY3TWGDMCNPP553DZPPR6LDUSFBBHU5AAAAA7XBICTFJ7BY7C55XX');
+const score = await client.getScore('GD64YIY3TWGDMCNPP553DZPPR6LDUSFQOIJVFDPPXWEG3FVOJCCDBBHU5A');
 console.log(score.trustScore, score.riskLevel);
 ```
 

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { createHash, randomBytes } from 'crypto';
+import { createHash, randomUUID } from 'crypto';
 import { recordIdempotencyConflict } from './metrics';
 
 const KEY_MIN_LENGTH = 8;
@@ -46,6 +46,14 @@ function startSweeper(): void {
   sweepTimer.unref?.();
 }
 
+/** Stops the periodic sweep. Used by tests and on graceful shutdown. */
+export function stopIdempotencySweeper(): void {
+  if (sweepTimer) {
+    clearInterval(sweepTimer);
+    sweepTimer = null;
+  }
+}
+
 startSweeper();
 
 export function isValidIdempotencyKey(key: string): boolean {
@@ -56,11 +64,25 @@ export function isValidIdempotencyKey(key: string): boolean {
 }
 
 export function generateServerKey(): string {
-  return `srv_${randomBytes(16).toString('hex')}`;
+  return `srv_${randomUUID().replace(/-/g, '')}`;
 }
 
+/**
+ * Canonical JSON: sort keys recursively so {a:1,b:2} and {b:2,a:1} hash
+ * to the same digest. Without this, two semantically-identical bodies
+ * with different key order would 409 instead of being treated as a replay.
+ */
 export function hashBody(body: unknown): string {
-  return createHash('sha256').update(JSON.stringify(body ?? null)).digest('hex');
+  return createHash('sha256').update(canonicalJson(body ?? null)).digest('hex');
+}
+
+function canonicalJson(value: unknown): string {
+  if (value === null || typeof value !== 'object') return JSON.stringify(value);
+  if (Array.isArray(value)) {
+    return '[' + value.map(canonicalJson).join(',') + ']';
+  }
+  const keys = Object.keys(value as Record<string, unknown>).sort();
+  return '{' + keys.map(k => `${JSON.stringify(k)}:${canonicalJson((value as Record<string, unknown>)[k])}`).join(',') + '}';
 }
 
 export function getIdempotencyRecord(key: string): IdempotencyRecord | undefined {
@@ -119,7 +141,7 @@ export function idempotencyMiddleware(req: Request, res: Response, next: NextFun
   if (headerKey === undefined) {
     key = generateServerKey();
   } else if (!isValidIdempotencyKey(headerKey)) {
-    res.status(400).json({ error: 'Invalid Idempotency-Key format. Must be 8-255 chars of [A-Za-z0-9_\\-:]' });
+    res.status(400).json({ error: 'Invalid Idempotency-Key format. Must be 8-255 chars of [A-Za-z0-9_-:]' });
     return;
   } else {
     key = headerKey;

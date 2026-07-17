@@ -5,7 +5,7 @@ import { withTimeout } from './lib/timeout';
 import { algod } from './lib/algorand-client';
 import { logger } from './lib/logger';
 import { isValidWallet } from './lib/constants';
-import { submitApplicationCall, getOperatorAddress } from './lib/operator-wallet';
+import { submitApplicationCall } from './lib/operator-wallet';
 
 const REPUTATION_APP_ID = config.reputationAppId;
 
@@ -23,16 +23,9 @@ const EVENT_TYPE_MAP: Record<EventType, string> = {
 export const EVENT_TYPES: EventType[] = ['payment', 'purchase', 'dispute', 'refund', 'endorsement', 'service'];
 
 /**
- * Event weights — F2 FIX: endorsement reduced from 15x to 8x.
- *
- * Original weights (VULNERABLE):
- *   payment: 10, purchase: 8, endorsement: 15, service: 5
- *   endorsement farming cost: 5 wallets × 0.1 ALGO = 0.5 ALGO for 75 points
- *
- * New weights (FIXED):
- *   payment: 10, purchase: 8, endorsement: 8, service: 5
- *   endorsement farming cost: 5 wallets × 0.1 ALGO = 0.5 ALGO for 40 points
- *   Impact: endorsement farming ROI reduced by 47%
+ * Event weights. Endorsement is 8x (down from a prior 15x) so that
+ * endorsement-farming (5 wallets × 0.1 ALGO each) yields ~40 reputation
+ * points instead of 75 — ROI cut by ~47%.
  */
 export const EVENT_WEIGHTS: Record<EventType, number> = {
   payment: 10,
@@ -50,10 +43,12 @@ interface ReputationEvent {
   counterparty?: string;
   round: number;
   timestamp: number;
-  /** F4: Deduplication hash — prevents same event from being counted twice */
+  /** Deduplication hash — prevents same event from being counted twice */
   eventHash?: string;
-  /** F1: Whether counterparty has been verified on-chain */
+  /** Whether counterparty has been verified on-chain */
   counterpartyVerified?: boolean;
+  /** Whether the self-reported event has on-chain transaction evidence. */
+  selfReportVerified?: boolean;
 }
 
 export interface ReputationBreakdown {
@@ -81,7 +76,7 @@ export interface ReputationResult {
 
 /**
  * Generates a deduplication hash for an event.
- * Same wallet + type + counterparty + round = duplicate.
+ * Same wallet + type + counterparty + round + salt = duplicate.
  *
  * Uses SHA-256 for collision resistance. First 16 hex chars used as key.
  */
@@ -90,8 +85,9 @@ export function computeEventHash(
   eventType: EventType,
   counterparty: string | undefined,
   round: number,
+  salt: number = 0,
 ): string {
-  const key = `${wallet}:${eventType}:${counterparty || ''}:${round}`;
+  const key = `${wallet}:${eventType}:${counterparty || ''}:${round}:${salt}`;
   return createHash('sha256').update(key).digest('hex').slice(0, 16);
 }
 
@@ -101,7 +97,7 @@ const DEDUP_TTL_MS = 60 * 60 * 1000; // 1 hour
 const DEDUP_MAX_SIZE = 10_000;
 
 /**
- * P1 FIX: Aggressive cleanup of expired entries.
+ *
  * Runs on every write and periodically via interval.
  * Prevents unbounded memory growth.
  */
@@ -119,8 +115,21 @@ function cleanupExpiredHashes(): void {
   }
 }
 
-// Run cleanup every 5 minutes
-setInterval(cleanupExpiredHashes, 5 * 60 * 1000);
+// Run cleanup every 5 minutes. ponytail: .unref() so this never keeps the
+// event loop alive on shutdown; cancel via stopReputationDedup() in tests.
+let dedupCleanupTimer: NodeJS.Timeout | null = null;
+function startDedupCleanup(): void {
+  if (dedupCleanupTimer) return;
+  dedupCleanupTimer = setInterval(cleanupExpiredHashes, 5 * 60 * 1000);
+  dedupCleanupTimer.unref?.();
+}
+function stopDedupCleanup(): void {
+  if (dedupCleanupTimer) {
+    clearInterval(dedupCleanupTimer);
+    dedupCleanupTimer = null;
+  }
+}
+startDedupCleanup();
 
 /**
  * F4: Checks if an event has already been recorded.
@@ -144,7 +153,7 @@ export function isDuplicateEvent(eventHash: string): boolean {
 export function registerEventHash(eventHash: string): void {
   recentEventHashes.set(eventHash, Date.now());
 
-  // P1 FIX: Aggressive cleanup — evict expired entries first, then oldest if still over limit
+  
   cleanupExpiredHashes();
 
   if (recentEventHashes.size > DEDUP_MAX_SIZE) {
@@ -160,7 +169,14 @@ export function registerEventHash(eventHash: string): void {
   }
 }
 
-// P1 FIX: Endorsement cycle detection
+/** Resets the dedup store. Test-only. */
+export function clearDuplicateEvents(): void {
+  recentEventHashes.clear();
+}
+
+export { stopDedupCleanup, startDedupCleanup };
+
+
 // Tracks endorsement relationships to prevent circular trust inflation
 const endorsementGraph = new Map<string, Set<string>>(); // wallet → set of wallets it endorsed
 const MAX_ENDORSEMENT_DEPTH = 5;
@@ -299,35 +315,39 @@ export interface ReputationScoreOpts {
   daysSinceLastActivity?: number;
   /** Total on-chain transactions for this wallet. Used for event-to-transaction ratio cap. */
   totalOnChainTxns?: number;
-  /** F3: Account age in days. Used for wallet age penalty. */
+  /** Account age in days. Used for wallet age penalty. */
   accountAgeDays?: number;
   /**
-   * F7: Event ages in days for time-weighting.
+   * Event ages in days for time-weighting.
    * Array length must match totalEvents. If not provided, no time-weighting applied.
    */
   eventAgeDays?: number[];
+  /**
+   * Ratio of self-reported events that had on-chain evidence (0–1).
+   * Self-reported events without on-chain proof get a 0.5x weight.
+   * Default 1 (all verified) preserves the legacy contract for callers
+   * that don't track verification state.
+   */
+  verifiedRatio?: number;
 }
 
 /**
  * Computes reputation score from event breakdown with anti-gaming defenses.
  *
- * Eight layers of defense (post-audit):
+ * Eight layers of defense:
  * 1. Event count multiplier — penalizes insufficient data (< 10 events)
  * 2. Recency decay — exponential decay after 180-day grace period (credit bureau standard)
  * 3. Event-to-transaction ratio cap — penalizes self-reporting farms (>10:1 ratio)
- * 4. F3: Wallet age penalty — new wallets (< 30 days) get 0.5x multiplier
- * 5. F7: Time-weighted events — recent events count more than old events
- * 6. F8: Reputation recovery — positive events outweigh negatives over time
- * 7. F2: Endorsement weight reduction — reduced from 15x to 8x
- * 8. F1: Counterparty verification — unverified events get 0.5x weight
- *
- * All opts are optional (defaults to {}) so existing callers are unaffected.
+ * 4. Wallet age penalty — new wallets (< 30 days) get 0.5x multiplier
+ * 5. Time-weighted events — recent events count more than old events
+ * 6. Reputation recovery — positive events outweigh negatives over time
+ * 7. Endorsement weight cap — endorsement farming reduced from 15x to 8x
+ * 8. Self-report penalty — unverified self-reported events get 0.5x weight
  */
 export function computeReputationScore(
   breakdown: ReputationBreakdown,
   opts: ReputationScoreOpts = {}
 ): number {
-  // F2: Use reduced endorsement weight (8x instead of 15x)
   const positive =
     breakdown.successfulPayments * EVENT_WEIGHTS.payment +
     breakdown.successfulPurchases * EVENT_WEIGHTS.purchase +
@@ -339,6 +359,15 @@ export function computeReputationScore(
 
   if (positive + negative === 0) return 0;
   let score = Math.round(Math.min(100, (positive / (positive + negative)) * 100) * 10) / 10;
+
+  // DEFENSE 8: Self-report penalty — applied BEFORE the count multiplier so
+  // unverified events get proportional weight, not flat-zero, and bounded by
+  // [0.5, 1.0] so a fully-verified history is unaffected.
+  if (opts.verifiedRatio !== undefined && opts.verifiedRatio < 1) {
+    const verifiedRatio = Math.max(0, Math.min(1, opts.verifiedRatio));
+    const penalty = 0.5 + 0.5 * verifiedRatio;
+    score = Math.round(score * penalty * 10) / 10;
+  }
 
   // DEFENSE 1: Event count multiplier — penalizes insufficient statistical data
   score = Math.round(score * computeReputationEventMultiplier(breakdown.totalEvents) * 10) / 10;
@@ -359,20 +388,20 @@ export function computeReputationScore(
     }
   }
 
-  // DEFENSE 4: F3 — Wallet age penalty for new wallets
+  // DEFENSE 4: Wallet age penalty for new wallets
   if (opts.accountAgeDays !== undefined) {
     const agePenalty = computeWalletAgePenalty(opts.accountAgeDays);
     score = Math.round(score * agePenalty * 10) / 10;
   }
 
-  // DEFENSE 5: F7 — Time-weighted events (recent events count more)
+  // DEFENSE 5: Time-weighted events (recent events count more)
   if (opts.eventAgeDays !== undefined && opts.eventAgeDays.length > 0) {
     const avgAge = opts.eventAgeDays.reduce((a, b) => a + b, 0) / opts.eventAgeDays.length;
     const timeWeight = computeTimeWeight(avgAge);
     score = Math.round(score * timeWeight * 10) / 10;
   }
 
-  // DEFENSE 6: F8 — Reputation recovery factor
+  // DEFENSE 6: Reputation recovery factor
   if (breakdown.negativeEvents > 0 && breakdown.positiveEvents > 0) {
     const recoveryFactor = computeRecoveryFactor(
       breakdown.positiveEvents,
@@ -591,7 +620,7 @@ export async function verifyDisputeEvent(
 }
 
 /**
- * P1 FIX: Verifies that a self-reported event has on-chain transaction evidence.
+ *
  * Prevents reputation inflation via fabricated events.
  *
  * For payment/purchase events, verifies that the wallet has at least one
@@ -637,17 +666,24 @@ export async function verifySelfReportedEvent(
   }
 }
 
+/**
+ * Records a reputation event.
+ *
+ * @param round — for dispute events only, the on-chain transaction round being
+ * disputed. Disputes without a real round reference are rejected — accepting
+ * `round=0` would let any attacker point a dispute at any wallet.
+ */
 export async function recordEvent(
   wallet: string,
   eventType: EventType,
   amount: number = 0,
-  counterparty?: string
+  counterparty?: string,
+  round: number = 0,
 ): Promise<ReputationEvent | null> {
   if (!isValidWallet(wallet)) return null;
   if (!EVENT_TYPES.includes(eventType)) return null;
   if (amount < 0) return null;
 
-  // P1 FIX: Endorsement cycle detection — prevent circular trust inflation
   if (eventType === 'endorsement' && counterparty) {
     if (wouldCreateEndorsementCycle(wallet, counterparty)) {
       logger.warn('Endorsement rejected — would create cycle', { wallet, counterparty });
@@ -655,35 +691,39 @@ export async function recordEvent(
     }
   }
 
-  // F1: Counterparty verification — disputes and refunds require verified counterparty
+  // Counterparty verification — disputes/refunds require a verified counterparty.
+  // Without this guard an attacker could submit unlimited disputes/refunds against
+  // any wallet (DDoS the reputation score downward).
   let counterpartyVerified = false;
-  if ((eventType === 'dispute' || eventType === 'refund') && counterparty) {
+  if (counterparty) {
+    if (!isValidWallet(counterparty)) return null;
     counterpartyVerified = await verifyCounterparty(counterparty);
-    if (!counterpartyVerified) {
-      logger.warn('Dispute/refund requires verified counterparty', { wallet, counterparty });
-    }
-  } else if (counterparty) {
-    counterpartyVerified = await verifyCounterparty(counterparty);
-  }
-
-  // P1 FIX: Self-reported events require on-chain transaction evidence
-  if (eventType !== 'endorsement' && eventType !== 'dispute') {
-    const selfReportVerified = await verifySelfReportedEvent(wallet, eventType);
-    if (!selfReportVerified) {
-      logger.warn('Self-reported event lacks on-chain evidence', { wallet, eventType });
-      // Still allow recording but flag as unverified — reputation score applies 0.5x weight
-    }
-  }
-
-  // F5: Dispute verification — disputes require on-chain proof of relationship
-  if (eventType === 'dispute') {
-    if (!counterparty || !isValidWallet(counterparty)) {
-      logger.warn('Dispute requires valid counterparty', { wallet });
+    if (!counterpartyVerified && (eventType === 'dispute' || eventType === 'refund')) {
+      logger.warn('Dispute/refund rejected — counterparty not verified', { wallet, counterparty });
       return null;
     }
-    const disputeVerified = await verifyDisputeEvent(wallet, counterparty, 0);
+  }
+
+  // Self-reported events: if no on-chain evidence, record with the 0.5x penalty
+  // flag (applied by computeReputationScore via the verifiedRatio argument).
+  // Disputes are verified by verifyDisputeEvent below, not here.
+  let selfReportVerified = true;
+  if (eventType !== 'endorsement' && eventType !== 'dispute') {
+    selfReportVerified = await verifySelfReportedEvent(wallet, eventType);
+    if (!selfReportVerified) {
+      logger.warn('Self-reported event lacks on-chain evidence — applying 0.5x weight', { wallet, eventType });
+    }
+  }
+
+  if (eventType === 'dispute') {
+    if (!counterparty || !isValidWallet(counterparty)) return null;
+    if (round <= 0) {
+      logger.warn('Dispute rejected — must reference an on-chain round', { wallet, counterparty });
+      return null;
+    }
+    const disputeVerified = await verifyDisputeEvent(wallet, counterparty, round);
     if (!disputeVerified) {
-      logger.warn('Dispute not verified — no on-chain relationship found', { wallet, counterparty });
+      logger.warn('Dispute rejected — no matching on-chain transaction', { wallet, counterparty, round });
       return null;
     }
   }
@@ -691,8 +731,9 @@ export async function recordEvent(
   const status = await withTimeout(algod.status().do(), 10_000, 'algod.status');
   const currentRound = Number(status.lastRound || 0);
 
-  // F4: Deduplication — check for duplicate event
-  const eventHash = computeEventHash(wallet, eventType, counterparty, currentRound);
+  // Deduplication by hash. Use a per-call salt (timestamp) so concurrent events
+  // in the same round don't collide.
+  const eventHash = computeEventHash(wallet, eventType, counterparty, currentRound, Date.now());
   if (isDuplicateEvent(eventHash)) {
     logger.warn('Duplicate event rejected', { wallet, eventType, eventHash });
     return null;
@@ -710,6 +751,7 @@ export async function recordEvent(
       timestamp: Math.floor(Date.now() / 1000),
       eventHash,
       counterpartyVerified,
+      selfReportVerified,
     };
   }
 
@@ -723,7 +765,6 @@ export async function recordEvent(
 
   const accounts = [wallet];
 
-  // P0 FIX: Submit transaction to chain using operator wallet
   const txId = await submitApplicationCall(REPUTATION_APP_ID, appArgs, accounts);
   if (!txId) {
     logger.warn('Failed to submit reputation transaction — event recorded off-chain only', {
@@ -731,7 +772,6 @@ export async function recordEvent(
     });
   }
 
-  // P1 FIX: Record endorsement relationship for cycle detection
   if (eventType === 'endorsement' && counterparty) {
     recordEndorsement(wallet, counterparty);
   }
@@ -745,6 +785,7 @@ export async function recordEvent(
     timestamp: Math.floor(Date.now() / 1000),
     eventHash,
     counterpartyVerified,
+    selfReportVerified,
     ...(txId ? { txId } : {}),
   };
 }

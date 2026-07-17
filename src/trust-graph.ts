@@ -2,7 +2,7 @@ import { config } from './config';
 import { withTimeout, fetchWithTimeout } from './lib/timeout';
 import { algod } from './lib/algorand-client';
 import { MICRO_ALGO, isValidWallet } from './lib/constants';
-import { LRUCache } from './lib/cache';
+import { TTLCache } from './lib/cache';
 import { logger } from './lib/logger';
 import { scoreWallet } from './trust-score';
 
@@ -99,7 +99,7 @@ export function computeExposure(
 
 type GraphAccountInfo = { balance: number; trustScore: number };
 
-const graphAccountInfoCache = new LRUCache<GraphAccountInfo>(200, 60_000);
+const graphAccountInfoCache = new TTLCache<GraphAccountInfo>({ maxEntries: 200, ttlMs: 60_000 });
 
 async function fetchAccountInfo(wallet: string, fresh: boolean = false): Promise<GraphAccountInfo | null> {
   if (!fresh) {
@@ -206,7 +206,7 @@ export async function analyzeTrustGraph(
   const nodes = Array.from(visited.values());
   const nodeCount = nodes.length;
 
-  // P0 FIX: Fetch actual trust scores for all visited nodes (was hardcoded to 0)
+  
   const trustScorePromises = nodes.map(async (node) => {
     try {
       const result = await scoreWallet(node.address);
@@ -292,5 +292,71 @@ export async function analyzeTrustGraph(
     exposure,
     whatIfs,
     explanation,
+  };
+}
+
+/**
+ * What-if: re-run the trust-graph analysis as if `lostSponsor` had never
+ * delegated. Used by `/trust-graph?simulateSponsorLost=...` so a caller
+ * can ask "what's my exposure if this sponsor goes bad?". ponytail —
+ * this is a one-shot query, not a persistent recomputation.
+ */
+export async function simulateSponsorLoss(
+  wallet: string,
+  lostSponsor: string,
+): Promise<TrustGraphResult | null> {
+  if (!isValidWallet(wallet) || !isValidWallet(lostSponsor)) return null;
+  const base = await analyzeTrustGraph(wallet);
+  if (!base) return null;
+
+  // Zero out edges where the lost sponsor is the source or a path hop.
+  const filteredEdges = base.edges.filter(e => e.from !== lostSponsor && e.to !== lostSponsor);
+  const filteredExposure = computeExposure(filteredEdges, wallet);
+
+  return {
+    ...base,
+    edges: filteredEdges,
+    paths: base.paths.filter(p => !p.path.includes(lostSponsor)),
+    exposure: filteredExposure,
+    whatIfs: [],
+    explanation: [
+      ...base.explanation,
+      `Simulated loss of sponsor ${lostSponsor.slice(0, 8)}...`,
+      `Total exposure without ${lostSponsor.slice(0, 8)}...: $${(filteredExposure.totalExposure / MICRO_ALGO).toFixed(2)}`,
+    ],
+  };
+}
+
+/**
+ * What-if: add a hypothetical sponsor with `amount` microAlgo to the
+ * trust graph. Returns the same structure with the new edge included.
+ * ponytail: caller-driven counterfactual, no persistent state.
+ */
+export async function simulateSponsorAdd(
+  wallet: string,
+  newSponsor: string,
+  amountMicroAlgo: number,
+): Promise<TrustGraphResult | null> {
+  if (!isValidWallet(wallet) || !isValidWallet(newSponsor)) return null;
+  if (!Number.isFinite(amountMicroAlgo) || amountMicroAlgo <= 0) return null;
+  const base = await analyzeTrustGraph(wallet);
+  if (!base) return null;
+
+  const augmentedEdges = [
+    ...base.edges,
+    { from: newSponsor, to: wallet, amount: amountMicroAlgo, round: 0 },
+  ];
+  const augmentedExposure = computeExposure(augmentedEdges, wallet);
+
+  return {
+    ...base,
+    edges: augmentedEdges,
+    exposure: augmentedExposure,
+    whatIfs: [],
+    explanation: [
+      ...base.explanation,
+      `Simulated addition of sponsor ${newSponsor.slice(0, 8)}... with $${(amountMicroAlgo / MICRO_ALGO).toFixed(2)} ALGO`,
+      `Total exposure with new sponsor: $${(augmentedExposure.totalExposure / MICRO_ALGO).toFixed(2)}`,
+    ],
   };
 }

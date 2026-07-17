@@ -16,14 +16,14 @@ if ! command -v "$K6_BIN" >/dev/null 2>&1; then
   exit 1
 fi
 
-echo "Waiting for service to be ready at $BASE_URL ..."
+echo "Waiting for service to be ready at $BASE_URL/ready ..."
 for i in {1..30}; do
-  if curl -sf "$BASE_URL/health" > /dev/null 2>&1; then
-    echo "Service is up"
+  if curl -sf "$BASE_URL/ready" > /dev/null 2>&1; then
+    echo "Service is ready (Algorand connectivity confirmed)"
     break
   fi
   if [[ $i -eq 30 ]]; then
-    echo "Service did not respond within 30s"
+    echo "Service did not become ready within 30s"
     exit 1
   fi
   sleep 1

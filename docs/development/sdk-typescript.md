@@ -20,7 +20,7 @@ const client = new AgentPassportClient({
   retries: 3,                             // optional, default 3
 });
 
-const score = await client.getScore('GD64YIY3TWGDMCNPP553DZPPR6LDUSFBBHU5AAAAA7XBICTFJ7BY7C55XX');
+const score = await client.getScore('GD64YIY3TWGDMCNPP553DZPPR6LDUSFQOIJVFDPPXWEG3FVOJCCDBBHU5A');
 console.log(score.trustScore, score.riskLevel);
 ```
 

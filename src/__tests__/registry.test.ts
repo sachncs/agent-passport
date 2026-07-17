@@ -17,8 +17,8 @@ import { delegate, revoke, RegistryNotConfiguredError, RegistryValidationError, 
 import { submitApplicationCall } from '../lib/operator-wallet';
 import { recordContractEvent } from '../lib/metrics';
 
-const SPONSOR = 'SPONSORRY7GNU3CJQX6FMT2BIPW5ELSZAHOV4DKRY7GNU3CJQX6FMT2BIP';
-const AGENT = 'AGENTDKRY7GNU3CJQX6FMT2BIPW5ELSZAHOV4DKRY7GNU3CJQX6FMT2BIP';
+const SPONSOR = 'GD64YIY3TWGDMCNPP553DZPPR6LDUSFQOIJVFDPPXWEG3FVOJCCDBBHU5A';
+const AGENT = 'A2YR3UXLBTMZK6BLCV6ABNG5JGNOX7TXQFTAVAPF5A4JOI5EFWZ2LETCEA';
 
 describe('Registry Service', () => {
   beforeEach(() => {

@@ -1,6 +1,13 @@
 # Agent Passport Escalation Policy
 #
-# Defines how alerts are escalated based on severity and duration.
+# THIS FILE IS A PAGERDUTY/OPSGENIE TEMPLATE, NOT A NATIVE ALERTMANAGER
+# CONFIG. Alertmanager uses `route:` blocks in `alertmanager.yml` to do
+# escalation; the schema below (escalation_policies / notification_templates
+# / slo_targets) is what PagerDuty / Opsgenie ingest. Operators feeding
+# Alertmanager should ignore this file; operators feeding PagerDuty /
+# Opsgenie should rename it to whatever their platform expects.
+#
+# The matching Alertmanager routing lives in `alertmanager.yml`.
 
 escalation_policies:
   - name: critical_escalation

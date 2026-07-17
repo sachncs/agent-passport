@@ -33,5 +33,7 @@
 #
 # See load-tests/results/full-{a,b,c,d}.txt for the raw measurement data.
 # See docs/OBSERVABILITY.md for the full SLO rationale and per-endpoint projections.
-
-groups: []
+#
+# NOTE: This file intentionally has no `groups:` so accidental `promtool
+# check rules alerts/slo.yml` won't load empty rules. Operators must use
+# slo-prod-relaxed.yml or slo-prod-strict.yml.

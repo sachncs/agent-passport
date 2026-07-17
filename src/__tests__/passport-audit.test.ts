@@ -505,17 +505,17 @@ describe('Data Integrity Audit — System Exposure', () => {
     expect(getSystemExposure()).toBe(0);
   });
 
-  it('EXP-2: addSystemExposure accumulates correctly', () => {
+  it('EXP-2: addSystemExposure accumulates correctly (per-wallet)', () => {
     resetSystemExposure();
-    addSystemExposure(1000);
+    addSystemExposure('WALLET_1', 1000);
     expect(getSystemExposure()).toBe(1000);
-    addSystemExposure(500);
+    addSystemExposure('WALLET_2', 500);
     expect(getSystemExposure()).toBe(1500);
   });
 
   it('EXP-3: capToSystemCapacity caps to remaining', () => {
     resetSystemExposure();
-    addSystemExposure(99_000);
+    addSystemExposure('WALLET_A', 99_000);
     // remaining = 100_000 - 99_000 = 1_000
     const result = computeUnderwritingLimit(80, 1350, 0.1, 50);
     // scoreMultiplier = 0.5 + 0.8 = 1.3, sybilMultiplier = 0.93, repMultiplier = 1.15

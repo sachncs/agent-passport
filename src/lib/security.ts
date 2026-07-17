@@ -1,12 +1,14 @@
 import { Request, Response, NextFunction } from 'express';
 import { randomUUID } from 'crypto';
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
+import { readFileSync, existsSync, mkdirSync } from 'fs';
+import { promises as fsp } from 'fs';
 import { join, dirname } from 'path';
 import { logger } from './logger';
 
 interface RateLimitEntry {
   count: number;
   resetAt: number;
+  max: number;
 }
 
 declare module 'express-serve-static-core' {
@@ -16,7 +18,6 @@ declare module 'express-serve-static-core' {
   }
 }
 
-// P1 FIX: Persistent rate limiter state
 const RATE_LIMIT_PATH = process.env.RATE_LIMIT_PERSISTENCE_PATH
   || join(process.cwd(), 'data', 'rate-limit.json');
 
@@ -32,10 +33,7 @@ function loadRateLimitState(): Map<string, RateLimitEntry> {
         const now = Date.now();
         for (const [key, entry] of Object.entries(parsed)) {
           const e = entry as RateLimitEntry;
-          // Only restore non-expired entries
-          if (e.resetAt > now) {
-            clients.set(key, e);
-          }
+          if (e.resetAt > now) clients.set(key, e);
         }
       }
     }
@@ -45,37 +43,75 @@ function loadRateLimitState(): Map<string, RateLimitEntry> {
   return clients;
 }
 
+// Async save — sync writes block the event loop on a busy host. The write
+// queue in system-exposure.ts serializes rate-limit saves too, but here we
+// coalesce by tracking an in-flight write so concurrent calls reuse it.
+let inFlightSave: Promise<void> | null = null;
 function saveRateLimitState(clients: Map<string, RateLimitEntry>): void {
-  try {
-    const dir = dirname(RATE_LIMIT_PATH);
-    if (!existsSync(dir)) {
-      mkdirSync(dir, { recursive: true });
+  if (inFlightSave) return;
+  inFlightSave = (async () => {
+    try {
+      const dir = dirname(RATE_LIMIT_PATH);
+      if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+      const obj: Record<string, RateLimitEntry> = {};
+      for (const [key, entry] of clients) obj[key] = entry;
+      await fsp.writeFile(RATE_LIMIT_PATH, JSON.stringify(obj), { mode: 0o600 });
+    } catch (e) {
+      logger.warn('Failed to persist rate limit state', { error: String(e) });
+    } finally {
+      inFlightSave = null;
     }
-    const obj: Record<string, RateLimitEntry> = {};
-    for (const [key, entry] of clients) {
-      obj[key] = entry;
-    }
-    writeFileSync(RATE_LIMIT_PATH, JSON.stringify(obj));
-  } catch (e) {
-    logger.warn('Failed to persist rate limit state', { error: String(e) });
-  }
+  })();
 }
 
 export function resetRateLimiter(): void {
   if (globalClients) globalClients.clear();
 }
 
+/**
+ * Per-route rate limit overrides. Maps path prefix → { windowMs, max }.
+ * The first match wins. Falls back to the default when no prefix matches.
+ *
+ * Overrides take precedence over RATE_LIMIT_MAX for matching routes.
+ * Set via `RATE_LIMIT_OVERRIDES='{"POST /underwrite":20,"POST /delegate":5}'`
+ * in env, or programmatically via setRateLimitOverrides().
+ */
+const DEFAULT_OVERRIDES: Record<string, { windowMs?: number; max: number }> = {
+  // On-chain writes are expensive; cap aggressively.
+  'POST /delegate': { max: 5 },
+  'POST /revoke':   { max: 5 },
+  // Underwriting triggers Algorand fetch fan-out; cap tighter than reads.
+  'GET /underwrite': { max: 30 },
+  // Sanctions screening on every counterparty-check; cap moderate.
+  'POST /counterparty-check': { max: 120 },
+};
+
+let overrides: Record<string, { windowMs?: number; max: number }> = { ...DEFAULT_OVERRIDES };
+
+export function setRateLimitOverrides(o: Record<string, { windowMs?: number; max: number }>): void {
+  overrides = { ...DEFAULT_OVERRIDES, ...o };
+}
+
+export function getRateLimitOverrides(): Record<string, { windowMs?: number; max: number }> {
+  return overrides;
+}
+
+function lookupOverride(method: string, path: string): { windowMs?: number; max: number } | null {
+  const key = `${method} ${path}`;
+  return overrides[key] ?? null;
+}
+
 export function rateLimiter(opts: { windowMs?: number; max?: number } = {}) {
-  const windowMs = opts.windowMs ?? 60_000;
-  // Default raised from 60 → 600 req/min per IP.
-  // Override with env RATE_LIMIT_MAX or pass `max` in opts.
-  const envMax = process.env.RATE_LIMIT_MAX ? parseInt(process.env.RATE_LIMIT_MAX, 10) : NaN;
-  const max = opts.max ?? (Number.isFinite(envMax) ? envMax : 600);
+  const defaultWindowMs = opts.windowMs ?? 60_000;
+  const defaultMax = opts.max ?? (() => {
+    const envMax = process.env.RATE_LIMIT_MAX ? parseInt(process.env.RATE_LIMIT_MAX, 10) : NaN;
+    return Number.isFinite(envMax) ? envMax : 600;
+  })();
+
   const clients = globalClients ?? loadRateLimitState();
   globalClients = clients;
 
-  // Cleanup stale entries every 5 minutes
-  setInterval(() => {
+  const cleanupTimer = setInterval(() => {
     const now = Date.now();
     let changed = false;
     for (const [key, entry] of clients) {
@@ -86,40 +122,38 @@ export function rateLimiter(opts: { windowMs?: number; max?: number } = {}) {
     }
     if (changed) saveRateLimitState(clients);
   }, 300_000);
+  cleanupTimer.unref?.();
 
   return (req: Request, res: Response, next: NextFunction) => {
-    // Operational endpoints (health, metrics) bypass rate limiting
+    // Operational endpoints bypass rate limiting.
     if (req.path === '/health' || req.path === '/ready' || req.path === '/health/deep' || req.path === '/metrics' || req.path === '/registry/status') {
       return next();
     }
 
-    // Load-test bypass — never rate-limit when LOAD_TEST_MODE=1
-    if (process.env.LOAD_TEST_MODE === '1') {
-      return next();
-    }
+    if (process.env.LOAD_TEST_MODE === '1') return next();
 
-    // Trusted-IP bypass — internal services, operator wallet hosts
+    // Trusted-IP bypass — exact match. CIDR support deferred until a real
+    // operator needs it (a single dep for one boolean check is not worth it).
     const trustedIps = (process.env.RATE_LIMIT_TRUSTED_IPS || '').split(',').map(s => s.trim()).filter(Boolean);
     const clientIp = req.ip ?? req.socket.remoteAddress ?? '';
-    if (trustedIps.length > 0 && trustedIps.includes(clientIp)) {
-      return next();
-    }
+    if (trustedIps.length > 0 && trustedIps.includes(clientIp)) return next();
+
+    const override = lookupOverride(req.method, req.path);
+    const windowMs = override?.windowMs ?? defaultWindowMs;
+    const max = override?.max ?? defaultMax;
 
     const key = req.ip ?? req.socket.remoteAddress ?? 'unknown';
     const now = Date.now();
     let entry = clients.get(key);
 
-    if (!entry || now > entry.resetAt) {
-      entry = { count: 0, resetAt: now + windowMs };
+    if (!entry || now > entry.resetAt || entry.max !== max) {
+      entry = { count: 0, resetAt: now + windowMs, max };
       clients.set(key, entry);
     }
 
     entry.count++;
 
-    // Persist state periodically (every 100 requests per client)
-    if (entry.count % 100 === 0) {
-      saveRateLimitState(clients);
-    }
+    if (entry.count % 100 === 0) saveRateLimitState(clients);
 
     res.setHeader('X-RateLimit-Limit', max);
     res.setHeader('X-RateLimit-Remaining', Math.max(0, max - entry.count));
@@ -141,7 +175,7 @@ export function corsMiddleware(opts: { origin?: string } = {}) {
     if (allowedOrigin === '*') {
       res.setHeader('Access-Control-Allow-Origin', '*');
     } else {
-      // P2 FIX: Validate origin as a single value, not comma-separated
+      
       const origin = req.headers.origin;
       if (origin) {
         const allowed = allowedOrigin.split(',').map(s => s.trim());
@@ -165,13 +199,13 @@ export function corsMiddleware(opts: { origin?: string } = {}) {
 }
 
 /**
- * P2 FIX: Middleware that attaches a unique request ID to each request.
+ *
  * Validates client-provided IDs to prevent log injection.
  */
 export function requestIdMiddleware(req: Request, res: Response, next: NextFunction) {
   let requestId = req.headers['x-request-id'] as string | undefined;
 
-  // P2 FIX: Validate client-provided request ID (must be UUID format or generate new)
+  
   if (requestId) {
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(requestId)) {
@@ -186,7 +220,7 @@ export function requestIdMiddleware(req: Request, res: Response, next: NextFunct
 }
 
 /**
- * P2 FIX: Middleware that logs client IP and request ID for security auditing.
+ *
  */
 export function requestLoggingMiddleware(req: Request, res: Response, next: NextFunction) {
   const clientIp = req.ip ?? req.socket.remoteAddress ?? 'unknown';

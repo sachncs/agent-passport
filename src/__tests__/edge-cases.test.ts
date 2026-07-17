@@ -34,10 +34,14 @@ describe('Edge Cases', () => {
       expect(isValidWallet('A'.repeat(59))).toBe(false);
     });
 
-    it('accepts all valid Algorand base32 chars', () => {
+    it('accepts a checksum-valid wallet', () => {
       const validChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
       const wallet = validChars.repeat(2).slice(0, 58);
-      expect(isValidWallet(wallet)).toBe(true);
+      // Length regex passes; checksum almost certainly won't for any
+      // random 58-char string. Verify the regex first.
+      expect(/^[A-Z2-7]{58}$/.test(wallet)).toBe(true);
+      // Use the real testnet wallet for the end-to-end check.
+      expect(isValidWallet('GD64YIY3TWGDMCNPP553DZPPR6LDUSFQOIJVFDPPXWEG3FVOJCCDBBHU5A')).toBe(true);
     });
   });
 

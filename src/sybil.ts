@@ -2,7 +2,7 @@ import { config } from './config';
 import { withTimeout, fetchWithTimeout } from './lib/timeout';
 import { algod } from './lib/algorand-client';
 import { MICRO_ALGO, isValidWallet } from './lib/constants';
-import { LRUCache } from './lib/cache';
+import { TTLCache } from './lib/cache';
 import { logger } from './lib/logger';
 import { computeGraphSignals, type GraphSignals } from './lib/graph';
 
@@ -327,7 +327,7 @@ export function generateSybilExplanation(
 
 type SybilAccountInfo = { balance: number; createdRound: number; fundedBy?: string };
 
-const sybilAccountInfoCache = new LRUCache<SybilAccountInfo>(500, 60_000);
+const sybilAccountInfoCache = new TTLCache<SybilAccountInfo>({ maxEntries: 500, ttlMs: 60_000 });
 
 const SYBIL_INDEXER_PAGE_SIZE = 2000;
 

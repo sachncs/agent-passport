@@ -22,7 +22,7 @@ client = AgentPassportClient(
     retries=3,
 )
 
-score = client.get_score("GD64YIY3TWGDMCNPP553DZPPR6LDUSFBBHU5AAAAA7XBICTFJ7BY7C55XX")
+score = client.get_score("GD64YIY3TWGDMCNPP553DZPPR6LDUSFQOIJVFDPPXWEG3FVOJCCDBBHU5A")
 print(score["trustScore"], score["riskLevel"])
 ```
 

@@ -7,7 +7,7 @@ on:
     branches: [master]
 
 env:
-  NODE_VERSION: '20'
+  NODE_VERSION: '20.18.0'  # LTS pinned — bump in lockstep with .nvmrc / Dockerfile
 
 jobs:
   test:
@@ -25,6 +25,23 @@ jobs:
       - name: Check markdown links
         run: node scripts/ci/check-md-links.mjs
       - run: npm test
+      - name: Unit-test coverage gate
+        run: |
+          npx vitest run --coverage --reporter=json-summary
+          # Enforce the thresholds declared in vitest.config.ts (80% statements,
+          # 70% branches, 80% functions, 80% lines). Fail CI if any drop below.
+          node -e '
+            const fs = require("fs");
+            const c = JSON.parse(fs.readFileSync("coverage/coverage-summary.json","utf8"));
+            const t = { statements:80, branches:70, functions:80, lines:80 };
+            const fail = [];
+            for (const k of Object.keys(t)) {
+              const pct = c.total[k].pct;
+              if (pct < t[k]) fail.push(`${k}: ${pct.toFixed(1)}% < ${t[k]}%`);
+            }
+            if (fail.length) { console.error("Coverage gate failed:", fail.join(", ")); process.exit(1); }
+            console.log("Coverage OK");
+          '
 
   build:
     runs-on: ubuntu-latest
@@ -46,9 +63,9 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-  # Load test smoke — runs on tagged releases only.
-  # Full 100/500/1000 VU runs are documented in load-tests/EXECUTION.md and
-  # should be executed in a staging environment with a local Algorand node.
+  # Load test smoke — runs on tagged releases only. Full 100/500/1000 VU
+  # runs are documented in load-tests/EXECUTION.md and should be executed
+  # in a staging environment with a local Algorand node.
   load-test-smoke:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
@@ -60,18 +77,15 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
-      - name: Install k6
+      - name: Install k6 (pinned version)
         run: |
           set -euo pipefail
-          sudo apt-get update
-          sudo apt-get install -y wget gnupg ca-certificates
-          # Fetch the k6 signing key over HTTPS (HKP keyservers are unreliable in CI).
-          wget -qO- https://github.com/grafana/k6/raw/main/release-archive-keyring.gpg \
-            | sudo tee /usr/share/keyrings/k6-archive-keyring.gpg > /dev/null
-          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" \
-            | sudo tee /etc/apt/sources.list.d/k6.list
-          sudo apt-get update
-          sudo apt-get install -y k6
+          # Pin to a specific k6 release so the JSON output format doesn't drift
+          # between CI runs. Bump consciously.
+          K6_VERSION="0.50.0"
+          wget -q "https://github.com/grafana/k6/releases/download/v${K6_VERSION}/k6-v${K6_VERSION}-linux-amd64.tar.gz"
+          tar -xzf "k6-v${K6_VERSION}-linux-amd64.tar.gz"
+          sudo mv "k6-v${K6_VERSION}-linux-amd64/k6" /usr/local/bin/k6
           k6 version
       - run: npm ci
       - run: npm run build
@@ -86,15 +100,18 @@ jobs:
           nohup node dist/index.js > /tmp/server.log 2>&1 &
           echo $! > /tmp/server.pid
           ready=0
-          for i in {1..30}; do
-            if curl -sf http://localhost:3000/health > /dev/null 2>&1; then
+          for i in {1..60}; do
+            # /ready returns 503 if Algorand is unreachable; both 200 and 503
+            # mean the process is up, but only 200 means upstream is healthy.
+            code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/ready || true)
+            if [ "$code" = "200" ] || [ "$code" = "503" ]; then
               ready=1
               break
             fi
             sleep 1
           done
           if [ "$ready" -ne 1 ]; then
-            echo "::error::Service failed to become ready within 30s. Server log:"
+            echo "::error::Service failed to come up within 60s. Server log:"
             cat /tmp/server.log
             exit 1
           fi

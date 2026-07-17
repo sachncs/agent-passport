@@ -2,12 +2,12 @@
 // Simulates a steady-state of ~0.116 req/s over 24h, accelerated.
 
 import http from 'k6/http';
-import { check, sleep } from 'k6';
-import { BASE_URL, pickWallet, VALID_WALLET } from '../lib/config.js';
+import { check } from 'k6';
+import { BASE_URL, VALID_WALLET } from '../lib/config.js';
 import {
   errorRate,
   requestDuration,
-  trustScoreDuration,
+  scoreDuration,
   recordResponse,
 } from '../lib/metrics.js';
 
@@ -32,9 +32,8 @@ export const options = {
 };
 
 export default function () {
-  // Use a real, well-known testnet wallet so we get 200s, not 404s
   const res = http.get(`${BASE_URL}/score?wallet=${VALID_WALLET}`);
-  trustScoreDuration.add(res.timings.duration);
+  scoreDuration.add(res.timings.duration);
   recordResponse(res);
 
   check(res, { 'status 200': (r) => r.status === 200 });

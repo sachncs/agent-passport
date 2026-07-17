@@ -5,6 +5,7 @@ import { paymentMiddlewareFromConfig } from '@x402/express';
 import { config } from '../config';
 import { X402_PRICING } from './constants';
 import { logger } from './logger';
+import { recordX402SettlementFailure } from './metrics';
 
 function buildRoutes(): RoutesConfig {
   const routes: RoutesConfig = {};
@@ -47,19 +48,15 @@ function createMiddleware() {
 export const x402Middleware = createMiddleware();
 
 /**
- * P2 FIX: Settlement verification for x402 payments.
- *
- * After the x402 middleware accepts a payment, this function verifies
- * that the payment was actually settled on-chain by querying the facilitator.
- *
- * This prevents double-spending and replay attacks on the payment layer.
+ * Verifies payment settlement with the facilitator. Returns whether the
+ * payment proof corresponds to a settled on-chain transaction.
  */
 export async function verifySettlement(
   paymentPayload: unknown,
   paymentRequirements: unknown,
-): Promise<{ verified: boolean; txHash?: string; error?: string }> {
+): Promise<{ verified: boolean; error?: string }> {
   if (!config.x402Enabled) {
-    return { verified: true }; // Skip verification when x402 is disabled
+    return { verified: true };
   }
 
   try {
@@ -67,7 +64,6 @@ export async function verifySettlement(
       url: config.x402FacilitatorUrl,
     });
 
-    // Verify the payment with the facilitator
     const result = await facilitatorClient.verify(
       paymentPayload as unknown as Parameters<HTTPFacilitatorClient['verify']>[0],
       paymentRequirements as unknown as Parameters<HTTPFacilitatorClient['verify']>[1],
@@ -80,19 +76,22 @@ export async function verifySettlement(
       return { verified: true };
     }
 
-    logger.warn('Payment settlement verification failed', {
-      error: result.invalidReason,
-    });
-    return { verified: false, error: result.invalidReason || result.invalidMessage };
+    const reason = result.invalidReason || result.invalidMessage || 'invalid';
+    logger.warn('Payment settlement verification failed', { error: reason });
+    recordX402SettlementFailure(reason);
+    return { verified: false, error: reason };
   } catch (e) {
-    logger.error('Settlement verification error', { error: String(e) });
-    return { verified: false, error: String(e) };
+    const msg = String(e);
+    logger.error('Settlement verification error', { error: msg });
+    recordX402SettlementFailure('exception');
+    return { verified: false, error: msg };
   }
 }
 
 /**
- * P2 FIX: Middleware that verifies payment settlement after x402 acceptance.
- * Place this after the x402Middleware in the route chain.
+ * Verifies the x402 payment settlement. Rejects with 402 when the proof
+ * cannot be matched to a settled on-chain transaction — without this, an
+ * attacker can replay a stale x-payment header indefinitely.
  */
 export function settlementVerificationMiddleware(
   req: Request,
@@ -103,36 +102,37 @@ export function settlementVerificationMiddleware(
     return next();
   }
 
-  // Extract payment proof from x402 payment header
   const paymentHeader = req.headers['x-payment'];
   if (!paymentHeader) {
-    // No payment header — x402 middleware should have rejected this
+    // x402Middleware already 402s requests missing the header; nothing to do.
     return next();
   }
 
-  // Determine expected amount from route config
-  const route = X402_PRICING[req.path as keyof typeof X402_PRICING];
+  // Strip trailing slashes before lookup so /score/ matches /score.
+  const normalizedPath = req.path.replace(/\/+$/, '') || '/';
+  const route = X402_PRICING[normalizedPath as keyof typeof X402_PRICING];
   if (!route) {
     return next();
   }
 
-  // Verify settlement asynchronously — don't block the request
+  // Block the request until the facilitator confirms the payment is settled.
+  // The x402 middleware checks the payment proof shape but does NOT verify the
+  // on-chain settlement — that is a separate defense against replay and
+  // double-spend.
   verifySettlement(
     paymentHeader,
     { price: String(route.price), payTo: config.x402PaymentRecipient, network: config.x402Network },
   ).then(result => {
     if (!result.verified) {
-      logger.warn('Settlement verification failed — payment may be unsettled', {
-        path: req.path,
-        error: result.error,
+      res.status(402).json({
+        error: 'Payment settlement not verified',
+        reason: result.error,
       });
-      // Note: We don't reject the request here because the x402 middleware
-      // already verified the payment proof. Settlement verification is an
-      // additional defense layer that logs discrepancies.
+      return;
     }
+    next();
   }).catch(e => {
     logger.error('Settlement verification threw', { error: String(e) });
+    res.status(502).json({ error: 'Settlement verification unavailable' });
   });
-
-  next();
 }

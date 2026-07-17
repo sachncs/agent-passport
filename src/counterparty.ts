@@ -1,6 +1,7 @@
 import { scoreWallet } from './trust-score';
 import { scoreDelegation } from './delegation';
 import { isValidWallet } from './lib/constants';
+import { checkSanctions } from './lib/sanctions';
 
 export interface CounterpartyResult {
   allow: boolean;
@@ -10,6 +11,11 @@ export interface CounterpartyResult {
   onChainScore: number;
   delegationScore: number;
   explanation: string[];
+  sanctions?: {
+    status: 'allowed' | 'denied' | 'unknown';
+    reason?: string;
+    provider: string;
+  };
 }
 
 // ── Pure math functions (exported for testing) ─────────────────
@@ -95,9 +101,10 @@ export function generateCounterpartyExplanation(
 export async function checkCounterparty(buyer: string): Promise<CounterpartyResult | null> {
   if (!isValidWallet(buyer)) return null;
 
-  const [onChainResult, delegationResult] = await Promise.all([
+  const [onChainResult, delegationResult, sanctions] = await Promise.all([
     scoreWallet(buyer),
     scoreDelegation(buyer),
+    checkSanctions(buyer),
   ]);
 
   const onChainScore = onChainResult?.trustScore ?? 0;
@@ -105,7 +112,9 @@ export async function checkCounterparty(buyer: string): Promise<CounterpartyResu
 
   const trustScore = computeCombinedScore(onChainScore, delegationScore);
   const confidence = computeConfidence(trustScore);
-  const allow = decideAllow(trustScore, confidence);
+  const baseAllow = decideAllow(trustScore, confidence);
+  // Sanctions fail-closed: denied or unknown screening -> deny.
+  const allow = baseAllow && sanctions.status === 'allowed';
   const riskLevel = classifyCounterpartyRisk(trustScore);
 
   const explanation = generateCounterpartyExplanation(
@@ -116,6 +125,12 @@ export async function checkCounterparty(buyer: string): Promise<CounterpartyResu
     confidence
   );
 
+  if (sanctions.status === 'denied') {
+    explanation.push(`Denied — wallet on sanctions deny list (provider: ${sanctions.provider})`);
+  } else if (sanctions.status === 'unknown') {
+    explanation.push(`Denied — sanctions provider unavailable (${sanctions.provider})`);
+  }
+
   return {
     allow,
     confidence,
@@ -124,5 +139,10 @@ export async function checkCounterparty(buyer: string): Promise<CounterpartyResu
     onChainScore,
     delegationScore,
     explanation,
+    sanctions: {
+      status: sanctions.status,
+      reason: sanctions.reason,
+      provider: sanctions.provider,
+    },
   };
 }

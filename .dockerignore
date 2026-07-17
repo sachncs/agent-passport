@@ -10,3 +10,16 @@ coverage
 *.md
 scripts/
 sdk/
+data/
+docs/
+alerts/
+public/
+load-tests/
+contracts/
+.ruff_cache/
+.benchmarks/
+*.test.ts
+__tests__/
+.eslintcache
+.vscode/
+.idea/
