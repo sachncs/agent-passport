@@ -1,12 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
-  computeBalanceCapacity,
-  computeActivityBonus,
-  computeAgeBonus,
   computeRiskPenalty,
   computeCreditLimit,
-  classifyCreditRisk,
-  computeCreditConfidence,
 } from '../credit';
 import {
   computeDepthScore,
@@ -14,23 +9,16 @@ import {
   computeSponsorCountScore,
   computeAmountScore,
   computeDelegationTrustScore,
-  classifyDelegationRisk,
-  computeDelegationRecommendedLimit,
 } from '../delegation';
 import {
   computeCompositeScore,
-  classifyUnderwritingRisk,
   computeUnderwritingLimit,
-  decideApproval,
-  computeUnderwritingConfidence,
 } from '../underwriting';
 import type { UnderwritingFactor } from '../underwriting';
 import {
-  getSystemExposure,
   resetSystemExposure,
   capToSystemCapacity,
   addSystemExposure,
-  MAX_SYSTEM_EXPOSURE,
 } from '../lib/system-exposure';
 
 function makeFactor(
