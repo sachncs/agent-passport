@@ -31,7 +31,10 @@ import { algod } from './lib/algorand-client';
 export const app = express();
 
 
-export const responseCache = new TTLCache<unknown>({ maxEntries: 500, ttlMs: 60_000 });
+export const responseCache = new TTLCache<unknown>({
+  maxEntries: 500,
+  ttlMs: 60_000,
+});
 
 // Security: trust proxy for correct IP behind load balancers
 app.set('trust proxy', 1);
@@ -53,7 +56,10 @@ app.use(settlementVerificationMiddleware);
 app.use(idempotencyMiddleware);
 
 // ── Helper: validate wallet from query param ──────────────────
-function requireWallet(req: express.Request, res: express.Response): string | null {
+function requireWallet(
+  req: express.Request,
+  res: express.Response,
+): string | null {
   const raw = req.query.wallet;
   if (typeof raw !== 'string' || !raw) {
     res.status(400).json({ error: 'Missing required query parameter: wallet' });
@@ -67,7 +73,10 @@ function requireWallet(req: express.Request, res: express.Response): string | nu
 }
 
 // ── Helper: validate wallet from body ─────────────────────────
-function requireBodyWallet(req: express.Request, res: express.Response): string | null {
+function requireBodyWallet(
+  req: express.Request,
+  res: express.Response,
+): string | null {
   const wallet = req.body?.wallet;
   if (!wallet) {
     res.status(400).json({ error: 'Missing required field: wallet' });
@@ -81,7 +90,10 @@ function requireBodyWallet(req: express.Request, res: express.Response): string 
 }
 
 // ── Helper: validate numeric amount ───────────────────────────
-function validateAmount(amount: unknown, opts: { allowNegative?: boolean } = {}): number | null {
+function validateAmount(
+  amount: unknown,
+  opts: { allowNegative?: boolean } = {},
+): number | null {
   if (amount === undefined || amount === null) return 0;
   if (typeof amount !== 'number' || !Number.isFinite(amount)) return null;
   if (!opts.allowNegative && amount < 0) return null;
@@ -250,7 +262,9 @@ app.post('/reputation/record', async (req, res) => {
   }
 
   try {
-    const result = await recordEvent(wallet, eventType, amount || 0, counterparty, round ?? 0);
+    const result = await recordEvent(
+      wallet, eventType, amount || 0, counterparty, round ?? 0,
+    );
     if (!result) {
       res.status(400).json({ error: 'Failed to record event' });
       return;
@@ -414,7 +428,9 @@ app.get('/verify', async (req, res) => {
     // Lightweight flag derivation: do a single, fast account lookup with
     // bounded timeout. Cached for 60s to avoid hammering algod.
     const cacheKey = `verify:${raw}`;
-    const cached = responseCache.get(cacheKey) as { flags: Record<string, boolean> } | undefined;
+    const cached = responseCache.get(cacheKey) as
+      | { flags: Record<string, boolean> }
+      | undefined;
     if (cached) {
       recordVerifyCheck(cached.flags);
       res.json({ valid: true, wallet: raw, flags: cached.flags, cached: true });
@@ -422,9 +438,10 @@ app.get('/verify', async (req, res) => {
     }
     try {
       const info = await algod.accountInformation(raw).do();
-      // Naive flag heuristics — refine in production
+      // Naive flag heuristics - refine in production
       flags.funded = Number(info.amount || 0n) > 0;
-      flags.active = (info.totalAppsOptedIn || 0) > 0 || (info.totalAssetsOptedIn || 0) > 0;
+      flags.active = (info.totalAppsOptedIn || 0) > 0
+        || (info.totalAssetsOptedIn || 0) > 0;
       flags.empty = Number(info.amount || 0n) === 0;
       responseCache.set(cacheKey, { flags });
     } catch {
@@ -442,7 +459,7 @@ app.get('/discovery/search', async (req, res) => {
   const q = (req.query.q as string | undefined)?.toLowerCase() ?? '';
   const limit = Math.min(parseInt(req.query.limit as string ?? '20', 10) || 20, 100);
 
-  // Static Bazaar catalog (production: backed by a registry or x402 bazaar service)
+  // Static Bazaar catalog (production: registry or x402 bazaar service)
   const catalog = [
     {
       id: 'agent-passport',
@@ -592,7 +609,9 @@ app.get('/ready', async (_req, res) => {
 
   // An uninitialized operator means /delegate, /revoke, /reputation/record
   // are no-ops. Surface this in readiness so k8s probes can hold traffic.
-  if (!isOperatorInitialized() && (config.registryAppId > 0 || config.reputationAppId > 0)) {
+  const contractsConfigured =
+    config.registryAppId > 0 || config.reputationAppId > 0;
+  if (!isOperatorInitialized() && contractsConfigured) {
     health.status = 'degraded';
   }
 
