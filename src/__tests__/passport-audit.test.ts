@@ -66,7 +66,10 @@ describe('Data Integrity Audit — Determinism', () => {
     });
 
     it('DET-3: computeTrustScore is deterministic', () => {
-      const breakdown = { ageScore: 65.3, activityScore: 42, volumeScore: 58, velocityScore: 80, complianceScore: 70 };
+      const breakdown = {
+        ageScore: 65.3, activityScore: 42, volumeScore: 58,
+        velocityScore: 80, complianceScore: 70,
+      };
       const r1 = computeTrustScore(breakdown);
       const r2 = computeTrustScore(breakdown);
       expect(r1).toBe(r2);
@@ -94,7 +97,9 @@ describe('Data Integrity Audit — Determinism', () => {
     });
 
     it('DET-7: computeCreditLimit is deterministic', () => {
-      const breakdown = { balanceCapacity: 500, activityBonus: 100, ageBonus: 75, riskPenalty: 25 };
+      const breakdown = {
+        balanceCapacity: 500, activityBonus: 100, ageBonus: 75, riskPenalty: 25,
+      };
       const r1 = computeCreditLimit(breakdown);
       const r2 = computeCreditLimit(breakdown);
       expect(r1).toBe(r2);
@@ -117,53 +122,45 @@ describe('Data Integrity Audit — Determinism', () => {
       }
     });
 
+    const standardFields = {
+      identityStrength: 65.3, trustScore: 72.1, trustRiskLevel: 'low' as const,
+      reputation: 45.0, reputationRiskLevel: 'medium' as const, totalEvents: 15,
+      paymentReliability: 58.2, creditLimit: 425.00, creditRisk: 'medium' as const,
+      risk: 32.5, sybilRisk: 0.15, overallRiskLevel: 'medium' as const,
+      onChain: {
+        balanceAlgo: 1000, totalTxns: 50, accountAgeDays: 365,
+        assets: 5, apps: 2,
+      },
+      delegation: {
+        depth: 1, sponsorCount: 3, delegatedAmount: 500, isTrustAnchor: false,
+      },
+      capabilities: {
+        trustScoring: true, delegation: true, creditEligible: true,
+        sybilClear: true, reputationActive: true,
+      },
+      dataSources: {
+        trust: true, delegation: true, credit: true,
+        sybil: true, reputation: true,
+      },
+      summary: 'Agent is well-established.',
+    };
+
     it('DET-10: computePassportChecksum is deterministic', () => {
-      const fields = {
-        identityStrength: 65.3, trustScore: 72.1, trustRiskLevel: 'low',
-        reputation: 45.0, reputationRiskLevel: 'medium', totalEvents: 15,
-        paymentReliability: 58.2, creditLimit: 425.00, creditRisk: 'medium',
-        risk: 32.5, sybilRisk: 0.15, overallRiskLevel: 'medium',
-        onChain: { balanceAlgo: 1000, totalTxns: 50, accountAgeDays: 365, assets: 5, apps: 2 },
-        delegation: { depth: 1, sponsorCount: 3, delegatedAmount: 500, isTrustAnchor: false },
-        capabilities: { trustScoring: true, delegation: true, creditEligible: true, sybilClear: true, reputationActive: true },
-        dataSources: { trust: true, delegation: true, credit: true, sybil: true, reputation: true },
-        summary: 'Agent is well-established.',
-      };
-      const c1 = computePassportChecksum('WALLET123', 1000000, fields);
-      const c2 = computePassportChecksum('WALLET123', 1000000, fields);
+      const c1 = computePassportChecksum('WALLET123', 1000000, standardFields);
+      const c2 = computePassportChecksum('WALLET123', 1000000, standardFields);
       expect(c1).toBe(c2);
       expect(c1).toHaveLength(64); // SHA-256 hex length
     });
 
     it('DET-11: Checksum changes when blockRound changes', () => {
-      const fields = {
-        identityStrength: 65.3, trustScore: 72.1, trustRiskLevel: 'low',
-        reputation: 45.0, reputationRiskLevel: 'medium', totalEvents: 15,
-        paymentReliability: 58.2, creditLimit: 425.00, creditRisk: 'medium',
-        risk: 32.5, sybilRisk: 0.15, overallRiskLevel: 'medium',
-        onChain: { balanceAlgo: 1000, totalTxns: 50, accountAgeDays: 365, assets: 5, apps: 2 },
-        delegation: { depth: 1, sponsorCount: 3, delegatedAmount: 500, isTrustAnchor: false },
-        capabilities: { trustScoring: true, delegation: true, creditEligible: true, sybilClear: true, reputationActive: true },
-        dataSources: { trust: true, delegation: true, credit: true, sybil: true, reputation: true },
-        summary: 'Agent is well-established.',
-      };
+      const fields = { ...standardFields };
       const c1 = computePassportChecksum('WALLET123', 1000000, fields);
       const c2 = computePassportChecksum('WALLET123', 1000001, fields);
       expect(c1).not.toBe(c2);
     });
 
     it('DET-12: Checksum changes when wallet changes', () => {
-      const fields = {
-        identityStrength: 65.3, trustScore: 72.1, trustRiskLevel: 'low',
-        reputation: 45.0, reputationRiskLevel: 'medium', totalEvents: 15,
-        paymentReliability: 58.2, creditLimit: 425.00, creditRisk: 'medium',
-        risk: 32.5, sybilRisk: 0.15, overallRiskLevel: 'medium',
-        onChain: { balanceAlgo: 1000, totalTxns: 50, accountAgeDays: 365, assets: 5, apps: 2 },
-        delegation: { depth: 1, sponsorCount: 3, delegatedAmount: 500, isTrustAnchor: false },
-        capabilities: { trustScoring: true, delegation: true, creditEligible: true, sybilClear: true, reputationActive: true },
-        dataSources: { trust: true, delegation: true, credit: true, sybil: true, reputation: true },
-        summary: 'Agent is well-established.',
-      };
+      const fields = { ...standardFields };
       const c1 = computePassportChecksum('WALLET123', 1000000, fields);
       const c2 = computePassportChecksum('WALLET456', 1000000, fields);
       expect(c1).not.toBe(c2);
@@ -186,7 +183,8 @@ describe('Data Integrity Audit — Schema Validation', () => {
       [10, 1, 0, 0.1], [99, 1000, 1000, 100000],
     ];
     for (const args of inputs) {
-      const result = computeIdentityStrength(...args as [number, number, number, number]);
+      const argsTyped = args as [number, number, number, number];
+      const result = computeIdentityStrength(...argsTyped);
       expect(result).toBeGreaterThanOrEqual(0);
       expect(result).toBeLessThanOrEqual(100);
     }
@@ -198,7 +196,8 @@ describe('Data Integrity Audit — Schema Validation', () => {
       [10, 5, 0], [80, 90, 1000],
     ];
     for (const args of inputs) {
-      const result = computePaymentReliability(...args as [number, number, number]);
+      const argsTyped = args as [number, number, number];
+      const result = computePaymentReliability(...argsTyped);
       expect(result).toBeGreaterThanOrEqual(0);
       expect(result).toBeLessThanOrEqual(100);
     }
@@ -211,7 +210,8 @@ describe('Data Integrity Audit — Schema Validation', () => {
       ['medium', 0.5, 'medium', 'medium'],
     ];
     for (const args of inputs) {
-      const result = computeOverallRisk(...args as [string, number, string, string]);
+      const argsTyped = args as [string, number, string, string];
+      const result = computeOverallRisk(...argsTyped);
       expect(result).toBeGreaterThanOrEqual(0);
       expect(result).toBeLessThanOrEqual(100);
     }
@@ -220,8 +220,14 @@ describe('Data Integrity Audit — Schema Validation', () => {
   it('SCH-5: computeCreditLimit returns number in [0, 1350]', () => {
     const inputs = [
       { balanceCapacity: 0, activityBonus: 0, ageBonus: 0, riskPenalty: 0 },
-      { balanceCapacity: 1000, activityBonus: 200, ageBonus: 150, riskPenalty: 0 },
-      { balanceCapacity: 500, activityBonus: 100, ageBonus: 75, riskPenalty: 200 },
+      {
+        balanceCapacity: 1000, activityBonus: 200,
+        ageBonus: 150, riskPenalty: 0,
+      },
+      {
+        balanceCapacity: 500, activityBonus: 100,
+        ageBonus: 75, riskPenalty: 200,
+      },
     ];
     for (const breakdown of inputs) {
       const result = computeCreditLimit(breakdown);
@@ -284,8 +290,10 @@ describe('Data Integrity Audit — Consistency', () => {
     // trust(40%) + age(25%) + activity(20%) + balance(15%) = 100%
     const trust = 100, age = 730, txns = 500, balance = 1000000;
     const result = computeIdentityStrength(trust, age, txns, balance);
-    // trust contributes 40, age contributes 25, activity contributes 20, balance contributes 15
-    // but each is capped at 100 then scaled, so total should be 94 (balance log10(1M)*10=60, 60/100*15=9)
+    // trust contributes 40, age contributes 25, activity contributes 20,
+    // balance contributes 15
+    // but each is capped at 100 then scaled, so total should be 94
+    // (balance log10(1M)*10=60, 60/100*15=9)
     expect(result).toBe(94);
   });
 
@@ -330,7 +338,8 @@ describe('Data Integrity Audit — Consistency', () => {
       { name: 'Sybil', score: 90, weight: 0.20, contribution: 18, status: 'positive' as const },
       { name: 'Reputation', score: 70, weight: 0.20, contribution: 14, status: 'positive' as const },
     ];
-    // weighted = (80*0.35 + 60*0.25 + 90*0.20 + 70*0.20) / (0.35+0.25+0.20+0.20)
+    // weighted = (80*0.35 + 60*0.25 + 90*0.20 + 70*0.20)
+    //           / (0.35+0.25+0.20+0.20)
     // = (28 + 15 + 18 + 14) / 1.0 = 75
     expect(computeCompositeScore(factors)).toBe(75);
   });
@@ -406,20 +415,40 @@ describe('Data Integrity Audit — Tampering', () => {
   });
 
   it('TAM-6: Checksum is SHA-256 (64 hex chars)', () => {
-    const checksum = computePassportChecksum('WALLET', 100, {
-      identityStrength: 50, trustScore: 50, trustRiskLevel: 'medium',
-      reputation: 50, reputationRiskLevel: 'medium', totalEvents: 10,
-      paymentReliability: 50, creditLimit: 500, creditRisk: 'medium',
-      risk: 35, sybilRisk: 0.2, overallRiskLevel: 'medium',
-      onChain: { balanceAlgo: 1000, totalTxns: 50, accountAgeDays: 365, assets: 5, apps: 2 },
-      delegation: { depth: 1, sponsorCount: 3, delegatedAmount: 500, isTrustAnchor: false },
-      capabilities: { trustScoring: true, delegation: true, creditEligible: true, sybilClear: true, reputationActive: true },
-      dataSources: { trust: true, delegation: true, credit: true, sybil: true, reputation: true },
-      summary: 'Agent is moderate.',
-    });
+    const checksum = computePassportChecksum('WALLET', 100, minimalFields);
     expect(checksum).toMatch(/^[a-f0-9]{64}$/);
   });
 });
+
+const minimalFields = {
+  identityStrength: 50, trustScore: 50, trustRiskLevel: 'medium' as const,
+  reputation: 50, reputationRiskLevel: 'medium' as const, totalEvents: 10,
+  paymentReliability: 50, creditLimit: 500, creditRisk: 'medium' as const,
+  risk: 35, sybilRisk: 0.2, overallRiskLevel: 'medium' as const,
+  onChain: {
+    balanceAlgo: 1000, totalTxns: 50, accountAgeDays: 365, assets: 5, apps: 2,
+  },
+  delegation: {
+    depth: 1, sponsorCount: 3, delegatedAmount: 500, isTrustAnchor: false,
+  },
+  capabilities: {
+    trustScoring: true, delegation: true, creditEligible: true,
+    sybilClear: true, reputationActive: true,
+  },
+  dataSources: {
+    trust: true, delegation: true, credit: true, sybil: true, reputation: true,
+  },
+  summary: 'Agent is moderate.',
+};
+
+const allZeros = {
+  ageScore: 0, activityScore: 0, volumeScore: 0,
+  velocityScore: 0, complianceScore: 0,
+};
+const allHundreds = {
+  ageScore: 100, activityScore: 100, volumeScore: 100,
+  velocityScore: 100, complianceScore: 100,
+};
 
 // ═══════════════════════════════════════════════════════════════
 // SECTION 5: EDGE CASE TESTS
@@ -428,22 +457,19 @@ describe('Data Integrity Audit — Tampering', () => {
 describe('Data Integrity Audit — Edge Cases', () => {
   it('EDGE-1: Zero trust score — identity strength still reflects other factors', () => {
     // trust=0, age=365, txns=100, balance=1000
-    // trust contributes 0, age contributes ~12.3, activity contributes 20, balance contributes ~10.5
+    // trust contributes 0, age contributes ~12.3, activity contributes 20,
+    // balance contributes ~10.5
     const result = computeIdentityStrength(0, 365, 100, 1000);
     expect(result).toBeGreaterThan(0);
   });
 
   it('EDGE-2: Zero all sub-scores — trust score is 0', () => {
-    const result = computeTrustScore({
-      ageScore: 0, activityScore: 0, volumeScore: 0, velocityScore: 0, complianceScore: 0,
-    });
+    const result = computeTrustScore(allZeros);
     expect(result).toBe(0);
   });
 
   it('EDGE-3: Max all sub-scores — trust score is 100', () => {
-    const result = computeTrustScore({
-      ageScore: 100, activityScore: 100, volumeScore: 100, velocityScore: 100, complianceScore: 100,
-    });
+    const result = computeTrustScore(allHundreds);
     expect(result).toBe(100);
   });
 
@@ -518,7 +544,8 @@ describe('Data Integrity Audit — System Exposure', () => {
     addSystemExposure('WALLET_A', 99_000);
     // remaining = 100_000 - 99_000 = 1_000
     const result = computeUnderwritingLimit(80, 1350, 0.1, 50);
-    // scoreMultiplier = 0.5 + 0.8 = 1.3, sybilMultiplier = 0.93, repMultiplier = 1.15
+    // scoreMultiplier = 0.5 + 0.8 = 1.3, sybilMultiplier = 0.93,
+    // repMultiplier = 1.15
     // raw = 1350 * 1.3 * 0.93 * 1.15 ≈ 1851, capped to 1350
     expect(result).toBe(1350);
   });
@@ -530,7 +557,9 @@ describe('Data Integrity Audit — System Exposure', () => {
 
 describe('Data Integrity Audit — Weight Verification', () => {
   it('WGT-1: Trust score weights sum to 1.0', () => {
-    const w = { age: 0.2, activity: 0.25, volume: 0.2, velocity: 0.15, compliance: 0.2 };
+    const w = {
+      age: 0.2, activity: 0.25, volume: 0.2, velocity: 0.15, compliance: 0.2,
+    };
     const total = w.age + w.activity + w.volume + w.velocity + w.compliance;
     expect(total).toBeCloseTo(1.0, 10);
   });
@@ -570,7 +599,7 @@ describe('Data Integrity Audit — Invariant Proofs', () => {
       () => computeIdentityStrength(100, 10000, 100000, 1e12),
       () => computePaymentReliability(100, 100, 1e6),
       () => computeOverallRisk('critical', 1.0, 'critical', 'critical'),
-      () => computeTrustScore({ ageScore: 100, activityScore: 100, volumeScore: 100, velocityScore: 100, complianceScore: 100 }),
+      () => computeTrustScore(allHundreds),
     ];
     for (const fn of extremeInputs) {
       const result = fn();
