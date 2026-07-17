@@ -87,7 +87,9 @@ function canonicalJson(value: unknown): string {
   return '{' + keys.map(k => `${JSON.stringify(k)}:${canonicalJson((value as Record<string, unknown>)[k])}`).join(',') + '}';
 }
 
-export function getIdempotencyRecord(key: string): IdempotencyRecord | undefined {
+export function getIdempotencyRecord(
+  key: string,
+): IdempotencyRecord | undefined {
   const rec = store.get(key);
   if (!rec) return undefined;
   if (rec.expiresAt <= Date.now()) {
@@ -132,7 +134,11 @@ declare module 'express-serve-static-core' {
   }
 }
 
-export function idempotencyMiddleware(req: Request, res: Response, next: NextFunction): void {
+export function idempotencyMiddleware(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): void {
   if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') {
     next();
     return;
