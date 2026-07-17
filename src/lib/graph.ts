@@ -81,9 +81,9 @@ export function computeClusteringCoefficient(
   const neighborList = [...neighbors];
   let edgesBetween = 0;
 
-  for (let i = 0; i < neighborList.length; i++) {
-    for (let j = i + 1; j < neighborList.length; j++) {
-      if (adj.get(neighborList[i])?.has(neighborList[j])) {
+  for (const [i, a] of neighborList.entries()) {
+    for (const b of neighborList.slice(i + 1)) {
+      if (adj.get(a)?.has(b)) {
         edgesBetween++;
       }
     }
@@ -233,11 +233,8 @@ export function computeIntermediateDensity(
   let intermediatePairs = 0;
   let nonDirectPairs = 0;
 
-  for (let i = 0; i < neighborList.length; i++) {
-    for (let j = i + 1; j < neighborList.length; j++) {
-      const a = neighborList[i];
-      const b = neighborList[j];
-
+  for (const [i, a] of neighborList.entries()) {
+    for (const b of neighborList.slice(i + 1)) {
       // Skip pairs that interact directly
       const adjA = adj.get(a) || new Set();
       if (adjA.has(b)) continue;
@@ -381,10 +378,10 @@ export function computeTemporalCorrelation(
   let totalSimilarity = 0;
   let pairsWithOverlap = 0;
 
-  for (let i = 0; i < nodes.length; i++) {
-    for (let j = i + 1; j < nodes.length; j++) {
-      const roundsA = roundsPerNode.get(nodes[i]) || new Set();
-      const roundsB = roundsPerNode.get(nodes[j]) || new Set();
+  for (const [i, a] of nodes.entries()) {
+    for (const b of nodes.slice(i + 1)) {
+      const roundsA = roundsPerNode.get(a) || new Set();
+      const roundsB = roundsPerNode.get(b) || new Set();
 
       // Find intersection size (co-active rounds)
       const [smaller, larger] = roundsA.size <= roundsB.size

@@ -36,10 +36,12 @@ function startSweeper(): void {
     if (store.size > MAX_STORE_SIZE) {
       const overflow = store.size - MAX_STORE_SIZE;
       const keys = store.keys();
-      for (let i = 0; i < overflow; i++) {
+      let evicted = 0;
+      while (evicted < overflow) {
         const next = keys.next();
         if (next.done) break;
         store.delete(next.value);
+        evicted++;
       }
     }
   }, SWEEP_INTERVAL_MS);

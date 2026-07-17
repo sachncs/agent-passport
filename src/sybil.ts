@@ -506,8 +506,10 @@ async function detectSybilInternal(wallet: string, fresh: boolean): Promise<Sybi
   // Signal 5: Timing regularity
   const rounds = txData.transactions.map(t => t.round).sort((a, b) => a - b);
   const intervals: number[] = [];
-  for (let i = 1; i < rounds.length; i++) {
-    intervals.push(rounds[i] - rounds[i - 1]);
+  let prevRound: number | undefined;
+  for (const r of rounds) {
+    if (prevRound !== undefined) intervals.push(r - prevRound);
+    prevRound = r;
   }
   const timingRegularity = computeTimingRegularity(intervals);
 
