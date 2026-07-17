@@ -49,7 +49,11 @@ export function computeAgeScore(days: number): number {
   return Math.round((linear * 0.6 + log * 0.4) * 10) / 10;
 }
 
-export function computeActivityScore(txns: number, days: number, assets: number): number {
+export function computeActivityScore(
+  txns: number,
+  days: number,
+  assets: number,
+): number {
   if (days <= 0) return 0;
   const txPerMonth = txns / (days / 30);
   return Math.min(100,
@@ -59,7 +63,10 @@ export function computeActivityScore(txns: number, days: number, assets: number)
   );
 }
 
-export function computeVolumeScore(balanceMicroAlgo: number, txns: number): number {
+export function computeVolumeScore(
+  balanceMicroAlgo: number,
+  txns: number,
+): number {
   const algo = balanceMicroAlgo / MICRO_ALGO;
   return Math.min(100,
     Math.min(50, Math.log10(Math.max(1, algo)) * 10) +
@@ -85,11 +92,12 @@ export function computeVelocityScore(txns: number, days: number): number {
  * - Binary thresholds (pass/fail) create cliff effects that are gameable
  * - Continuous penalties provide smoother graduation between risk levels
  * - Floor of 10 (not 0) because even worst wallet technically exists on-chain
- * - Credit bureau alignment: FICO doesn't score dormant files at all; we give minimal credit
+ * - Credit bureau alignment: FICO doesn't score dormant files; we give
+ *   minimal credit
  *
- * Balance penalty: Scales linearly from 0 (≥1 ALGO) to 40 (0 ALGO)
+ * Balance penalty: Scales linearly from 0 (>=1 ALGO) to 40 (0 ALGO)
  *   - Below 1 ALGO indicates wallet may be abandoned or freshly created
- *   - Log scale would compress the low end too much; linear is more interpretable
+ *   - Log scale compresses the low end too much; linear is clearer
  *
  * Transaction penalty: Scales from 50 (0 txns) to ~0 (100+ txns) using log₁₀
  *   - Log scale prevents diminishing returns from spam
@@ -99,12 +107,17 @@ export function computeVelocityScore(txns: number, days: number): number {
  * Worst case: 100 - 40 - 50 = 10 (floor)
  * Best case: 100 - 0 - 0 = 100
  */
-export function computeComplianceScore(balanceMicroAlgo: number, txns: number): number {
+export function computeComplianceScore(
+  balanceMicroAlgo: number,
+  txns: number,
+): number {
   const algo = balanceMicroAlgo / MICRO_ALGO;
   // Balance: continuous penalty below 1 ALGO, max 40 points
   const balancePenalty = algo >= 1 ? 0 : Math.round((1 - algo) * 40);
   // Transactions: log-scaled penalty, 0 txns = 50, 100+ txns ≈ 0
-  const txnPenalty = txns === 0 ? 50 : Math.round(Math.max(0, 50 - Math.log10(txns + 1) * 25));
+  const txnPenalty = txns === 0 ? 50 : Math.round(
+    Math.max(0, 50 - Math.log10(txns + 1) * 25),
+  );
   const score = 100 - balancePenalty - txnPenalty;
   return Math.max(0, Math.min(100, score));
 }
@@ -116,16 +129,18 @@ export function computeTrustScore(breakdown: {
   velocityScore: number;
   complianceScore: number;
 }): number {
-  const w = { age: 0.2, activity: 0.25, volume: 0.2, velocity: 0.15, compliance: 0.2 };
+  const w = {
+    age: 0.2, activity: 0.25, volume: 0.2, velocity: 0.15, compliance: 0.2,
+  };
   const total = w.age + w.activity + w.volume + w.velocity + w.compliance;
 
-  return Math.round(Math.max(0, Math.min(100,
+  const weighted =
     (w.age / total) * breakdown.ageScore +
     (w.activity / total) * breakdown.activityScore +
     (w.volume / total) * breakdown.volumeScore +
     (w.velocity / total) * breakdown.velocityScore +
-    (w.compliance / total) * breakdown.complianceScore
-  )) * 10) / 10;
+    (w.compliance / total) * breakdown.complianceScore;
+  return Math.round(Math.max(0, Math.min(100, weighted)) * 10) / 10;
 }
 
 /**
@@ -135,7 +150,8 @@ export function computeTrustScore(breakdown: {
  * - FICO requires data within last 6 months to be scorable
  * - Files without updates in 6+ months are "stale" / "dormant"
  * - Exponential decay (not linear) matches credit bureau behavior:
- *   "a 5-year-old delinquency carries much less weight than one from last month"
+ *   "a 5-year-old delinquency carries much less weight than one from
+ *   last month"
  *
  * Parameters:
  *   Grace period: 180 days (6 months) — no penalty
@@ -154,22 +170,27 @@ export function computeStalenessPenalty(daysSinceLastActivity: number): number {
   const STALENESS_FLOOR = 0.30;
   if (daysSinceLastActivity <= STALENESS_GRACE_DAYS) return 1.0;
   const staleDays = daysSinceLastActivity - STALENESS_GRACE_DAYS;
-  return Math.max(STALENESS_FLOOR, Math.pow(0.5, staleDays / STALENESS_HALF_LIFE_DAYS));
+  const factor = Math.pow(0.5, staleDays / STALENESS_HALF_LIFE_DAYS);
+  return Math.max(STALENESS_FLOOR, factor);
 }
 
 /**
  * Caps trust score for fresh wallets (< 30 days old).
  *
  * Design rationale:
- * - A brand-new wallet should not be approved based on single-transaction metrics
+ * - A brand-new wallet should not be approved based on
+ *   single-transaction metrics
  * - 30-day minimum aligns with standard KYC/account maturation periods
- * - Cap of 30 ensures fresh wallets stay in "critical" risk tier (below 45 medium threshold)
+ * - Cap of 30 keeps fresh wallets in "critical" risk tier (below 45 medium)
  * - Prevents the attack: create wallet → fund → single txn → approved
  *
  * The cap only applies to wallets younger than 30 days.
  * At exactly 30 days, no cap is applied.
  */
-export function applyFreshWalletCap(trustScore: number, accountAgeDays: number): number {
+export function applyFreshWalletCap(
+  trustScore: number,
+  accountAgeDays: number,
+): number {
   const FRESH_WALLET_THRESHOLD_DAYS = 30;
   const FRESH_WALLET_MAX_SCORE = 30;
   if (accountAgeDays < FRESH_WALLET_THRESHOLD_DAYS) {
@@ -183,8 +204,10 @@ export function applyFreshWalletCap(trustScore: number, accountAgeDays: number):
  *
  * Design rationale:
  * - Sybil clusters indicate coordinated inauthentic behavior
- * - Penalty scales with severity: low risk → no penalty, high risk → 50% reduction
- * - Applied in underwriting layer (not base trust score) because sybil detection
+ * - Penalty scales with severity: low risk -> no penalty, high risk ->
+ *   50% reduction
+ * - Applied in underwriting layer (not base trust score) because
+ *   sybil detection
  *   requires cluster analysis that isn't available in single-wallet scoring
  * - Thresholds align with classifySybilRisk boundaries
  *
@@ -194,7 +217,10 @@ export function applyFreshWalletCap(trustScore: number, accountAgeDays: number):
  *   sybilRisk < 0.70 (high)     → 20% reduction
  *   sybilRisk >= 0.70 (critical) → 50% reduction
  */
-export function applySybilPenalty(trustScore: number, sybilRisk: number): number {
+export function applySybilPenalty(
+  trustScore: number,
+  sybilRisk: number,
+): number {
   if (sybilRisk < 0.45) return trustScore;
   if (sybilRisk < 0.70) return Math.round(trustScore * 0.8 * 10) / 10;
   return Math.round(trustScore * 0.5 * 10) / 10;
@@ -214,8 +240,11 @@ export function computeRecommendedLimit(score: number): number {
 }
 
 export function generateExplanation(
-  onChain: { balanceAlgo: number; totalTxns: number; assetCount: number; accountAgeDays: number },
-  trustScore: number
+  onChain: {
+    balanceAlgo: number; totalTxns: number;
+    assetCount: number; accountAgeDays: number;
+  },
+  trustScore: number,
 ): string[] {
   const reasons: string[] = [];
   const { balanceAlgo, totalTxns, assetCount, accountAgeDays } = onChain;
@@ -249,12 +278,18 @@ interface AccountInfo {
   lastRound: number;
 }
 
-const accountInfoCache = new TTLCache<AccountInfo>({ maxEntries: 200, ttlMs: 60_000 });
+const accountInfoCache = new TTLCache<AccountInfo>({
+  maxEntries: 200,
+  ttlMs: 60_000,
+});
 
 const INDEXER_PAGE_SIZE = 2000;
 const MAX_TRANSACTION_PAGES = 10;
 
-async function fetchAccountInfoImpl(wallet: string, fresh: boolean): Promise<AccountInfo | null> {
+async function fetchAccountInfoImpl(
+  wallet: string,
+  fresh: boolean,
+): Promise<AccountInfo | null> {
   if (!fresh) {
     const cached = accountInfoCache.get(wallet);
     if (cached) return cached;
@@ -290,10 +325,13 @@ async function fetchAccountInfoImpl(wallet: string, fresh: boolean): Promise<Acc
   }
 }
 
-// ponytail: singleflight around fetchAccountInfo — 100 concurrent /score
+// ponytail: singleflight around fetchAccountInfo - 100 concurrent /score
 // requests on the same wallet share one algod round-trip instead of
 // stampeding the indexer.
-async function fetchAccountInfo(wallet: string, fresh = false): Promise<AccountInfo | null> {
+async function fetchAccountInfo(
+  wallet: string,
+  fresh = false,
+): Promise<AccountInfo | null> {
   if (fresh) return fetchAccountInfoImpl(wallet, fresh);
   return singleflight(`acctinfo:${wallet}`, () => fetchAccountInfoImpl(wallet, fresh));
 }
@@ -331,7 +369,8 @@ async function fetchTransactionHistory(wallet: string, fresh = false): Promise<{
       allTxns = allTxns.concat(txns);
 
       nextToken = data['next-token'];
-      hasMore = nextToken !== undefined && nextToken !== null && txns.length === INDEXER_PAGE_SIZE;
+      const hasNextToken = nextToken !== undefined && nextToken !== null;
+      hasMore = hasNextToken && txns.length === INDEXER_PAGE_SIZE;
       pages++;
     }
 
@@ -362,7 +401,9 @@ async function fetchTransactionHistory(wallet: string, fresh = false): Promise<{
 /**
  * Scores a wallet's trust using cached data (for API endpoints).
  */
-export async function scoreWallet(wallet: string): Promise<WalletTrustScore | null> {
+export async function scoreWallet(
+  wallet: string,
+): Promise<WalletTrustScore | null> {
   return scoreWalletInternal(wallet, false);
 }
 
@@ -370,11 +411,16 @@ export async function scoreWallet(wallet: string): Promise<WalletTrustScore | nu
  * Scores a wallet's trust using fresh data (for passport generation).
  * Bypasses all LRU caches to guarantee data freshness.
  */
-export async function scoreWalletFresh(wallet: string): Promise<WalletTrustScore | null> {
+export async function scoreWalletFresh(
+  wallet: string,
+): Promise<WalletTrustScore | null> {
   return scoreWalletInternal(wallet, true);
 }
 
-async function scoreWalletInternal(wallet: string, fresh: boolean): Promise<WalletTrustScore | null> {
+async function scoreWalletInternal(
+  wallet: string,
+  fresh: boolean,
+): Promise<WalletTrustScore | null> {
   if (!isValidWallet(wallet)) return null;
 
   const [accountInfo, txHistory] = await Promise.all([
@@ -383,8 +429,12 @@ async function scoreWalletInternal(wallet: string, fresh: boolean): Promise<Wall
   ]);
 
   const latestRound = accountInfo?.lastRound || TESTNET_GENESIS_ROUND;
-  const createdRound = accountInfo?.createdRound || txHistory.firstRound || latestRound - MAX_ROUNDS_LOOKBACK;
-  const accountAgeDays = Math.max(1, Math.floor(((latestRound - createdRound) * SECONDS_PER_BLOCK) / SECONDS_PER_DAY));
+  const fallbackRound = latestRound - MAX_ROUNDS_LOOKBACK;
+  const createdRound = accountInfo?.createdRound
+    || txHistory.firstRound
+    || fallbackRound;
+  const roundDelta = (latestRound - createdRound) * SECONDS_PER_BLOCK;
+  const accountAgeDays = Math.max(1, Math.floor(roundDelta / SECONDS_PER_DAY));
 
   const balanceAlgo = (accountInfo?.amount || 0) / MICRO_ALGO;
 
@@ -398,22 +448,28 @@ async function scoreWalletInternal(wallet: string, fresh: boolean): Promise<Wall
     lastSeenRound: txHistory.lastRound,
   };
 
+  const balance = accountInfo?.amount ?? 0;
   const breakdown = {
     ageScore: computeAgeScore(accountAgeDays),
-    activityScore: computeActivityScore(txHistory.totalTxns, accountAgeDays, onChain.assetCount),
-    volumeScore: computeVolumeScore(accountInfo?.amount || 0, txHistory.totalTxns),
+    activityScore: computeActivityScore(
+      txHistory.totalTxns, accountAgeDays, onChain.assetCount,
+    ),
+    volumeScore: computeVolumeScore(balance, txHistory.totalTxns),
     velocityScore: computeVelocityScore(txHistory.totalTxns, accountAgeDays),
-    complianceScore: computeComplianceScore(accountInfo?.amount || 0, txHistory.totalTxns),
+    complianceScore: computeComplianceScore(balance, txHistory.totalTxns),
   };
 
   const trustScore = computeTrustScore(breakdown);
 
   // Apply staleness decay: old wallets without recent activity lose trust
+  const lastRoundDelta = (latestRound - txHistory.lastRound)
+    * SECONDS_PER_BLOCK;
   const daysSinceLastActivity = txHistory.lastRound > 0
-    ? Math.max(0, Math.floor(((latestRound - txHistory.lastRound) * SECONDS_PER_BLOCK) / SECONDS_PER_DAY))
+    ? Math.max(0, Math.floor(lastRoundDelta / SECONDS_PER_DAY))
     : accountAgeDays;
   const stalenessMultiplier = computeStalenessPenalty(daysSinceLastActivity);
-  const stalenessAdjusted = Math.round(trustScore * stalenessMultiplier * 10) / 10;
+  const adjusted = trustScore * stalenessMultiplier;
+  const stalenessAdjusted = Math.round(adjusted * 10) / 10;
 
   // Apply fresh wallet cap: new wallets cannot achieve high trust
   const adjustedTrustScore = applyFreshWalletCap(stalenessAdjusted, accountAgeDays);
