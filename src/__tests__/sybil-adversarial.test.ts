@@ -22,7 +22,11 @@ function farmWallets(n: number, baseRound: number = 100000): number[] {
 /**
  * Helper: generate N wallets with staggered creation (1 per round)
  */
-function staggeredFarm(n: number, baseRound: number = 100000, interval: number = 1): number[] {
+function staggeredFarm(
+  n: number,
+  baseRound = 100_000,
+  interval = 1,
+): number[] {
   return Array(n).fill(0).map((_, i) => baseRound + i * interval);
 }
 
@@ -303,7 +307,8 @@ describe('Sybil Detection Rate Analysis', () => {
     });
 
     const metrics = computeMetrics(sybilRisks, legitRisks, 0.45);
-    expect(metrics.recall).toBeGreaterThanOrEqual(0.90); // catches 90%+ of sybils
+    expect(metrics.recall).toBeGreaterThanOrEqual(0.90);
+    // catches 90%+ of sybils
     expect(metrics.fpr).toBeLessThanOrEqual(0.10); // < 10% false positives
     expect(metrics.precision).toBeGreaterThanOrEqual(0.90);
   });
@@ -474,7 +479,8 @@ describe('Sybil Detection — Known Vulnerabilities', () => {
     // Strong sybil signal but not detected by current system
     // The system doesn't trace funding sources
     // Use widely varying balances to reduce similarity
-    const balances = Array(100).fill(0).map((_, i) => Math.pow(10, i / 20)); // exponential range
+    const balances = Array(100).fill(0).map((_, i) => Math.pow(10, i / 20));
+    // exponential range
     const similarity = computeBalanceSimilarity(balances);
     // Very different balances → low similarity → low risk
     expect(similarity).toBeLessThan(0.50);

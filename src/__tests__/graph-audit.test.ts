@@ -633,7 +633,8 @@ describe('Intermediate Density', () => {
       ['D', new Set(['A', 'E'])],
       ['E', new Set(['B', 'D'])],
     ]);
-    // Pairs: B-C (direct → skip), B-D (non-direct, E intermediary → 1), C-D (non-direct, no intermediary → 0)
+    // Pairs: B-C (direct, skip), B-D (non-direct, E intermediary, count 1),
+    // C-D (non-direct, no intermediary, count 0).
     // nonDirectPairs = 2, intermediatePairs = 1 → 0.5
     expect(computeIntermediateDensity(adj, 'A')).toBe(0.5);
   });

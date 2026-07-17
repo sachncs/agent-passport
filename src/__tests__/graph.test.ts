@@ -414,9 +414,11 @@ describe('Graph Analysis — computeGraphSignals', () => {
       { from: 'A', to: 'D' },
     ];
     const signals = computeGraphSignals(txns, ['A', 'B', 'C', 'D']);
-    expect(signals.hubScore).toBe(1.0);   // A is connected to all
-    expect(signals.neighborhoodClustering).toBe(0); // A's neighbors don't interact
-    expect(signals.componentRatio).toBe(1.0); // all connected through A
+    expect(signals.hubScore).toBe(1.0); // A is connected to all
+    expect(signals.neighborhoodClustering).toBe(0);
+    // A's neighbors don't interact
+    expect(signals.componentRatio).toBe(1.0);
+    // all connected through A
     expect(signals.subGroupCount).toBe(1);
   });
 
@@ -428,7 +430,8 @@ describe('Graph Analysis — computeGraphSignals', () => {
     ];
     const signals = computeGraphSignals(txns, ['A', 'B', 'C']);
     expect(signals.neighborhoodClustering).toBe(1.0);
-    expect(signals.hubScore).toBe(1.0); // each has 2/2 neighbors = equal hub
+    expect(signals.hubScore).toBe(1.0);
+    // each has 2/2 neighbors = equal hub
     expect(signals.componentRatio).toBe(1.0);
   });
 
@@ -455,7 +458,7 @@ describe('Graph Analysis — computeGraphSignals', () => {
   it('mixed topology with intermediaries', () => {
     // A→B, A→C, B→C: A's neighbors B and C interact DIRECTLY
     // Direct interactions are not intermediate → intermediateDensity = 0
-    // But clustering is 1.0 (triangle)
+    // But clustering is 1.0 (triangle) — verified by neighborhoodClustering
     const txns: GraphTransaction[] = [
       { from: 'A', to: 'B' },
       { from: 'A', to: 'C' },

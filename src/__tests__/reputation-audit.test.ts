@@ -12,7 +12,9 @@ import {
 } from '../reputation';
 import type { ReputationBreakdown } from '../reputation';
 
-function makeBreakdown(overrides: Partial<ReputationBreakdown> = {}): ReputationBreakdown {
+function makeBreakdown(
+  overrides: Partial<ReputationBreakdown> = {},
+): ReputationBreakdown {
   const partial = {
     successfulPayments: 0,
     successfulPurchases: 0,
@@ -23,8 +25,10 @@ function makeBreakdown(overrides: Partial<ReputationBreakdown> = {}): Reputation
     ...overrides,
   };
   const totalEvents = partial.successfulPayments + partial.successfulPurchases +
-    partial.serviceInteractions + partial.sponsorEndorsements + partial.disputes + partial.refunds;
-  const positiveEvents = partial.successfulPayments + partial.successfulPurchases +
+    partial.serviceInteractions + partial.sponsorEndorsements
+      + partial.disputes + partial.refunds;
+  const positiveEvents = partial.successfulPayments + partial.successfulPurchases
+    +
     partial.serviceInteractions + partial.sponsorEndorsements;
   const negativeEvents = partial.disputes + partial.refunds;
   return { ...partial, totalEvents, positiveEvents, negativeEvents };

@@ -35,7 +35,8 @@ describe('Credit Capacity Estimation — Integration Tests (Real Testnet)', () =
 
     expect(result).not.toBeNull();
     const b = result!.breakdown;
-    const raw = b.balanceCapacity + b.activityBonus + b.ageBonus - b.riskPenalty;
+    const raw = b.balanceCapacity + b.activityBonus
+      + b.ageBonus - b.riskPenalty;
     const expected = Math.round(Math.max(0, Math.min(1350, raw)) * 100) / 100;
     expect(result!.estimatedLimit).toBe(expected);
   }, 30000);

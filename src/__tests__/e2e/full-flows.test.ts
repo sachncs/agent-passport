@@ -2,7 +2,7 @@
  * E2E: Full Application Flows
  *
  * 15 production flows, each with happy + failure + security + edge coverage.
- * Hits the real Express app, real business logic, real metrics, real persistence.
+ * Hits the real Express app, business logic, metrics, and persistence.
  *
  * Network calls: only the lowest-level algorand-client is permitted to be
  * isolated for tests. Business logic modules (trust-score, delegation,
@@ -577,9 +577,9 @@ maybeDescribe('Flow 11: Replay Protection', () => {
     };
     await request(app).post('/delegate').set('Idempotency-Key', key).send(body1);
     const r2 = await request(app).post('/delegate').set('Idempotency-Key', key).send(body2);
-    // Since /delegate returns 503 (registry not configured), the first call doesn't get cached.
-    // The second call also returns 503, no conflict because no successful
-    // response was cached.
+    // Since /delegate returns 503 (registry not configured), the first call
+    // doesn't get cached. The second call also returns 503, no conflict
+    // because no successful response was cached.
     // 429 is acceptable if rate limit triggers before the second call.
     expect([409, 503, 429]).toContain(r2.status);
   });
@@ -610,8 +610,8 @@ maybeDescribe('Flow 12: Idempotency', () => {
          agent: ALT_TESTNET_WALLET,
          amount: 1000
       });
-    // Expect 503 (registry not configured) but the server should have generated a key
-    expect([503, 200, 201]).toContain(res.status);
+    // Expect 503 (registry not configured) but the server should have
+    // generated a key    expect([503, 200, 201]).toContain(res.status);
     const serverKey = res.headers['idempotency-key'];
     if (serverKey) {
       expect(typeof serverKey).toBe('string');

@@ -40,7 +40,8 @@ describe('Registry Service', () => {
 
   describe('delegate', () => {
     it('throws RegistryNotConfiguredError when app id is 0', async () => {
-      await expect(delegate(SPONSOR, AGENT, 1000)).rejects.toThrow(RegistryNotConfiguredError);
+      await expect(delegate(SPONSOR, AGENT, 1000))
+        .rejects.toThrow(RegistryNotConfiguredError);
     });
 
     it('rejects invalid sponsor', async () => {
@@ -52,23 +53,29 @@ describe('Registry Service', () => {
     });
 
     it('rejects self-delegation', async () => {
-      await expect(delegate(SPONSOR, SPONSOR, 1000)).rejects.toThrow(RegistryValidationError);
+      await expect(delegate(SPONSOR, SPONSOR, 1000))
+        .rejects.toThrow(RegistryValidationError);
     });
 
     it('rejects non-positive amount', async () => {
-      await expect(delegate(SPONSOR, AGENT, 0)).rejects.toThrow(RegistryValidationError);
-      await expect(delegate(SPONSOR, AGENT, -1)).rejects.toThrow(RegistryValidationError);
+      await expect(delegate(SPONSOR, AGENT, 0))
+        .rejects.toThrow(RegistryValidationError);
+      await expect(delegate(SPONSOR, AGENT, -1))
+        .rejects.toThrow(RegistryValidationError);
     });
 
     it('rejects non-finite amount', async () => {
-      await expect(delegate(SPONSOR, AGENT, NaN)).rejects.toThrow(RegistryValidationError);
-      await expect(delegate(SPONSOR, AGENT, Infinity)).rejects.toThrow(RegistryValidationError);
+      await expect(delegate(SPONSOR, AGENT, NaN))
+        .rejects.toThrow(RegistryValidationError);
+      await expect(delegate(SPONSOR, AGENT, Infinity))
+        .rejects.toThrow(RegistryValidationError);
     });
   });
 
   describe('revoke', () => {
     it('throws RegistryNotConfiguredError when app id is 0', async () => {
-      await expect(revoke(SPONSOR, AGENT)).rejects.toThrow(RegistryNotConfiguredError);
+      await expect(revoke(SPONSOR, AGENT))
+        .rejects.toThrow(RegistryNotConfiguredError);
     });
 
     it('rejects invalid sponsor', async () => {
@@ -80,7 +87,8 @@ describe('Registry Service', () => {
     });
 
     it('rejects same wallet sponsor and agent', async () => {
-      await expect(revoke(SPONSOR, SPONSOR)).rejects.toThrow(RegistryValidationError);
+      await expect(revoke(SPONSOR, SPONSOR))
+        .rejects.toThrow(RegistryValidationError);
     });
   });
 });

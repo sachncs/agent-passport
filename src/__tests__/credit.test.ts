@@ -132,10 +132,14 @@ describe('Credit Capacity Estimation — Pure Math Functions', () => {
 
     it('caps at 1350', () => {
       expect(computeCreditLimit({
-        balanceCapacity: 1000, activityBonus: 200, ageBonus: 150, riskPenalty: 0,
+        balanceCapacity: 1000,
+        activityBonus: 200,
+        ageBonus: 150,
+        riskPenalty: 0,
       })).toBe(1350);
     });
   });
+
 
   describe('classifyCreditRisk', () => {
     it('returns low when ratio >= 2.0', () => {

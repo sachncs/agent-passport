@@ -30,6 +30,7 @@ describe('Trust Score — Pure Math Functions', () => {
       expect(computeAgeScore(1000)).toBe(100);
     });
 
+
     it('returns between 0 and 100 for intermediate values', () => {
       const score = computeAgeScore(365);
       expect(score).toBeGreaterThan(0);
@@ -37,7 +38,8 @@ describe('Trust Score — Pure Math Functions', () => {
     });
 
     it('increases monotonically', () => {
-      const scores = [1, 30, 90, 180, 365, 540, 730].map(computeAgeScore);
+      const inputs = [1, 30, 90, 180, 365, 540, 730];
+      const scores = inputs.map(computeAgeScore);
       for (let i = 1; i < scores.length; i++) {
         expect(scores[i]).toBeGreaterThanOrEqual(scores[i - 1]);
       }
@@ -134,7 +136,8 @@ describe('Trust Score — Pure Math Functions', () => {
     });
 
     it('returns 76 for healthy account with moderate activity', () => {
-      // algo=1.0 → balPen=0, 10 txns → txPen=Math.round(50-log10(11)*25)=24, score=76
+      // algo=1.0 -> balPen=0, 10 txns -> txPen=Math.round(50-log10(11)*25)=24,
+      // score=76
       expect(computeComplianceScore(1_000_000, 10)).toBe(76);
     });
 
@@ -164,7 +167,8 @@ describe('Trust Score — Pure Math Functions', () => {
       // 10 txns → txPen=24, score=76
       const score10 = computeComplianceScore(1_000_000, 10);
       expect(score10).toBe(76);
-      // 100 txns → txPen=Math.round(50-log10(101)*25)=Math.round(0)=0, score=100
+      // 100 txns -> txPen=Math.round(50-log10(101)*25)=Math.round(0)=0,
+      // score=100
       const score100 = computeComplianceScore(1_000_000, 100);
       expect(score100).toBe(100);
     });
@@ -191,31 +195,51 @@ describe('Trust Score — Pure Math Functions', () => {
   describe('computeTrustScore', () => {
     it('returns 0 for all-zero breakdown', () => {
       const score = computeTrustScore({
-        ageScore: 0, activityScore: 0, volumeScore: 0, velocityScore: 0, complianceScore: 0,
+        ageScore: 0,
+        activityScore: 0,
+        volumeScore: 0,
+        velocityScore: 0,
+        complianceScore: 0,
       });
       expect(score).toBe(0);
     });
 
     it('returns 100 for all-100 breakdown', () => {
       const score = computeTrustScore({
-        ageScore: 100, activityScore: 100, volumeScore: 100, velocityScore: 100, complianceScore: 100,
+        ageScore: 100,
+        activityScore: 100,
+        volumeScore: 100,
+        velocityScore: 100,
+        complianceScore: 100,
       });
       expect(score).toBe(100);
     });
 
     it('weights activity highest (0.25)', () => {
       const highActivity = computeTrustScore({
-        ageScore: 0, activityScore: 100, volumeScore: 0, velocityScore: 0, complianceScore: 0,
+        ageScore: 0,
+        activityScore: 100,
+        volumeScore: 0,
+        velocityScore: 0,
+        complianceScore: 0,
       });
       const highAge = computeTrustScore({
-        ageScore: 100, activityScore: 0, volumeScore: 0, velocityScore: 0, complianceScore: 0,
+        ageScore: 100,
+        activityScore: 0,
+        volumeScore: 0,
+        velocityScore: 0,
+        complianceScore: 0,
       });
       expect(highActivity).toBeGreaterThan(highAge);
     });
 
     it('is between 0 and 100', () => {
       const score = computeTrustScore({
-        ageScore: 45, activityScore: 60, volumeScore: 30, velocityScore: 80, complianceScore: 50,
+        ageScore: 45,
+        activityScore: 60,
+        volumeScore: 30,
+        velocityScore: 80,
+        complianceScore: 50,
       });
       expect(score).toBeGreaterThanOrEqual(0);
       expect(score).toBeLessThanOrEqual(100);

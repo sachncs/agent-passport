@@ -29,7 +29,9 @@ function emptyBreakdown(): ReputationBreakdown {
   };
 }
 
-function makeBreakdown(overrides: Partial<ReputationBreakdown>): ReputationBreakdown {
+function makeBreakdown(
+  overrides: Partial<ReputationBreakdown>,
+): ReputationBreakdown {
   const b = emptyBreakdown();
   Object.assign(b, overrides);
   b.totalEvents = b.successfulPayments + b.successfulPurchases + b.disputes +

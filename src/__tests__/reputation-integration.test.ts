@@ -44,7 +44,8 @@ describe('Reputation Layer — Integration Tests (Real Testnet)', () => {
     if (positive + negative === 0) {
       expected = 0;
     } else {
-      expected = Math.round(Math.min(100, (positive / (positive + negative)) * 100) * 10) / 10;
+      expected = Math.round(Math.min(100, (positive / (positive + negative)) * 100)
+        * 10) / 10;
     }
     expect(result!.reputation).toBe(expected);
   }, 30000);
@@ -97,7 +98,8 @@ describe('Reputation Layer — Integration Tests (Real Testnet)', () => {
     const result = await computeReputation(TESTNET_WALLET);
     expect(result).not.toBeNull();
     const b = result!.breakdown;
-    const expectedTotal = b.successfulPayments + b.successfulPurchases + b.disputes +
+    const expectedTotal = b.successfulPayments + b.successfulPurchases
+      + b.disputes +
       b.refunds + b.sponsorEndorsements + b.serviceInteractions;
     expect(b.totalEvents).toBe(expectedTotal);
   }, 30000);
