@@ -344,7 +344,10 @@ interface TrustScoreIndexerResponse {
   'next-token'?: string;
 }
 
-async function fetchTransactionHistory(wallet: string, _fresh = false): Promise<{
+async function fetchTransactionHistory(
+  wallet: string,
+  _fresh = false,
+): Promise<{
   totalTxns: number;
   firstRound: number;
   lastRound: number;

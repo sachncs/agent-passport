@@ -28,12 +28,6 @@ interface IndexerTransaction {
   'confirmed-round'?: number;
 }
 
-interface DelegationPath {
-  path: string[];
-  depth: number;
-  totalAmount: number;
-}
-
 export interface DelegationTrustScore {
   wallet: string;
   trustScore: number;

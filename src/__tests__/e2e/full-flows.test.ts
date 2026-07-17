@@ -47,16 +47,6 @@ function metricValue(
   return 0;
 }
 
-function histogramCount(
-  metrics: string,
-   name: string,
-   labelMatch?: string
-): number {
-  const regex = new RegExp(`^${name}_count\\{[^}]*${labelMatch ?? ''}[^}]*\\}\\s+([\\d.eE+-]+)$`, 'm');
-  const match = metrics.match(regex);
-  return match ? parseFloat(match[1]) : 0;
-}
-
 beforeAll(() => {
   if (isE2ESkipped()) {
     console.warn('E2E tests skipped — SKIP_E2E=1 is set');
