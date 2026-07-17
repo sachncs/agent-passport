@@ -27,7 +27,8 @@ function makeBreakdown(
   const totalEvents = partial.successfulPayments + partial.successfulPurchases +
     partial.serviceInteractions + partial.sponsorEndorsements
       + partial.disputes + partial.refunds;
-  const positiveEvents = partial.successfulPayments + partial.successfulPurchases
+  const positiveEvents = partial.successfulPayments
+    + partial.successfulPurchases
     +
     partial.serviceInteractions + partial.sponsorEndorsements;
   const negativeEvents = partial.disputes + partial.refunds;

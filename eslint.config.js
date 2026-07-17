@@ -10,9 +10,7 @@ export default tseslint.config(
   {
     files: ['src/**/*.ts', 'scripts/**/*.ts'],
     rules: {
-      'no-unused-vars': 'off',
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
-      'no-console': 'off',
+      // Google TS Style Guide enforcement
       'curly': ['error', 'multi-line'],
       'max-len': [
         'error',
@@ -24,6 +22,14 @@ export default tseslint.config(
           ignoreRegExpLiterals: true,
         },
       ],
+      'prefer-const': 'error',
+      'no-var': 'error',
+      '@typescript-eslint/consistent-type-imports': 'error',
+      '@typescript-eslint/no-explicit-any': 'error',
+      // Existing rules
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      'no-console': 'off',
     },
   },
 );

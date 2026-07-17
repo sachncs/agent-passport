@@ -1,5 +1,5 @@
 import * as dotenv from 'dotenv';
-import express from 'express';
+import type express from 'express';
 import { config } from './config';
 import { app } from './app';
 import { logger, closeLoggerStreams } from './lib/logger';

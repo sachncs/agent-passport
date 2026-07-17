@@ -2,7 +2,7 @@ import { randomUUID } from 'crypto';
 import { existsSync, mkdirSync, readFileSync } from 'fs';
 import { promises as fsp } from 'fs';
 import { join, dirname } from 'path';
-import { NextFunction, Request, Response } from 'express';
+import type { NextFunction, Request, Response } from 'express';
 import { logger } from './logger';
 
 interface RateLimitEntry {

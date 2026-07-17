@@ -24,7 +24,9 @@ import {
   generatePassportSummary,
 } from '../passport';
 
-function makeFactor(overrides: Partial<UnderwritingFactor>): UnderwritingFactor {
+function makeFactor(
+  overrides: Partial<UnderwritingFactor>,
+): UnderwritingFactor {
   return {
     name: 'Test',
     score: 50,
@@ -424,7 +426,9 @@ describe('Underwriting Decision Audit', () => {
            status: 'neutral' as const
         },
       ];
-      expect(computeUnderwritingConfidence(many)).toBeGreaterThan(computeUnderwritingConfidence(few));
+      expect(computeUnderwritingConfidence(many)).toBeGreaterThan(
+        computeUnderwritingConfidence(few),
+      );
     });
   });
 
@@ -455,7 +459,8 @@ describe('Underwriting Decision Audit', () => {
 
     it('per-wallet share caps a single wallet to MAX_WALLET_SHARE', () => {
       resetSystemExposure();
-      // 10 wallets each get 10k = 100k (full global cap, per-wallet share = 10k)
+      // 10 wallets each get 10k = 100k (full global cap, per-wallet
+      // share = 10k)
       for (let i = 0; i < 9; i++) {
         addSystemExposure(`WALLET_${i}`, 10_000);
       }

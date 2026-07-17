@@ -44,8 +44,8 @@ describe('Reputation Layer — Integration Tests (Real Testnet)', () => {
     if (positive + negative === 0) {
       expected = 0;
     } else {
-      expected = Math.round(Math.min(100, (positive / (positive + negative)) * 100)
-        * 10) / 10;
+      const raw = (positive / (positive + negative)) * 100;
+      expected = Math.round(Math.min(100, raw) * 10) / 10;
     }
     expect(result!.reputation).toBe(expected);
   }, 30000);

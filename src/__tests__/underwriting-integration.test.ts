@@ -37,8 +37,8 @@ describe('Underwriting Decision Engine — Integration Tests (Real Testnet)', ()
     const weightedSum = result!.factors.reduce(
       (sum, f) => sum + f.score * f.weight, 0,
     );
-    const expected = Math.round(Math.max(0, Math.min(100, weightedSum / totalWeight))
-      * 10) / 10;
+    const score = Math.max(0, Math.min(100, weightedSum / totalWeight));
+    const expected = Math.round(score * 10) / 10;
     expect(result!.compositeScore).toBe(expected);
   }, 60000);
 
