@@ -20,7 +20,10 @@ export interface CounterpartyResult {
 
 // ── Pure math functions (exported for testing) ─────────────────
 
-export function computeCombinedScore(onChainScore: number, delegationScore: number): number {
+export function computeCombinedScore(
+  onChainScore: number,
+  delegationScore: number,
+): number {
   return Math.round((0.6 * onChainScore + 0.4 * delegationScore) * 10) / 10;
 }
 
@@ -98,7 +101,9 @@ export function generateCounterpartyExplanation(
 
 // ── Main function ──────────────────────────────────────────────
 
-export async function checkCounterparty(buyer: string): Promise<CounterpartyResult | null> {
+export async function checkCounterparty(
+  buyer: string,
+): Promise<CounterpartyResult | null> {
   if (!isValidWallet(buyer)) return null;
 
   const [onChainResult, delegationResult, sanctions] = await Promise.all([
