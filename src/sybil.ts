@@ -43,7 +43,8 @@ export function computeCreationClustering(
   const inWindow = creationRounds.filter(
     r => Math.abs(r - referenceRound) <= windowRounds
   ).length;
-  return Math.round(((inWindow - 1) / Math.max(1, creationRounds.length - 1)) * 100) / 100;
+  const denom = Math.max(1, creationRounds.length - 1);
+  return Math.round(((inWindow - 1) / denom) * 100) / 100;
 }
 
 export function computeInteractionDensity(
@@ -59,7 +60,8 @@ export function computeBalanceSimilarity(balances: number[]): number {
   if (balances.length <= 1) return 0;
   const mean = balances.reduce((a, b) => a + b, 0) / balances.length;
   if (mean === 0) return 0;
-  const variance = balances.reduce((sum, b) => sum + Math.pow(b - mean, 2), 0) / balances.length;
+  const sumSq = balances.reduce((sum, b) => sum + Math.pow(b - mean, 2), 0);
+  const variance = sumSq / balances.length;
   const stddev = Math.sqrt(variance);
   const cv = stddev / mean; // coefficient of variation
   return Math.round(Math.max(0, Math.min(1, 1 - cv)) * 100) / 100;
@@ -95,7 +97,8 @@ export function computeCircularActivity(
 
   if (uniquePairs.size === 0) return 0;
   // circularPairs counts both directions, so divide by 2
-  return Math.round(Math.min(1, (circularPairs / 2) / uniquePairs.size) * 100) / 100;
+  const ratio = Math.min(1, (circularPairs / 2) / uniquePairs.size);
+  return Math.round(ratio * 100) / 100;
 }
 
 /**
@@ -115,7 +118,8 @@ export function computeTimingRegularity(intervals: number[]): number {
   if (intervals.length <= 1) return 0;
   const mean = intervals.reduce((a, b) => a + b, 0) / intervals.length;
   if (mean === 0) return 0;
-  const variance = intervals.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / intervals.length;
+  const sumSq = intervals.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0);
+  const variance = sumSq / intervals.length;
   const stddev = Math.sqrt(variance);
   const cv = stddev / mean;
   return Math.round(Math.max(0, Math.min(1, 1 - cv)) * 100) / 100;
@@ -125,7 +129,7 @@ export function computeTimingRegularity(intervals: number[]): number {
  * Detects uniform transaction amounts (strong sybil signal).
  *
  * Design rationale:
- * - Sybil farms often send identical amounts to all wallets (e.g., 0.1 ALGO each)
+ * - Sybil farms often send identical amounts to all wallets (e.g. 0.1 ALGO)
  * - Legitimate transactions have varied amounts
  * - Amount fingerprint = 1 - (unique amounts / total amounts)
  * - High fingerprint = many identical amounts = likely automation
@@ -226,7 +230,8 @@ export function classifySybilRisk(
 }
 
 export function computeSybilConfidence(dataPoints: number): number {
-  return Math.round(Math.max(0.50, Math.min(0.95, 0.50 + dataPoints * 0.12)) * 100) / 100;
+  const score = Math.max(0.50, Math.min(0.95, 0.50 + dataPoints * 0.12));
+  return Math.round(score * 100) / 100;
 }
 
 export function generateSybilExplanation(
@@ -331,11 +336,17 @@ interface SybilAccountInfo {
   fundedBy?: string;
 }
 
-const sybilAccountInfoCache = new TTLCache<SybilAccountInfo>({ maxEntries: 500, ttlMs: 60_000 });
+const sybilAccountInfoCache = new TTLCache<SybilAccountInfo>({
+  maxEntries: 500,
+  ttlMs: 60_000,
+});
 
 const SYBIL_INDEXER_PAGE_SIZE = 2000;
 
-async function fetchAccountInfo(wallet: string, fresh = false): Promise<SybilAccountInfo | null> {
+async function fetchAccountInfo(
+  wallet: string,
+  fresh = false,
+): Promise<SybilAccountInfo | null> {
   if (!fresh) {
     const cached = sybilAccountInfoCache.get(wallet);
     if (cached) return cached;
@@ -394,25 +405,33 @@ async function fetchTransactions(wallet: string, fresh = false): Promise<{
       allTxns = allTxns.concat(txns);
 
       nextToken = data['next-token'];
-      hasMore = nextToken !== undefined && nextToken !== null && txns.length === SYBIL_INDEXER_PAGE_SIZE;
+      const hasNextToken = nextToken !== undefined && nextToken !== null;
+      hasMore = hasNextToken && txns.length === SYBIL_INDEXER_PAGE_SIZE;
     }
 
+    type CounterpartyTx = {
+      from: string; to: string; round: number; amount: number;
+    };
     const counterpartyCounts = new Map<string, number>();
     const fundingSources = new Map<string, string>();
-    const transactions: { from: string; to: string; round: number; amount: number }[] = [];
+    const transactions: CounterpartyTx[] = [];
 
     for (const t of allTxns) {
       const sender = t.sender || '';
-      const receiver = t['payment-transaction']?.receiver ||
-                       t['asset-transfer-transaction']?.receiver || '';
+      const receiver = t['payment-transaction']?.receiver
+        ?? t['asset-transfer-transaction']?.receiver ?? '';
       const round = t['confirmed-round'] || 0;
-      const amount = Number(t['payment-transaction']?.amount ||
-                            t['asset-transfer-transaction']?.amount || 0);
+      const rawAmount = t['payment-transaction']?.amount
+        ?? t['asset-transfer-transaction']?.amount ?? 0;
+      const amount = Number(rawAmount);
 
       if (sender && receiver && sender !== receiver) {
         transactions.push({ from: sender, to: receiver, round, amount });
-        counterpartyCounts.set(receiver, (counterpartyCounts.get(receiver) || 0) + 1);
-        counterpartyCounts.set(sender, (counterpartyCounts.get(sender) || 0) + 1);
+        const inc = (k: string) => {
+          counterpartyCounts.set(k, (counterpartyCounts.get(k) ?? 0) + 1);
+        };
+        inc(receiver);
+        inc(sender);
 
         // Track who funded this wallet (first incoming transaction)
         if (!fundingSources.has(wallet) && receiver === wallet) {
@@ -424,7 +443,11 @@ async function fetchTransactions(wallet: string, fresh = false): Promise<{
     return { transactions, counterpartyCounts, fundingSources };
   } catch (e) {
     logger.warn('fetchTransactions failed', { wallet, error: String(e) });
-    return { transactions: [], counterpartyCounts: new Map(), fundingSources: new Map() };
+    return {
+      transactions: [],
+      counterpartyCounts: new Map(),
+      fundingSources: new Map(),
+    };
   }
 }
 
@@ -441,11 +464,16 @@ export async function detectSybil(wallet: string): Promise<SybilResult | null> {
  * Detects sybil risk for a wallet using fresh data (for passport generation).
  * Bypasses all LRU caches to guarantee data freshness.
  */
-export async function detectSybilFresh(wallet: string): Promise<SybilResult | null> {
+export async function detectSybilFresh(
+  wallet: string,
+): Promise<SybilResult | null> {
   return detectSybilInternal(wallet, true);
 }
 
-async function detectSybilInternal(wallet: string, fresh: boolean): Promise<SybilResult | null> {
+async function detectSybilInternal(
+  wallet: string,
+  fresh: boolean,
+): Promise<SybilResult | null> {
   if (!isValidWallet(wallet)) return null;
 
   const [walletInfo, txData] = await Promise.all([
@@ -468,19 +496,26 @@ async function detectSybilInternal(wallet: string, fresh: boolean): Promise<Sybi
       return info ? { addr, ...info } : null;
     })
   );
-  const counterpartyInfos = counterpartyResults.filter(Boolean) as { addr: string; balance: number; createdRound: number }[];
+  type ClusterMember = { addr: string; balance: number; createdRound: number };
+  const counterpartyInfos = counterpartyResults.filter(
+    Boolean,
+  ) as ClusterMember[];
 
   // Build cluster: wallet + counterparties
-  const cluster = [
-    { addr: wallet, balance: walletInfo.balance, createdRound: walletInfo.createdRound },
-    ...counterpartyInfos,
-  ];
+  const walletCluster: ClusterMember = {
+    addr: wallet,
+    balance: walletInfo.balance,
+    createdRound: walletInfo.createdRound,
+  };
+  const cluster: ClusterMember[] = [walletCluster, ...counterpartyInfos];
 
   const clusterSize = cluster.length;
   const creationRounds = cluster.map(c => c.createdRound).filter(r => r > 0);
 
   // Signal 1: Creation clustering
-  const creationClustering = computeCreationClustering(creationRounds, walletInfo.createdRound);
+  const creationClustering = computeCreationClustering(
+    creationRounds, walletInfo.createdRound,
+  );
 
   // Signal 2: Interaction density
   const clusterAddrs = new Set(cluster.map(c => c.addr));
@@ -494,7 +529,9 @@ async function detectSybilInternal(wallet: string, fresh: boolean): Promise<Sybi
       externalCount++;
     }
   }
-  const interactionDensity = computeInteractionDensity(internalCount, externalCount);
+  const interactionDensity = computeInteractionDensity(
+    internalCount, externalCount,
+  );
 
   // Signal 3: Balance similarity
   const balances = cluster.map(c => c.balance / MICRO_ALGO); // convert to ALGO
@@ -550,7 +587,7 @@ async function detectSybilInternal(wallet: string, fresh: boolean): Promise<Sybi
   const sybilRisk = computeSybilRisk(signals);
   const riskLevel = classifySybilRisk(sybilRisk);
 
-  // Flagged wallets: counterparties in the cluster (excluding the target wallet)
+  // Flagged wallets: counterparties in the cluster (excluding target wallet)
   const flaggedWallets = cluster
     .filter(c => c.addr !== wallet && clusterAddrs.has(c.addr))
     .map(c => c.addr);
