@@ -511,37 +511,37 @@ describe('Reputation Layer — Pure Math Functions', () => {
 
   describe('computeEventHash (F4)', () => {
     it('produces consistent hash for same inputs', () => {
-      const hash1 = computeEventHash('wallet1', 'payment', 'wallet2', 12345);
-      const hash2 = computeEventHash('wallet1', 'payment', 'wallet2', 12345);
+      const hash1 = computeEventHash('wallet1', 'payment', 12345, 'wallet2');
+      const hash2 = computeEventHash('wallet1', 'payment', 12345, 'wallet2');
       expect(hash1).toBe(hash2);
     });
 
     it('produces different hash for different wallet', () => {
-      const hash1 = computeEventHash('wallet1', 'payment', 'wallet2', 12345);
-      const hash2 = computeEventHash('wallet999', 'payment', 'wallet2', 12345);
+      const hash1 = computeEventHash('wallet1', 'payment', 12345, 'wallet2');
+      const hash2 = computeEventHash('wallet999', 'payment', 12345, 'wallet2');
       expect(hash1).not.toBe(hash2);
     });
 
     it('produces different hash for different type', () => {
-      const hash1 = computeEventHash('wallet1', 'payment', 'wallet2', 12345);
-      const hash2 = computeEventHash('wallet1', 'dispute', 'wallet2', 12345);
+      const hash1 = computeEventHash('wallet1', 'payment', 12345, 'wallet2');
+      const hash2 = computeEventHash('wallet1', 'dispute', 12345, 'wallet2');
       expect(hash1).not.toBe(hash2);
     });
 
     it('produces different hash for different counterparty', () => {
-      const hash1 = computeEventHash('wallet1', 'payment', 'wallet2', 12345);
-      const hash2 = computeEventHash('wallet1', 'payment', 'wallet3', 12345);
+      const hash1 = computeEventHash('wallet1', 'payment', 12345, 'wallet2');
+      const hash2 = computeEventHash('wallet1', 'payment', 12345, 'wallet3');
       expect(hash1).not.toBe(hash2);
     });
 
     it('produces different hash for different round', () => {
-      const hash1 = computeEventHash('wallet1', 'payment', 'wallet2', 12345);
-      const hash2 = computeEventHash('wallet1', 'payment', 'wallet2', 12346);
+      const hash1 = computeEventHash('wallet1', 'payment', 12345, 'wallet2');
+      const hash2 = computeEventHash('wallet1', 'payment', 12346, 'wallet2');
       expect(hash1).not.toBe(hash2);
     });
 
     it('returns a string', () => {
-      const hash = computeEventHash('wallet1', 'payment', 'wallet2', 12345);
+      const hash = computeEventHash('wallet1', 'payment', 12345, 'wallet2');
       expect(typeof hash).toBe('string');
       expect(hash.length).toBeGreaterThan(0);
     });
@@ -549,22 +549,22 @@ describe('Reputation Layer — Pure Math Functions', () => {
 
   describe('isDuplicateEvent (F4)', () => {
     it('returns false for event not seen before', () => {
-      const hash = computeEventHash('wallet1', 'payment', 'wallet2', 12345);
+      const hash = computeEventHash('wallet1', 'payment', 12345, 'wallet2');
       expect(isDuplicateEvent(hash)).toBe(false);
     });
 
     it('returns true after registering the same event', () => {
-      const hash = computeEventHash('wallet1', 'payment', 'wallet2', 12345);
+      const hash = computeEventHash('wallet1', 'payment', 12345, 'wallet2');
       registerEventHash(hash);
       expect(isDuplicateEvent(hash)).toBe(true);
     });
 
     it('returns false for different event parameters', () => {
-      const hash = computeEventHash('wallet1', 'payment', 'wallet2', 12345);
+      const hash = computeEventHash('wallet1', 'payment', 12345, 'wallet2');
       registerEventHash(hash);
-      expect(isDuplicateEvent(computeEventHash('wallet1', 'payment', 'wallet2', 12346))).toBe(false);
-      expect(isDuplicateEvent(computeEventHash('wallet1', 'dispute', 'wallet2', 12345))).toBe(false);
-      expect(isDuplicateEvent(computeEventHash('wallet999', 'payment', 'wallet2', 12345))).toBe(false);
+      expect(isDuplicateEvent(computeEventHash('wallet1', 'payment', 12346, 'wallet2'))).toBe(false);
+      expect(isDuplicateEvent(computeEventHash('wallet1', 'dispute', 12345, 'wallet2'))).toBe(false);
+      expect(isDuplicateEvent(computeEventHash('wallet999', 'payment', 12345, 'wallet2'))).toBe(false);
     });
   });
 });

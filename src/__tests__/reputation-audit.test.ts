@@ -60,21 +60,21 @@ describe('Reputation Audit — 8 Farming Vectors', () => {
 
   describe('Vector 2: Payment Loop (F4 event deduplication)', () => {
     it('duplicate payment event is rejected', () => {
-      const hash = computeEventHash('wallet1', 'payment', 'wallet2', 1000);
+      const hash = computeEventHash('wallet1', 'payment', 1000, 'wallet2');
       registerEventHash(hash);
       expect(isDuplicateEvent(hash)).toBe(true);
     });
 
     it('same wallet, same counterparty, different round — not duplicate', () => {
-      const hash1 = computeEventHash('wallet1', 'payment', 'wallet2', 1000);
-      const hash2 = computeEventHash('wallet1', 'payment', 'wallet2', 2000);
+      const hash1 = computeEventHash('wallet1', 'payment', 1000, 'wallet2');
+      const hash2 = computeEventHash('wallet1', 'payment', 2000, 'wallet2');
       registerEventHash(hash1);
       expect(isDuplicateEvent(hash2)).toBe(false);
     });
 
     it('different counterparty — not duplicate', () => {
-      const hash1 = computeEventHash('wallet1', 'payment', 'wallet2', 1000);
-      const hash2 = computeEventHash('wallet1', 'payment', 'wallet3', 1000);
+      const hash1 = computeEventHash('wallet1', 'payment', 1000, 'wallet2');
+      const hash2 = computeEventHash('wallet1', 'payment', 1000, 'wallet3');
       registerEventHash(hash1);
       expect(isDuplicateEvent(hash2)).toBe(false);
     });
@@ -155,14 +155,14 @@ describe('Reputation Audit — 8 Farming Vectors', () => {
 
   describe('Vector 5: Cross-Wallet Identity (F6 — data layer)', () => {
     it('event deduplication prevents same event from multiple angles', () => {
-      const hash = computeEventHash('wallet1', 'dispute', 'wallet2', 1000);
+      const hash = computeEventHash('wallet1', 'dispute', 1000, 'wallet2');
       registerEventHash(hash);
       expect(isDuplicateEvent(hash)).toBe(true);
     });
 
     it('different wallets sharing same counterparty not affected', () => {
-      const hash1 = computeEventHash('wallet1', 'payment', 'wallet2', 1000);
-      const hash2 = computeEventHash('wallet3', 'payment', 'wallet2', 2000);
+      const hash1 = computeEventHash('wallet1', 'payment', 1000, 'wallet2');
+      const hash2 = computeEventHash('wallet3', 'payment', 2000, 'wallet2');
       registerEventHash(hash1);
       expect(isDuplicateEvent(hash2)).toBe(false);
     });
@@ -182,17 +182,17 @@ describe('Reputation Audit — 8 Farming Vectors', () => {
 
   describe('Vector 7: Event Duplication (F4 deduplication)', () => {
     it('hash is deterministic for same inputs', () => {
-      const h1 = computeEventHash('w1', 'payment', 'w2', 100);
-      const h2 = computeEventHash('w1', 'payment', 'w2', 100);
+      const h1 = computeEventHash('w1', 'payment', 100, 'w2');
+      const h2 = computeEventHash('w1', 'payment', 100, 'w2');
       expect(h1).toBe(h2);
     });
 
     it('hash changes with each parameter', () => {
-      const base = computeEventHash('w1', 'payment', 'w2', 100);
-      expect(computeEventHash('w1', 'payment', 'w2', 101)).not.toBe(base);
-      expect(computeEventHash('w1', 'payment', 'w3', 100)).not.toBe(base);
-      expect(computeEventHash('w1', 'dispute', 'w2', 100)).not.toBe(base);
-      expect(computeEventHash('w2', 'payment', 'w2', 100)).not.toBe(base);
+      const base = computeEventHash('w1', 'payment', 100, 'w2');
+      expect(computeEventHash('w1', 'payment', 101, 'w2')).not.toBe(base);
+      expect(computeEventHash('w1', 'payment', 100, 'w3')).not.toBe(base);
+      expect(computeEventHash('w1', 'dispute', 100, 'w2')).not.toBe(base);
+      expect(computeEventHash('w2', 'payment', 100, 'w2')).not.toBe(base);
     });
   });
 

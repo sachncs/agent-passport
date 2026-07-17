@@ -83,11 +83,11 @@ export interface ReputationResult {
 export function computeEventHash(
   wallet: string,
   eventType: EventType,
-  counterparty: string | undefined,
   round: number,
+  counterparty?: string,
   salt: number = 0,
 ): string {
-  const key = `${wallet}:${eventType}:${counterparty || ''}:${round}:${salt}`;
+  const key = `${wallet}:${eventType}:${counterparty ?? ''}:${round}:${salt}`;
   return createHash('sha256').update(key).digest('hex').slice(0, 16);
 }
 
@@ -733,7 +733,7 @@ export async function recordEvent(
 
   // Deduplication by hash. Use a per-call salt (timestamp) so concurrent events
   // in the same round don't collide.
-  const eventHash = computeEventHash(wallet, eventType, counterparty, currentRound, Date.now());
+  const eventHash = computeEventHash(wallet, eventType, currentRound, counterparty, Date.now());
   if (isDuplicateEvent(eventHash)) {
     logger.warn('Duplicate event rejected', { wallet, eventType, eventHash });
     return null;
