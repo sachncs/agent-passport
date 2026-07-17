@@ -131,7 +131,6 @@ maybeDescribe('Security: Headers', () => {
 
 maybeDescribe('Security: Rate Limiting', () => {
   it('exposes X-RateLimit-Limit header on non-exempt endpoint', async () => {
-    const res = await request(app).get('/verify').query({ wallet: KNOWN_TESTNET_WALLET }).catch(() => null) || await request(app).get('/reputation').query({ wallet: KNOWN_TESTNET_WALLET });
     // /reputation will 200 or 404, but rate limit headers should always be set
     // on a rate-limited endpoint
     const limitedRes = await request(app).get(`/reputation?wallet=${KNOWN_TESTNET_WALLET}`);
