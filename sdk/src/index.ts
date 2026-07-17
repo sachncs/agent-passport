@@ -190,8 +190,10 @@ export class AgentPassportClient {
     throw lastError ?? new ServerError('Request failed after retries');
   }
 
-  static errorFromResponse(response: Response, data: any, requestId?: string): AgentPassportError {
-    const message = (data && data.error) || `HTTP ${response.status}`;
+  static errorFromResponse(response: Response, data: unknown, requestId?: string): AgentPassportError {
+    const message = (data && typeof data === 'object' && 'error' in data && typeof (data as { error: unknown }).error === 'string')
+      ? (data as { error: string }).error
+      : `HTTP ${response.status}`;
     switch (response.status) {
       case 400: return new ValidationError(message, data, requestId);
       case 401: return new AuthenticationError(message, data, requestId);
@@ -199,8 +201,11 @@ export class AgentPassportClient {
       case 404: return new NotFoundError(message, data, requestId);
       case 408: return new TimeoutError(message, requestId);
       case 409:
-        if (data && typeof data.error === 'string' && data.error.toLowerCase().includes('idempotency')) {
-          return new IdempotencyError(message, data, requestId);
+        if (data && typeof data === 'object' && 'error' in data) {
+          const errField = (data as { error: unknown }).error;
+          if (typeof errField === 'string' && errField.toLowerCase().includes('idempotency')) {
+            return new IdempotencyError(message, data, requestId);
+          }
         }
         return new AgentPassportError(message, 409, data, requestId);
       case 429: {
