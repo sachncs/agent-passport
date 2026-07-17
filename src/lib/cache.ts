@@ -74,6 +74,11 @@ export class TTLCache<V> {
   }
 
   stats(): { hits: number; misses: number; evictions: number; size: number } {
-    return { hits: this.hits, misses: this.misses, evictions: this.evictions, size: this.store.size };
+    return {
+      hits: this.hits,
+      misses: this.misses,
+      evictions: this.evictions,
+      size: this.store.size,
+    };
   }
 }
