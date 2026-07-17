@@ -382,7 +382,7 @@ interface SybilIndexerResponse {
   'next-token'?: string;
 }
 
-async function fetchTransactions(wallet: string, fresh = false): Promise<{
+async function fetchTransactions(wallet: string, _fresh = false): Promise<{
   transactions: { from: string; to: string; round: number; amount: number }[];
   counterpartyCounts: Map<string, number>;
   fundingSources: Map<string, string>;
