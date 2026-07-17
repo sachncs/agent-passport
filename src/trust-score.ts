@@ -1,10 +1,17 @@
 import { config } from './config';
 import { withTimeout, fetchWithTimeout } from './lib/timeout';
 import { algod } from './lib/algorand-client';
-import { MICRO_ALGO, SECONDS_PER_BLOCK, SECONDS_PER_DAY, TESTNET_GENESIS_ROUND, MAX_ROUNDS_LOOKBACK, isValidWallet } from './lib/constants';
+import { logger } from './lib/logger';
+import {
+  isValidWallet,
+  MAX_ROUNDS_LOOKBACK,
+  MICRO_ALGO,
+  SECONDS_PER_BLOCK,
+  SECONDS_PER_DAY,
+  TESTNET_GENESIS_ROUND,
+} from './lib/constants';
 import { TTLCache } from './lib/cache';
 import { singleflight } from './lib/singleflight';
-import { logger } from './lib/logger';
 
 const INDEXER_URL = config.indexerUrl;
 const INDEXER_TOKEN = config.indexerToken;

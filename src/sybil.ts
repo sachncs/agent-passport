@@ -1,9 +1,9 @@
 import { config } from './config';
 import { withTimeout, fetchWithTimeout } from './lib/timeout';
 import { algod } from './lib/algorand-client';
-import { MICRO_ALGO, isValidWallet } from './lib/constants';
-import { TTLCache } from './lib/cache';
 import { logger } from './lib/logger';
+import { isValidWallet, MICRO_ALGO } from './lib/constants';
+import { TTLCache } from './lib/cache';
 import { computeGraphSignals, type GraphSignals } from './lib/graph';
 
 const INDEXER_URL = config.indexerUrl;
