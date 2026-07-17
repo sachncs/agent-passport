@@ -1,8 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  scoreDelegation,
-  scoreWallet,
-} from '../delegation';
+import { scoreDelegation } from '../delegation';
 
 // NOTE: These tests require REGISTRY_APP_ID to be set in env
 // and a deployed registry contract on testnet.
