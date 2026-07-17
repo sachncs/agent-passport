@@ -1,6 +1,4 @@
 import * as dotenv from 'dotenv';
-dotenv.config();
-
 import express from 'express';
 import { config } from './config';
 import { app } from './app';
@@ -10,6 +8,8 @@ import { stopMetricsCollectors } from './lib/metrics-collectors';
 import { stopIdempotencySweeper } from './lib/idempotency';
 import { stopDedupCleanup } from './reputation';
 
+dotenv.config();
+
 const PORT = config.port;
 
 let server: ReturnType<typeof express.application.listen> | null = null;
@@ -17,7 +17,9 @@ let forcedShutdownTimer: NodeJS.Timeout | null = null;
 
 function main() {
   if (!initOperatorWallet()) {
-    logger.warn('Operator wallet not initialized — on-chain /delegate, /revoke, /reputation/record will be no-ops');
+    logger.warn(
+      'Operator wallet not initialized — on-chain /delegate, /revoke, /reputation/record will be no-ops',
+    );
   }
   server = app.listen(PORT, () => {
     logger.info(`Agent Passport running on port ${PORT}`, {
