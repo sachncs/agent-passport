@@ -221,12 +221,18 @@ export function recordCacheMiss(cacheName: string): void {
   cacheMissesTotal.inc({ cache_name: cacheName });
 }
 
-export function recordContractEvent(event: string): void {
+export type ContractEventType = 'endorsement' | 'revocation' | 'dispute' | 'success';
+
+export function recordContractEvent(event: ContractEventType): void {
   switch (event) {
     case 'endorsement': contractEndorsementsTotal.inc(); break;
     case 'revocation': contractRevocationsTotal.inc(); break;
     case 'dispute': contractDisputesTotal.inc(); break;
     case 'success': contractSuccessEventsTotal.inc(); break;
+    default: {
+      const _exhaustive: never = event;
+      throw new Error(`Unhandled contract event: ${String(_exhaustive)}`);
+    }
   }
 }
 
