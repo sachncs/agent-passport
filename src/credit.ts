@@ -37,16 +37,20 @@ export function computeAgeBonus(accountAgeDays: number): number {
  * - Binary thresholds (pass/fail) create cliff effects at arbitrary boundaries
  * - Continuous penalties provide smoother graduation between risk levels
  * - Velocity penalty (0-50): penalizes bot/spam behavior, scales with severity
- * - Compliance penalty (0-100): penalizes low balance/zero txns, scales with severity
- * - Velocity < 40 = bot-like behavior → up to $50 penalty
- * - Compliance < 60 = low usage/abandoned → up to $100 penalty
+ * - Compliance penalty (0-100): penalizes low balance/zero txns, scales
+ *   with severity
+ * - Velocity < 40 = bot-like behavior -> up to $50 penalty
+ * - Compliance < 60 = low usage/abandoned -> up to $100 penalty
  *
  * Examples:
- *   velocity=39, compliance=90 → (40-39)/40*50 = $1.25
- *   velocity=20, compliance=40 → (40-20)/40*50 + (60-20)/60*100 = $25+$67 = $92
- *   velocity=0,  compliance=0  → 50 + 100 = $150 (max penalty)
+ *   velocity=39, compliance=90 -> (40-39)/40*50 = $1.25
+ *   velocity=20, compliance=40 -> (40-20)/40*50 + (60-20)/60*100 = $92
+ *   velocity=0,  compliance=0  -> 50 + 100 = $150 (max penalty)
  */
-export function computeRiskPenalty(velocityScore: number, complianceScore: number): number {
+export function computeRiskPenalty(
+  velocityScore: number,
+  complianceScore: number,
+): number {
   const velocityPenalty = velocityScore < 40
     ? Math.round((40 - velocityScore) / 40 * 50 * 100) / 100
     : 0;
@@ -60,13 +64,13 @@ export function computeRiskPenalty(velocityScore: number, complianceScore: numbe
  * Computes credit limit from on-chain capacity components only.
  *
  * Design rationale (post-audit):
- * - Delegation is a trust endorsement, not collateral — removed from capacity formula
+ * - Delegation is a trust endorsement, not collateral - removed from formula
  * - Credit capacity must be backed by the wallet's own on-chain activity
  * - Max capacity = 1000 (balance) + 200 (activity) + 150 (age) = 1350
- * - This prevents double-counting: delegation score is used ONLY in underwriting
+ * - Prevents double-counting: delegation is used ONLY in underwriting
  *   as a quality multiplier on the credit limit, not as a capacity component
  *
- * Formula: max(0, min(1350, balanceCapacity + activityBonus + ageBonus - riskPenalty))
+ * Formula: clamp(0, 1350, balanceCapacity + activityBonus + ageBonus - riskPenalty)
  */
 export function computeCreditLimit(breakdown: {
   balanceCapacity: number;
@@ -74,8 +78,8 @@ export function computeCreditLimit(breakdown: {
   ageBonus: number;
   riskPenalty: number;
 }): number {
-  const raw = breakdown.balanceCapacity + breakdown.activityBonus +
-    breakdown.ageBonus - breakdown.riskPenalty;
+  const raw = breakdown.balanceCapacity + breakdown.activityBonus
+    + breakdown.ageBonus - breakdown.riskPenalty;
   return Math.round(Math.max(0, Math.min(1350, raw)) * 100) / 100;
 }
 
@@ -98,7 +102,9 @@ export function classifyCreditRisk(
 }
 
 export function computeCreditConfidence(dataPoints: number): number {
-  return Math.round(Math.max(0.40, Math.min(0.95, 0.40 + dataPoints * 0.12)) * 100) / 100;
+  const score = 0.40 + dataPoints * 0.12;
+  const clamped = Math.max(0.40, Math.min(0.95, score));
+  return Math.round(clamped * 100) / 100;
 }
 
 export function generateCreditExplanation(
@@ -201,10 +207,12 @@ export async function estimateCredit(
 
 /**
  * Estimates credit using pre-fetched trust data (for passport generation).
- * Eliminates the redundant scoreWallet() call that estimateCredit() makes internally.
+ * Eliminates the redundant scoreWallet() call that estimateCredit() makes
+ * internally.
  *
- * This ensures the trust score used for identityStrength and the trust score used
- * for credit limit are identical — preventing contradictory passports.
+ * This ensures the trust score used for identityStrength and the trust
+ * score used for credit limit are identical - preventing contradictory
+ * passports.
  */
 export async function estimateCreditWithTrust(
   wallet: string,
