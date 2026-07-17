@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import {
   computeIdentityStrength,
   computePaymentReliability,
@@ -12,22 +12,16 @@ import {
 import {
   computeAgeScore,
   computeActivityScore,
-  computeVolumeScore,
   computeVelocityScore,
   computeComplianceScore,
   computeTrustScore,
   computeStalenessPenalty,
   applyFreshWalletCap,
   classifyRisk,
-  computeRecommendedLimit,
 } from '../trust-score';
 import {
-  computeBalanceCapacity,
-  computeActivityBonus,
-  computeAgeBonus,
   computeRiskPenalty,
   computeCreditLimit,
-  classifyCreditRisk,
 } from '../credit';
 import {
   computeCompositeScore,
