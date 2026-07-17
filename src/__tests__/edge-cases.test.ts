@@ -1,14 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import {
   computeAgeScore,
-  computeVelocityScore,
-  computeVolumeScore,
   computeComplianceScore,
-  computeTrustScore,
   classifyRisk,
   generateExplanation,
 } from '../trust-score';
-import { isValidWallet, WALLET_REGEX } from '../lib/constants';
+import { isValidWallet } from '../lib/constants';
 
 describe('Edge Cases', () => {
   describe('Wallet address edge cases', () => {
@@ -64,12 +61,12 @@ describe('Edge Cases', () => {
     it('computeTrustScore handles equal weights', () => {
       const breakdown = {
         ageScore: 50,
-         activityScore: 50,
-         volumeScore: 50,
-         velocityScore: 50,
-         complianceScore: 50
+        activityScore: 50,
+        volumeScore: 50,
+        velocityScore: 50,
+        complianceScore: 50,
       };
-      const score = Math.round(50 * 10) / 10;
+      const score = computeTrustScore(breakdown);
       expect(score).toBe(50);
     });
 
