@@ -14,7 +14,6 @@ import { TTLCache } from './lib/cache';
 import { singleflight } from './lib/singleflight';
 
 const INDEXER_URL = config.indexerUrl;
-const INDEXER_TOKEN = config.indexerToken;
 
 export interface WalletTrustScore {
   wallet: string;
@@ -345,7 +344,7 @@ interface TrustScoreIndexerResponse {
   'next-token'?: string;
 }
 
-async function fetchTransactionHistory(wallet: string, fresh = false): Promise<{
+async function fetchTransactionHistory(wallet: string, _fresh = false): Promise<{
   totalTxns: number;
   firstRound: number;
   lastRound: number;
