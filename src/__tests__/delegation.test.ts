@@ -143,41 +143,62 @@ describe('Delegation Trust — Pure Math Functions', () => {
   describe('computeDelegationTrustScore', () => {
     it('returns 0 for all-zero breakdown', () => {
       const score = computeDelegationTrustScore({
-        depthScore: 0, sponsorQualityScore: 0, sponsorCountScore: 0, amountScore: 0,
+        depthScore: 0,
+        sponsorQualityScore: 0,
+        sponsorCountScore: 0,
+        amountScore: 0,
       });
       expect(score).toBe(0);
     });
 
     it('returns 100 for all-100 breakdown', () => {
       const score = computeDelegationTrustScore({
-        depthScore: 100, sponsorQualityScore: 100, sponsorCountScore: 100, amountScore: 100,
+        depthScore: 100,
+        sponsorQualityScore: 100,
+        sponsorCountScore: 100,
+        amountScore: 100,
       });
       expect(score).toBe(100);
     });
 
     it('weights depth highest (0.35)', () => {
       const highDepth = computeDelegationTrustScore({
-        depthScore: 100, sponsorQualityScore: 0, sponsorCountScore: 0, amountScore: 0,
+        depthScore: 100,
+        sponsorQualityScore: 0,
+        sponsorCountScore: 0,
+        amountScore: 0,
       });
       const highQuality = computeDelegationTrustScore({
-        depthScore: 0, sponsorQualityScore: 100, sponsorCountScore: 0, amountScore: 0,
+        depthScore: 0,
+        sponsorQualityScore: 100,
+        sponsorCountScore: 0,
+        amountScore: 0,
       });
       expect(highDepth).toBeGreaterThan(highQuality);
     });
 
     it('weights quality second highest (0.30)', () => {
       const highQuality = computeDelegationTrustScore({
-        depthScore: 0, sponsorQualityScore: 100, sponsorCountScore: 0, amountScore: 0,
+        depthScore: 0,
+        sponsorQualityScore: 100,
+        sponsorCountScore: 0,
+        amountScore: 0,
       });
       const highCount = computeDelegationTrustScore({
-        depthScore: 0, sponsorQualityScore: 0, sponsorCountScore: 100, amountScore: 0,
+        depthScore: 0,
+        sponsorQualityScore: 0,
+        sponsorCountScore: 100,
+        amountScore: 0,
       });
       expect(highQuality).toBeGreaterThan(highCount);
     });
 
     it('is between 0 and 100', () => {
       const score = computeDelegationTrustScore({
-        depthScore: 45, sponsorQualityScore: 60, sponsorCountScore: 30, amountScore: 80,
+        depthScore: 45,
+        sponsorQualityScore: 60,
+        sponsorCountScore: 30,
+        amountScore: 80,
       });
       expect(score).toBeGreaterThanOrEqual(0);
       expect(score).toBeLessThanOrEqual(100);
@@ -253,7 +274,9 @@ describe('Sponsor Trust Propagation Audit', () => {
   describe('Property 1: Depth Score Monotonicity', () => {
     it('depthScore(d) >= depthScore(d+1) for all d', () => {
       for (let d = 0; d < 20; d++) {
-        expect(computeDepthScore(d)).toBeGreaterThanOrEqual(computeDepthScore(d + 1));
+        expect(computeDepthScore(d)).toBeGreaterThanOrEqual(
+          computeDepthScore(d + 1),
+        );
       }
     });
 
@@ -277,13 +300,19 @@ describe('Sponsor Trust Propagation Audit', () => {
   describe('Property 2: Delegation Trust Score Bounds', () => {
     it('returns 0 for all-zero breakdown', () => {
       expect(computeDelegationTrustScore({
-        depthScore: 0, sponsorQualityScore: 0, sponsorCountScore: 0, amountScore: 0,
+        depthScore: 0,
+        sponsorQualityScore: 0,
+        sponsorCountScore: 0,
+        amountScore: 0,
       })).toBe(0);
     });
 
     it('returns 100 for all-100 breakdown', () => {
       expect(computeDelegationTrustScore({
-        depthScore: 100, sponsorQualityScore: 100, sponsorCountScore: 100, amountScore: 100,
+        depthScore: 100,
+        sponsorQualityScore: 100,
+        sponsorCountScore: 100,
+        amountScore: 100,
       })).toBe(100);
     });
 
@@ -379,7 +408,8 @@ describe('Sponsor Trust Propagation Audit', () => {
         amountScore: computeAmountScore(1_000_000),
       };
       const uncapped = computeDelegationTrustScore(breakdown);
-      // The cap is applied in scoreDelegation(), not in computeDelegationTrustScore()
+      // The cap is applied in scoreDelegation(), not in
+      // computeDelegationTrustScore()
       // So the raw score can exceed sponsor trust — the cap is in
       // scoreDelegation
       // This test verifies the raw score CAN exceed, proving the cap is needed
@@ -434,11 +464,13 @@ describe('Sponsor Trust Propagation Audit', () => {
 
   describe('Property 4: Circular Delegations', () => {
     it('cycle A→B→C→A does not increase depth beyond chain length', () => {
-      // In BFS: start at A, visit B(depth=1), visit C(depth=2), A already visited
+      // In BFS: start at A, visit B(depth=1), visit C(depth=2),
+      // A already visited
       // Max depth = 2, not 3
       const depth = 2; // BFS correctly detects cycle
       expect(computeDepthScore(depth)).toBe(60);
-      expect(computeDepthScore(3)).toBe(40); // If cycle wasn't detected, depth would be 3
+      expect(computeDepthScore(3)).toBe(40);
+      // If cycle wasn't detected, depth would be 3
     });
 
     it('self-endorsement A→A is excluded', () => {
@@ -498,17 +530,26 @@ describe('Sponsor Trust Propagation Audit', () => {
 
     it('depth 0 (anchor) gives highest possible score', () => {
       const anchorScore = computeDelegationTrustScore({
-        depthScore: 100, sponsorQualityScore: 100, sponsorCountScore: 100, amountScore: 100,
+        depthScore: 100,
+        sponsorQualityScore: 100,
+        sponsorCountScore: 100,
+        amountScore: 100,
       });
       expect(anchorScore).toBe(100);
     });
 
     it('depth 7+ gives 0 depth contribution', () => {
       const scoreAtDepth7 = computeDelegationTrustScore({
-        depthScore: 0, sponsorQualityScore: 100, sponsorCountScore: 100, amountScore: 100,
+        depthScore: 0,
+        sponsorQualityScore: 100,
+        sponsorCountScore: 100,
+        amountScore: 100,
       });
       const scoreAtDepth100 = computeDelegationTrustScore({
-        depthScore: 0, sponsorQualityScore: 100, sponsorCountScore: 100, amountScore: 100,
+        depthScore: 0,
+        sponsorQualityScore: 100,
+        sponsorCountScore: 100,
+        amountScore: 100,
       });
       // Same score because depthScore=0 for both
       expect(scoreAtDepth7).toBe(scoreAtDepth100);
@@ -520,7 +561,8 @@ describe('Sponsor Trust Propagation Audit', () => {
   describe('Property 6: Orphaned Nodes', () => {
     it('wallet with no delegations gets 0 for all breakdown components', () => {
       // No delegations → no chain found → depth=0 BUT not an anchor
-      // For a non-anchor with no delegations: depthScore=0 (no chain), quality=0, count=0, amount=0
+      // For a non-anchor with no delegations: depthScore=0 (no chain),
+      // quality=0, count=0, amount=0
       const breakdown = {
         depthScore: 0, // No delegation chain found (not an anchor)
         sponsorQualityScore: computeSponsorQualityScore(0),
@@ -582,7 +624,8 @@ describe('Sponsor Trust Propagation Audit', () => {
 
     it('endorsements from same wallet do not inflate count', () => {
       // If A endorses B 3 times, it should still count as 1 unique sponsor
-      // This is enforced at the data layer (fetchDelegations returns unique delegates)
+      // This is enforced at the data layer
+      // (fetchDelegations returns unique delegates)
       const unique = computeSponsorCountScore(1, 100);
       const duplicate = computeSponsorCountScore(1, 100);
       expect(unique).toBe(duplicate);
@@ -646,7 +689,8 @@ describe('Sponsor Trust Propagation Audit', () => {
       expect(countScore).toBe(20);
       // Depth is 2 (not 3) due to cycle detection
       expect(computeDepthScore(2)).toBe(60);
-      expect(computeDepthScore(3)).toBe(40); // Would be 40 if cycle wasn't detected
+      expect(computeDepthScore(3)).toBe(40);
+      // Would be 40 if cycle wasn't detected
     });
 
     it('Attack 4: Whale delegation — single large delegation', () => {
