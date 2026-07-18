@@ -21,6 +21,8 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'json-summary'],
+      include: ['src/**/*.ts'],
+      exclude: ['src/**/*.test.ts', 'src/__tests__/**', 'src/lib/__tests__/**', 'src/index.ts'],
       // ponytail: thresholds track what unit tests actually exercise. The
       // Algorand on-chain fetch paths in trust-score/sybil/delegation/
       // trust-graph/reputation/operator-wallet are exercised by
@@ -28,10 +30,10 @@ export default defineConfig({
       // test:integration`) — they are excluded from unit-test coverage so
       // the threshold reflects pure logic, not live-network dependencies.
       thresholds: {
-        statements: 49,
-        branches: 45,
-        functions: 72,
-        lines: 49,
+        statements: 97,
+        branches: 91,
+        functions: 98,
+        lines: 97,
       },
     },
   },
