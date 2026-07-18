@@ -7,7 +7,7 @@ on:
     branches: [master]
 
 env:
-  NODE_VERSION: '20.19.0'  # LTS pinned — bump in lockstep with .nvmrc / Dockerfile
+  NODE_VERSION: '22.23.1'  # LTS pinned — bump in lockstep with .nvmrc / Dockerfile
 
 jobs:
   test:
