@@ -4,7 +4,7 @@ import client from 'prom-client';
 const baseRegistry = new client.Registry();
 client.collectDefaultMetrics({ register: baseRegistry, prefix: 'agent_passport_node_' });
 
-export const registry = baseRegistry;
+const registry = baseRegistry;
 
 const PREFIX = 'agent_passport_';
 
@@ -78,13 +78,6 @@ export const x402SettlementFailuresTotal = new client.Counter({
   registers: [baseRegistry],
 });
 
-export const x402ReplayAttemptsTotal = new client.Counter({
-  name: `${PREFIX}x402_replay_attempts_total`,
-  help: 'Total x402 replay attempts blocked',
-  labelNames: ['path'] as const,
-  registers: [baseRegistry],
-});
-
 export const x402VerificationDurationSeconds = new client.Histogram({
   name: `${PREFIX}x402_verification_duration_seconds`,
   help: 'x402 verification duration in seconds',
@@ -146,13 +139,6 @@ export const cacheHitsTotal = new client.Counter({
 export const cacheMissesTotal = new client.Counter({
   name: `${PREFIX}cache_misses_total`,
   help: 'Total cache misses',
-  labelNames: ['cache_name'] as const,
-  registers: [baseRegistry],
-});
-
-export const cacheSize = new client.Gauge({
-  name: `${PREFIX}cache_size`,
-  help: 'Current cache size (entries)',
   labelNames: ['cache_name'] as const,
   registers: [baseRegistry],
 });
@@ -228,7 +214,7 @@ export function recordCacheMiss(cacheName: string): void {
   cacheMissesTotal.inc({ cache_name: cacheName });
 }
 
-export type ContractEventType = 'endorsement' | 'revocation' | 'dispute' | 'success';
+type ContractEventType = 'endorsement' | 'revocation' | 'dispute' | 'success';
 
 export function recordContractEvent(event: ContractEventType): void {
   switch (event) {

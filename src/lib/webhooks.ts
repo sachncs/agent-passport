@@ -15,7 +15,7 @@
 import { randomUUID } from 'crypto';
 import { logger } from './logger';
 
-export interface WebhookSubscriber {
+interface WebhookSubscriber {
   id: string;
   wallet: string;
   url: string;

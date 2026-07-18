@@ -51,7 +51,7 @@ export const x402Middleware = createMiddleware();
  * Verifies payment settlement with the facilitator. Returns whether the
  * payment proof corresponds to a settled on-chain transaction.
  */
-export async function verifySettlement(
+async function verifySettlement(
   paymentPayload: unknown,
   paymentRequirements: unknown,
 ): Promise<{ verified: boolean; error?: string }> {

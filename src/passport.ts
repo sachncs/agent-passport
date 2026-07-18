@@ -9,7 +9,7 @@ import { logger } from './lib/logger';
 
 export const PASSPORT_SCHEMA_VERSION = 1;
 
-export interface DataSourceStatus {
+interface DataSourceStatus {
   trust: boolean;
   delegation: boolean;
   credit: boolean;

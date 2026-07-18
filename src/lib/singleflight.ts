@@ -19,14 +19,6 @@ export function inflightGet<T>(key: string): Promise<T> | undefined {
   return inflight.get(key) as Promise<T> | undefined;
 }
 
-export function inflightSet<T>(key: string, promise: Promise<T>): void {
-  inflight.set(key, promise);
-}
-
-export function inflightDelete(key: string): void {
-  inflight.delete(key);
-}
-
 /** Convenience: run `loader` once even if `key` is requested concurrently. */
 export async function singleflight<T>(
   key: string,

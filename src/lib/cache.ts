@@ -10,7 +10,7 @@
  * a shared store.
  */
 
-export interface TTLCacheOptions {
+interface TTLCacheOptions {
   /** Max entries before LRU eviction kicks in. */
   maxEntries: number;
   /** Per-entry lifetime in ms. */

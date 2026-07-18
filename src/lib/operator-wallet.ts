@@ -50,23 +50,9 @@ export function initOperatorWallet(): boolean {
   }
 }
 
-/**
- * Returns the operator account, or null if not initialized.
- */
-export function getOperatorAccount(): algosdk.Account | null {
-  return operatorAccount;
-}
-
 /** Whether initOperatorWallet() has successfully loaded an account. */
 export function isOperatorInitialized(): boolean {
   return operatorAccount !== null;
-}
-
-/**
- * Returns the operator address as a string, or null if not initialized.
- */
-export function getOperatorAddress(): string | null {
-  return operatorAccount?.addr.toString() ?? null;
 }
 
 /**

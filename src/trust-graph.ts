@@ -46,7 +46,7 @@ interface WhatIfResult {
   explanation: string[];
 }
 
-export interface TrustGraphResult {
+interface TrustGraphResult {
   wallet: string;
   depth: number;
   nodeCount: number;

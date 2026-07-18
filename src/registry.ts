@@ -36,7 +36,7 @@ export class RegistryValidationError extends Error {
   }
 }
 
-export interface DelegationResult {
+interface DelegationResult {
   txId: string;
   sponsor: string;
   agent: string;
@@ -45,7 +45,7 @@ export interface DelegationResult {
   timestamp: number;
 }
 
-export interface RevocationResult {
+interface RevocationResult {
   txId: string;
   sponsor: string;
   agent: string;

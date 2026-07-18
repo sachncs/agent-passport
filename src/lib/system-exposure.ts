@@ -20,8 +20,8 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { logger } from './logger';
 
-export const MAX_SYSTEM_EXPOSURE = 100_000;
-export const MAX_WALLET_SHARE = MAX_SYSTEM_EXPOSURE / 10;
+const MAX_SYSTEM_EXPOSURE = 100_000;
+const MAX_WALLET_SHARE = MAX_SYSTEM_EXPOSURE / 10;
 // 10k — no single wallet gets more than 10% of the cap
 
 let totalSystemExposure = 0;
@@ -102,11 +102,6 @@ export function getWalletExposure(wallet: string): number {
   return walletExposure.get(wallet) ?? 0;
 }
 
-/** Number of wallets currently tracked. */
-export function getTrackedWalletCount(): number {
-  return walletExposure.size;
-}
-
 /**
  * Atomically reserves `amount` of system capacity for `wallet` and adds
  * it to the running total. Returns the actual amount reserved (may be less
@@ -151,12 +146,6 @@ export function addSystemExposure(wallet: string, amount: number): number {
 export function resetSystemExposure(): void {
   totalSystemExposure = 0;
   walletExposure.clear();
-  saveToDisk();
-}
-
-/** Sets the system exposure (for restoring from persistent storage). */
-export function setSystemExposure(amount: number): void {
-  totalSystemExposure = Math.max(0, Number.isFinite(amount) ? amount : 0);
   saveToDisk();
 }
 
