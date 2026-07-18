@@ -90,7 +90,9 @@
     "vitest": "^3.2.7"
   },
   "overrides": {
-    "ws": "8.21.0"
+    "ws": "8.21.0",
+    "glob": "^13.0.6",
+    "test-exclude": "^8.0.0"
   },
   "engines": {
     "node": ">=20.0.0"
