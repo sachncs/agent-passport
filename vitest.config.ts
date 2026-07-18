@@ -15,6 +15,7 @@ export default defineConfig({
       '**/*-integration.test.ts',
       'src/__tests__/e2e/**',
       'src/__tests__/benchmark.test.ts',
+      'src/__tests__/graph-audit.test.ts',
     ],
     testTimeout: 30000,
     hookTimeout: 10000,

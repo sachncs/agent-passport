@@ -674,6 +674,11 @@ describe('recordEvent', () => {
     }));
     (submitApplicationCall as ReturnType<typeof vi.fn>).mockResolvedValue('txid');
 
+    // Pin Date.now so both calls compute the same hash (production
+    // salts with Date.now to avoid collision between concurrent events,
+    // so we override it here to force the dedup path).
+    vi.spyOn(Date, 'now').mockReturnValue(1_700_000_000_000);
+
     const result1 = await recordEvent(VALID_W, 'payment', 1000);
     expect(result1).not.toBeNull();
 
@@ -681,6 +686,7 @@ describe('recordEvent', () => {
     const result2 = await recordEvent(VALID_W, 'payment', 1000);
     expect(result2).toBeNull(); // dedup catches it
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
   it('records endorsement and calls recordEndorsement', async () => {
