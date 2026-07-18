@@ -70,6 +70,7 @@ function saveRateLimitState(clients: Map<string, RateLimitEntry>): void {
 
 export function resetRateLimiter(): void {
   if (globalClients) globalClients.clear();
+  globalClients = null;
 }
 
 /**

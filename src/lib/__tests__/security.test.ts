@@ -1,13 +1,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import express from 'express';
 import request from 'supertest';
-import { rateLimiter, corsMiddleware } from '../security';
+import { rateLimiter, corsMiddleware, resetRateLimiter } from '../security';
 
 describe('rateLimiter', () => {
   let app: express.Express;
 
   beforeEach(() => {
     vi.useFakeTimers();
+    resetRateLimiter();
     app = express();
     app.use(rateLimiter({ windowMs: 1000, max: 3 }));
     app.get('/test', (_req, res) => res.json({ ok: true }));
@@ -15,6 +16,7 @@ describe('rateLimiter', () => {
 
   afterEach(() => {
     vi.useRealTimers();
+    resetRateLimiter();
   });
 
   it('allows requests under limit', async () => {
