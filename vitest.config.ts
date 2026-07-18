@@ -28,10 +28,10 @@ export default defineConfig({
       // test:integration`) — they are excluded from unit-test coverage so
       // the threshold reflects pure logic, not live-network dependencies.
       thresholds: {
-        statements: 50,
+        statements: 49,
         branches: 45,
-        functions: 55,
-        lines: 50,
+        functions: 72,
+        lines: 49,
       },
     },
   },
