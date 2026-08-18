@@ -28,9 +28,9 @@ vi.mock('../constants', () => ({
 }));
 
 vi.mock('@x402/core/server', () => ({
-  HTTPFacilitatorClient: vi.fn().mockImplementation(() => ({
-    verify: vi.fn(),
-  })),
+  HTTPFacilitatorClient: vi.fn().mockImplementation(function () {
+    return { verify: vi.fn() };
+  }),
 }));
 
 vi.mock('@x402/express', () => ({
@@ -160,9 +160,12 @@ describe('settlementVerificationMiddleware', () => {
   it('calls next when settlement is verified', async () => {
     vi.useFakeTimers();
     const { HTTPFacilitatorClient } = await import('@x402/core/server');
-    vi.mocked(HTTPFacilitatorClient).mockImplementationOnce(() => ({
+    vi.mocked(HTTPFacilitatorClient).mockImplementationOnce(function () {
+  return {
       verify: vi.fn().mockResolvedValue({ isValid: true }),
-    } as never));
+    
+  } as never;
+});
 
     const next = vi.fn();
     svm(
@@ -177,12 +180,15 @@ describe('settlementVerificationMiddleware', () => {
   it('returns 402 when settlement verification fails', async () => {
     vi.useFakeTimers();
     const { HTTPFacilitatorClient } = await import('@x402/core/server');
-    vi.mocked(HTTPFacilitatorClient).mockImplementationOnce(() => ({
+    vi.mocked(HTTPFacilitatorClient).mockImplementationOnce(function () {
+  return {
       verify: vi.fn().mockResolvedValue({
         isValid: false,
         invalidReason: 'insufficient_funds',
       }),
-    } as never));
+    
+  } as never;
+});
 
     const res = mockRes();
     const next = vi.fn();
@@ -203,13 +209,16 @@ describe('settlementVerificationMiddleware', () => {
   it('uses invalidMessage as fallback reason', async () => {
     vi.useFakeTimers();
     const { HTTPFacilitatorClient } = await import('@x402/core/server');
-    vi.mocked(HTTPFacilitatorClient).mockImplementationOnce(() => ({
+    vi.mocked(HTTPFacilitatorClient).mockImplementationOnce(function () {
+  return {
       verify: vi.fn().mockResolvedValue({
         isValid: false,
         invalidReason: undefined,
         invalidMessage: 'tx not found',
       }),
-    } as never));
+    
+  } as never;
+});
 
     const res = mockRes();
     svm(
@@ -227,9 +236,12 @@ describe('settlementVerificationMiddleware', () => {
   it('returns 502 when verifySettlement itself throws', async () => {
     vi.useFakeTimers();
     const { HTTPFacilitatorClient } = await import('@x402/core/server');
-    vi.mocked(HTTPFacilitatorClient).mockImplementationOnce(() => ({
+    vi.mocked(HTTPFacilitatorClient).mockImplementationOnce(function () {
+  return {
       verify: vi.fn().mockRejectedValue(new Error('facilitator down')),
-    } as never));
+    
+  } as never;
+});
 
     const { logger } = await import('../logger');
     vi.mocked(logger.error).mockImplementationOnce(() => {
@@ -255,9 +267,12 @@ describe('settlementVerificationMiddleware', () => {
   it('records settlement failure metric on invalid settlement', async () => {
     vi.useFakeTimers();
     const { HTTPFacilitatorClient } = await import('@x402/core/server');
-    vi.mocked(HTTPFacilitatorClient).mockImplementationOnce(() => ({
+    vi.mocked(HTTPFacilitatorClient).mockImplementationOnce(function () {
+  return {
       verify: vi.fn().mockResolvedValue({ isValid: false, invalidReason: 'double_spend' }),
-    } as never));
+    
+  } as never;
+});
     const metrics = await import('../metrics');
 
     svm(
@@ -273,9 +288,12 @@ describe('settlementVerificationMiddleware', () => {
   it('records exception as settlement failure', async () => {
     vi.useFakeTimers();
     const { HTTPFacilitatorClient } = await import('@x402/core/server');
-    vi.mocked(HTTPFacilitatorClient).mockImplementationOnce(() => ({
+    vi.mocked(HTTPFacilitatorClient).mockImplementationOnce(function () {
+  return {
       verify: vi.fn().mockRejectedValue('something broke'),
-    } as never));
+    
+  } as never;
+});
     const metrics = await import('../metrics');
 
     svm(
@@ -292,9 +310,12 @@ describe('settlementVerificationMiddleware', () => {
     vi.useFakeTimers();
     const { HTTPFacilitatorClient } = await import('@x402/core/server');
     const mockVerify = vi.fn().mockResolvedValue({ isValid: true });
-    vi.mocked(HTTPFacilitatorClient).mockImplementationOnce(() => ({
+    vi.mocked(HTTPFacilitatorClient).mockImplementationOnce(function () {
+  return {
       verify: mockVerify,
-    } as never));
+    
+  } as never;
+});
 
     svm(
       mockReq({ headers: { 'x-payment': 'proof' }, path: '/delegation' }),

@@ -65,12 +65,14 @@ vi.mock('../lib/x402', () => ({
 vi.mock('../lib/cache', () => {
   const store = new Map<string, unknown>();
   return {
-    TTLCache: vi.fn().mockImplementation(() => ({
-      get: (k: string) => store.get(k),
-      set: (k: string, v: unknown) => { store.set(k, v); },
-      delete: (k: string) => store.delete(k),
-      clear: () => store.clear(),
-    })),
+    TTLCache: vi.fn().mockImplementation(function () {
+      return {
+        get: (k: string) => store.get(k),
+        set: (k: string, v: unknown) => { store.set(k, v); },
+        delete: (k: string) => store.delete(k),
+        clear: () => store.clear(),
+      };
+    }),
   };
 });
 
@@ -281,6 +283,9 @@ describe('GET /ready', () => {
 
 describe('GET /health/deep', () => {
   it('returns 200 when algorand connected', async () => {
+    algod.status.mockReturnValue({
+      do: vi.fn(() => Promise.resolve({ lastRound: 12345 })),
+    });
     const res = await request(app).get('/health/deep');
     expect(res.status).toBe(200);
     expect(res.body.algorand.connected).toBe(true);
