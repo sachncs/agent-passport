@@ -543,7 +543,9 @@ describe('underwrite()', () => {
   });
 
   describe('sybil penalty integration', () => {
-    it('applies sybil penalty to trust factor when risk is high', async () => {
+    it('does NOT apply sybil penalty to trust factor (deduped, H12)', async () => {
+      // Sybil penalty is now applied only via computeUnderwritingLimit;
+      // the trust factor carries the raw score.
       mockScoreWalletFresh
         .mockResolvedValue(
           trustResult({ trustScore: 80 }) as never,
@@ -559,26 +561,25 @@ describe('underwrite()', () => {
 
       const result = await underwrite(VALID_WALLET);
 
-      expect(result!.factors[0].score).toBe(64);
+      expect(result!.factors[0].score).toBe(80);
+      expect(result!.factors[0].name).toBe('Trust Score');
     });
 
-    it('halves trust factor when sybil risk is critical', async () => {
-      mockScoreWalletFresh
-        .mockResolvedValue(
-          trustResult({ trustScore: 80 }) as never,
-        );
+    it('reflects sybil risk in the Sybil Resistance factor (inverted)', async () => {
+      mockScoreWalletFresh.mockResolvedValue(trustResult() as never);
       mockScoreDelegationFresh.mockResolvedValue(delegationResult() as never);
       mockEstimateCreditWithTrust.mockResolvedValue(creditResult() as never);
-      mockDetectSybilFresh
-        .mockResolvedValue(
-          sybilResult({ sybilRisk: 0.8 }) as never,
-        );
+      mockDetectSybilFresh.mockResolvedValue(
+        sybilResult({ sybilRisk: 0.8 }) as never,
+      );
       mockComputeReputation.mockResolvedValue(reputationResult() as never);
       mockCheckSanctions.mockResolvedValue(sanctionsAllowed());
 
       const result = await underwrite(VALID_WALLET);
-
-      expect(result!.factors[0].score).toBe(40);
+      const sybilFactor = result!.factors.find(f => f.name === 'Sybil Resistance');
+      expect(sybilFactor).toBeDefined();
+      // (1 - 0.8) * 100 = 20
+      expect(sybilFactor!.score).toBe(20);
     });
   });
 

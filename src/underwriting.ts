@@ -2,7 +2,7 @@ import { estimateCreditWithTrust } from './credit';
 import { scoreDelegationFresh } from './delegation';
 import { computeReputation } from './reputation';
 import { detectSybilFresh } from './sybil';
-import { applySybilPenalty, scoreWalletFresh } from './trust-score';
+import { scoreWalletFresh } from './trust-score';
 import { isValidWallet } from './lib/constants';
 import { logger } from './lib/logger';
 import { checkSanctions } from './lib/sanctions';
@@ -71,6 +71,11 @@ export function classifyUnderwritingRisk(
  * - sybilMultiplier ∈ [0.3, 1.0]
  * - reputationMultiplier ∈ [1.0, 1.3]
  * - Max recommendedLimit = creditLimit × 1.5 × 1.0 × 1.3 = 1.95 × creditLimit
+ *
+ * Sybil penalty is applied ONLY here (in the limit formula). The
+ * `Sybil Resistance` factor in compositeScore is the sole other place.
+ * Previously the trustScore factor was also sybil-penalized
+ * (applySybilPenalty), producing triple-counting. (H12)
  */
 export function computeUnderwritingLimit(
   compositeScore: number,
@@ -200,10 +205,9 @@ export async function underwrite(
   const factors: UnderwritingFactor[] = [];
 
   // Factor 1: Trust Score (weight: 0.35)
-  // Apply sybil penalty: high sybil risk reduces trust contribution
-  const rawTrustScore = trustResult?.trustScore ?? 0;
-  const sybilRiskValue = sybilResult?.sybilRisk ?? 0;
-  const trustScore = applySybilPenalty(rawTrustScore, sybilRiskValue);
+  // The raw trust score — sybil penalty is applied ONLY in the limit
+  // formula (computeUnderwritingLimit), not duplicated here. (H12)
+  const trustScore = trustResult?.trustScore ?? 0;
   factors.push({
     name: 'Trust Score',
     score: trustScore,
@@ -224,8 +228,12 @@ export async function underwrite(
   });
 
   // Factor 3: Sybil Resistance (weight: 0.20) - inverted
-  // (low sybil = high score)
-  const sybilScore = sybilResult ? (1 - sybilResult.sybilRisk) * 100 : 50;
+  // (low sybil = high score). When sybil data is missing (failure),
+  // default to a neutral 50 (matches the original behavior).
+  const sybilRisk = sybilResult?.sybilRisk ?? 0;
+  const sybilScore = sybilResult
+    ? Math.round((1 - sybilRisk) * 100 * 10) / 10
+    : 50;
   factors.push({
     name: 'Sybil Resistance',
     score: sybilScore,
@@ -253,7 +261,6 @@ export async function underwrite(
   const sanctions = await checkSanctions(wallet);
 
   // Decision
-  const sybilRisk = sybilResult?.sybilRisk ?? 0;
   const reputation = reputationResult?.reputation ?? 0;
   const baseApproved = decideApproval(compositeScore, sybilRisk, reputation);
   const approved = baseApproved && sanctions.status === 'allowed';
