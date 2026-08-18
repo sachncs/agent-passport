@@ -17,16 +17,24 @@ import { isValidWallet } from './lib/constants';
 import { TTLCache } from './lib/cache';
 import { idempotencyMiddleware } from './lib/idempotency';
 import { logger } from './lib/logger';
-import { recordCounterpartyCheck, recordDiscoverySearch, recordUnderwritingDecision, recordVerifyCheck, metricsEndpoint, metricsMiddleware } from './lib/metrics';
+import { recordCacheHit, recordCacheMiss, recordCounterpartyCheck, recordDiscoverySearch, recordUnderwritingDecision, recordVerifyCheck, metricsEndpoint, metricsMiddleware } from './lib/metrics';
 import { startMetricsCollectors } from './lib/metrics-collectors';
 import { isOperatorInitialized } from './lib/operator-wallet';
 import { rateLimiter, corsMiddleware, requestIdMiddleware, requestLoggingMiddleware } from './lib/security';
 import { getSanctionsProvider } from './lib/sanctions';
 import { buildInfo, packageVersion } from './lib/build-info';
 import { openApiSpec } from './lib/openapi';
-import { addSubscriber, fireWebhook, listSubscribers, removeSubscriber } from './lib/webhooks';
+import { addSubscriber, fireWebhook, listSubscribers, removeSubscriber, validateWebhookUrl } from './lib/webhooks';
 import { x402Middleware, settlementVerificationMiddleware } from './lib/x402';
 import { algod } from './lib/algorand-client';
+import { withTimeout } from './lib/timeout';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import { hmacAuth, HMAC_BYPASS_PATHS, isHmacAuthEnabled } from './lib/hmac-auth';
+import { setRateLimitOverrides } from './lib/security';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 export const app = express();
 
@@ -35,6 +43,15 @@ export const responseCache = new TTLCache<unknown>({
   maxEntries: 500,
   ttlMs: 60_000,
 });
+
+// Apply per-endpoint rate-limit overrides from env at module load.
+if (process.env.RATE_LIMIT_OVERRIDES) {
+  try {
+    setRateLimitOverrides(JSON.parse(process.env.RATE_LIMIT_OVERRIDES));
+  } catch (e) {
+    logger.warn('Failed to parse RATE_LIMIT_OVERRIDES', { error: String(e) });
+  }
+}
 
 // Security: trust proxy for correct IP behind load balancers
 app.set('trust proxy', 1);
@@ -54,6 +71,18 @@ app.use(metricsMiddleware);
 app.use(x402Middleware);
 app.use(settlementVerificationMiddleware);
 app.use(idempotencyMiddleware);
+
+// HMAC auth — applied last so all other middleware (idempotency, CORS,
+// helmet) sees the request first. Public reads and operational endpoints
+// bypass. Only enforced when HMAC_SECRET is set; otherwise a warning is
+// logged at startup so operators know /delegate is unauthenticated.
+if (isHmacAuthEnabled()) {
+  app.use(hmacAuth({
+    secret: config.hmacSecret,
+    skewMs: config.hmacSkewMs,
+    bypassPaths: HMAC_BYPASS_PATHS,
+  }));
+}
 
 // ── Helper: validate wallet from query param ──────────────────
 function requireWallet(
@@ -110,9 +139,11 @@ app.get('/score', async (req, res) => {
   const cacheKey = `score:${wallet}`;
   const cached = responseCache.get(cacheKey);
   if (cached) {
+    recordCacheHit('response');
     res.json(cached);
     return;
   }
+  recordCacheMiss('response');
 
   try {
     const result = await scoreWallet(wallet);
@@ -271,6 +302,7 @@ app.post('/reputation/record', async (req, res) => {
     }
     responseCache.delete(`passport:${wallet}`);
     responseCache.delete(`score:${wallet}`);
+    responseCache.delete(`verify:${wallet}`);
     // Fire-and-forget webhook delivery to subscribers of this wallet.
     fireWebhook(wallet, result).catch(e => logger.warn('webhook dispatch failed', { error: String(e) }));
     res.json(result);
@@ -340,6 +372,8 @@ app.post('/delegate', async (req, res) => {
     responseCache.delete(`passport:${sponsor}`);
     responseCache.delete(`score:${agent}`);
     responseCache.delete(`score:${sponsor}`);
+    responseCache.delete(`verify:${agent}`);
+    responseCache.delete(`verify:${sponsor}`);
     res.status(201).json(result);
   } catch (error) {
     if (error instanceof RegistryNotConfiguredError) {
@@ -369,6 +403,8 @@ app.post('/revoke', async (req, res) => {
     responseCache.delete(`passport:${sponsor}`);
     responseCache.delete(`score:${agent}`);
     responseCache.delete(`score:${sponsor}`);
+    responseCache.delete(`verify:${agent}`);
+    responseCache.delete(`verify:${sponsor}`);
     res.json(result);
   } catch (error) {
     if (error instanceof RegistryNotConfiguredError) {
@@ -398,9 +434,16 @@ app.get('/passport', async (req, res) => {
   const cacheKey = `passport:${wallet}`;
   const cached = responseCache.get(cacheKey);
   if (cached) {
-    res.json(cached);
+    recordCacheHit('response');
+    // Refresh generatedAt so cached docs don't lie about freshness.
+    const refreshed = {
+      ...(cached as Record<string, unknown>),
+      generatedAt: new Date().toISOString(),
+    };
+    res.json(refreshed);
     return;
   }
+  recordCacheMiss('response');
 
   try {
     const result = await generatePassport(wallet);
@@ -432,12 +475,18 @@ app.get('/verify', async (req, res) => {
       | { flags: Record<string, boolean> }
       | undefined;
     if (cached) {
+      recordCacheHit('response');
       recordVerifyCheck(cached.flags);
       res.json({ valid: true, wallet: raw, flags: cached.flags, cached: true });
       return;
     }
+    recordCacheMiss('response');
     try {
-      const info = await algod.accountInformation(raw).do();
+      const info = await withTimeout(
+        algod.accountInformation(raw).do(),
+        config.requestTimeoutMs,
+        'accountInformation(/verify)',
+      );
       // Naive flag heuristics - refine in production
       flags.funded = Number(info.amount || 0n) > 0;
       flags.active = (info.totalAppsOptedIn || 0) > 0
@@ -532,12 +581,27 @@ app.post('/reputation/subscribe', (req, res) => {
     res.status(400).json({ error: 'Invalid or missing wallet' });
     return;
   }
-  if (!url || typeof url !== 'string' || !/^https?:\/\//.test(url)) {
-    res.status(400).json({ error: 'Invalid url — must be http(s)' });
+  if (!url || typeof url !== 'string') {
+    res.status(400).json({ error: 'Invalid url' });
+    return;
+  }
+  const urlCheck = validateWebhookUrl(url);
+  if (!urlCheck.ok) {
+    res.status(400).json({ error: `Invalid url: ${urlCheck.reason}` });
     return;
   }
   const sub = addSubscriber(wallet, url);
-  res.status(201).json(sub);
+  // Don't leak the secret to the public response — return it once for the
+  // operator to record; it will never be returned again.
+  res.status(201).json({
+    id: sub.id,
+    wallet: sub.wallet,
+    url: sub.url,
+    createdAt: sub.createdAt,
+    secret: sub.secret,
+    signatureHeader: 'X-Webhook-Signature',
+    signatureScheme: 'sha256=<hex(HMAC-SHA256(secret, rawBody))>',
+  });
 });
 
 app.delete('/reputation/subscribe/:id', (req, res) => {
@@ -551,8 +615,10 @@ app.get('/reputation/subscribers', (req, res) => {
 });
 
 // ── Dashboard static (no auth, public HTML) ──────────────────
+const PUBLIC_DIR = join(__dirname, '..', '..', 'public');
+app.use('/static', express.static(PUBLIC_DIR));
 app.get('/dashboard', (_req, res) => {
-  res.sendFile(join(process.cwd(), 'public', 'dashboard.html'));
+  res.sendFile(join(PUBLIC_DIR, 'dashboard.html'));
 });
 
 app.get('/', (_req, res) => {
