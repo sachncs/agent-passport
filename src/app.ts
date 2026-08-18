@@ -25,6 +25,7 @@ import { getSanctionsProvider } from './lib/sanctions';
 import { buildInfo, packageVersion } from './lib/build-info';
 import { openApiSpec } from './lib/openapi';
 import { addSubscriber, fireWebhook, listSubscribers, removeSubscriber, validateWebhookUrl } from './lib/webhooks';
+import { getBazaarCatalog } from './lib/bazaar';
 import { x402Middleware, settlementVerificationMiddleware } from './lib/x402';
 import { algod } from './lib/algorand-client';
 import { withTimeout } from './lib/timeout';
@@ -86,38 +87,36 @@ if (isHmacAuthEnabled()) {
   }));
 }
 
-// ── Helper: validate wallet from query param ──────────────────
+// ── Helpers (extracted for consistency across query/body) ────
+function validateWallet(raw: unknown, location: 'query' | 'body'): string | null {
+  if (typeof raw !== 'string' || !raw) {
+    const msg = location === 'query'
+      ? 'Missing required query parameter: wallet'
+      : 'Missing required field: wallet';
+    return msg;
+  }
+  if (!isValidWallet(raw)) {
+    return 'Invalid wallet address. Must be 58-character base32 (A-Z, 2-7).';
+  }
+  return null;
+}
+
 function requireWallet(
   req: express.Request,
   res: express.Response,
 ): string | null {
-  const raw = req.query.wallet;
-  if (typeof raw !== 'string' || !raw) {
-    res.status(400).json({ error: 'Missing required query parameter: wallet' });
-    return null;
-  }
-  if (!isValidWallet(raw)) {
-    res.status(400).json({ error: 'Invalid wallet address. Must be 58-character base32 (A-Z, 2-7).' });
-    return null;
-  }
-  return raw;
+  const err = validateWallet(req.query.wallet, 'query');
+  if (err) { res.status(400).json({ error: err }); return null; }
+  return req.query.wallet as string;
 }
 
-// ── Helper: validate wallet from body ─────────────────────────
 function requireBodyWallet(
   req: express.Request,
   res: express.Response,
 ): string | null {
-  const wallet = req.body?.wallet;
-  if (!wallet) {
-    res.status(400).json({ error: 'Missing required field: wallet' });
-    return null;
-  }
-  if (!isValidWallet(wallet)) {
-    res.status(400).json({ error: 'Invalid wallet address. Must be 58-character base32 (A-Z, 2-7).' });
-    return null;
-  }
-  return wallet;
+  const err = validateWallet(req.body?.wallet, 'body');
+  if (err) { res.status(400).json({ error: err }); return null; }
+  return req.body.wallet as string;
 }
 
 // ── Helper: validate numeric amount ───────────────────────────
@@ -510,32 +509,9 @@ app.get('/discovery/search', async (req, res) => {
   const q = (req.query.q as string | undefined)?.toLowerCase() ?? '';
   const limit = Math.min(parseInt(req.query.limit as string ?? '20', 10) || 20, 100);
 
-  // Static Bazaar catalog (production: registry or x402 bazaar service)
-  const catalog = [
-    {
-      id: 'agent-passport',
-      type: 'service',
-      category: 'trust',
-      name: 'Agent Passport',
-      description: 'Stateless trust scoring, delegation, credit, sybil, reputation, and underwriting for AI agents on Algorand',
-      tags: ['trust', 'scoring', 'algorand', 'agent', 'wallet', 'x402'],
-      endpoints: {
-        score: '/score',
-        passport: '/passport',
-        underwrite: '/underwrite',
-        counterparty: '/counterparty-check',
-        delegate: '/delegate',
-        revoke: '/revoke',
-      },
-      pricing: {
-        score: '0.001 USDC',
-        passport: '0.005 USDC',
-        underwrite: '0.01 USDC',
-        counterparty: '0.01 USDC',
-      },
-      health: '/health',
-    },
-  ];
+  // Load catalog from docs/bazaar-metadata.json (or data/). Falls back
+  // to a single self-listing. (M5)
+  const catalog = getBazaarCatalog();
 
   const filtered = q
     ? catalog.filter(s =>
@@ -562,6 +538,7 @@ app.get('/version', (_req, res) => {
   res.json({
     service: 'Agent Passport',
     version: packageVersion,
+    commit: config.gitCommit,
     node: process.version,
     startedAt: buildInfo.startedAt,
     network: config.algoNetwork,
