@@ -142,14 +142,24 @@ export class AgentPassportClient {
         clearTimeout(timeoutId);
         const requestId = response.headers.get('x-request-id') ?? undefined;
 
-        if (response.status === 402 && this.onPaymentRequired) {
+        if (response.status === 402 && this.onPaymentRequired && !options.xPayment) {
           const requirements = (await response.json()) as PaymentRequirements;
           const proof = await this.onPaymentRequired(requirements);
-          const retryResponse = await fetch(url, {
-            method,
-            headers: this.buildHeaders(options.idempotencyKey, proof.paymentHeader),
-            body: body && method !== 'GET' ? JSON.stringify(body) : undefined,
-          });
+          // Fresh controller for the retry — a hung facilitator must not
+          // pin the caller forever.
+          const retryController = new AbortController();
+          const retryTimeoutId = setTimeout(() => retryController.abort(), this.timeout);
+          let retryResponse: Response;
+          try {
+            retryResponse = await fetch(url, {
+              method,
+              headers: this.buildHeaders(options.idempotencyKey, proof.paymentHeader),
+              body: body && method !== 'GET' ? JSON.stringify(body) : undefined,
+              signal: retryController.signal,
+            });
+          } finally {
+            clearTimeout(retryTimeoutId);
+          }
           const retryData = await retryResponse.json().catch(() => ({}));
           if (!retryResponse.ok) {
             throw AgentPassportClient.errorFromResponse(retryResponse, retryData, requestId);

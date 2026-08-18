@@ -164,14 +164,18 @@ class AgentPassportClient:
         body: Optional[Dict[str, Any]] = None,
         idempotency_key: Optional[str] = None,
         x_payment: Optional[str] = None,
+        attempts_left: Optional[int] = None,
     ) -> Dict[str, Any]:
         url = f"{self.base_url}{path}"
         headers = self._build_headers(idempotency_key=idempotency_key, x_payment=x_payment)
         json_body = body if method != "GET" else None
 
+        if attempts_left is None:
+            attempts_left = self.retries
+
         last_error: Optional[AgentPassportError] = None
 
-        for attempt in range(self.retries + 1):
+        for attempt in range(attempts_left + 1):
             try:
                 resp = self.session.request(
                     method=method,
@@ -197,10 +201,14 @@ class AgentPassportClient:
                         body_data = {}
                     requirements = PaymentRequirements.from_dict(body_data)
                     proof = self.on_payment_required(requirements)
+                    # Inline the retry instead of recursing: pass attempts_left
+                    # through so a 402-then-500 sequence doesn't multiply the
+                    # total HTTP request count by 2× retries+1.
                     return self._request(
                         method, path, body,
                         idempotency_key=idempotency_key,
                         x_payment=proof.payment_header,
+                        attempts_left=attempts_left,
                     )
 
                 if not resp.ok:
@@ -226,7 +234,7 @@ class AgentPassportClient:
             except requests.exceptions.RequestException as e:
                 last_error = ConnectionError(str(e))
 
-            if attempt < self.retries:
+            if attempt < attempts_left:
                 delay = compute_backoff(attempt, self.retry_delay)
                 time.sleep(max(0.0, delay))
 
