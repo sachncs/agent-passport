@@ -43,13 +43,12 @@ function loadRateLimitState(): Map<string, RateLimitEntry> {
   return clients;
 }
 
-// Async save — sync writes block the event loop on a busy host. The write
-// queue in system-exposure.ts serializes rate-limit saves too, but here we
-// coalesce by tracking an in-flight write so concurrent calls reuse it.
-let inFlightSave: Promise<void> | null = null;
+// Async save — sync writes block the event loop on a busy host. Promise
+// queue (mirrors system-exposure.ts) serializes writes so concurrent saves
+// can't race or regress to an older snapshot. (H7)
+let writeQueue: Promise<void> = Promise.resolve();
 function saveRateLimitState(clients: Map<string, RateLimitEntry>): void {
-  if (inFlightSave) return;
-  inFlightSave = (async () => {
+  writeQueue = writeQueue.then(async () => {
     try {
       const dir = dirname(RATE_LIMIT_PATH);
       if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
@@ -62,10 +61,8 @@ function saveRateLimitState(clients: Map<string, RateLimitEntry>): void {
       );
     } catch (e) {
       logger.warn('Failed to persist rate limit state', { error: String(e) });
-    } finally {
-      inFlightSave = null;
     }
-  })();
+  });
 }
 
 export function resetRateLimiter(): void {
