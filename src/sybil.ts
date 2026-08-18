@@ -342,6 +342,8 @@ const sybilAccountInfoCache = new TTLCache<SybilAccountInfo>({
 });
 
 const SYBIL_INDEXER_PAGE_SIZE = 2000;
+const MAX_TX_PAGES = 10;
+const MAX_TX_BYTES = 5 * 1024 * 1024;
 
 async function fetchAccountInfo(
   wallet: string,
@@ -391,8 +393,17 @@ async function fetchTransactions(wallet: string, _fresh = false): Promise<{
     let allTxns: SybilIndexerTransaction[] = [];
     let nextToken: string | undefined;
     let hasMore = true;
+    let pageCount = 0;
+    let byteCount = 0;
+    let hitPageCap = false;
 
     while (hasMore) {
+      if (pageCount >= MAX_TX_PAGES) {
+        hitPageCap = true;
+        break;
+      }
+      pageCount++;
+
       const url = new URL(`${INDEXER_URL}/v2/accounts/${wallet}/transactions`);
       url.searchParams.set('limit', String(SYBIL_INDEXER_PAGE_SIZE));
       if (nextToken) url.searchParams.set('next', nextToken);
@@ -403,10 +414,24 @@ async function fetchTransactions(wallet: string, _fresh = false): Promise<{
       const data = (await res.json()) as SybilIndexerResponse;
       const txns = data.transactions || [];
       allTxns = allTxns.concat(txns);
+      byteCount += JSON.stringify(txns).length;
+      if (byteCount > MAX_TX_BYTES) {
+        hitPageCap = true;
+        break;
+      }
 
       nextToken = data['next-token'];
       const hasNextToken = nextToken !== undefined && nextToken !== null;
       hasMore = hasNextToken && txns.length === SYBIL_INDEXER_PAGE_SIZE;
+    }
+
+    if (hitPageCap) {
+      logger.warn('Sybil transaction fetch hit page/byte cap', {
+        wallet,
+        pages: pageCount,
+        bytes: byteCount,
+        maxPages: MAX_TX_PAGES,
+      });
     }
 
     type CounterpartyTx = {
@@ -433,9 +458,11 @@ async function fetchTransactions(wallet: string, _fresh = false): Promise<{
         inc(receiver);
         inc(sender);
 
-        // Track who funded this wallet (first incoming transaction)
-        if (!fundingSources.has(wallet) && receiver === wallet) {
-          fundingSources.set(wallet, sender);
+        // Track first funder for ANY wallet we see, not just the target.
+        // Keying by `wallet` (target) made all counterparty lookups return
+        // 'unknown', inflating the funding-correlation signal to ~1.
+        if (!fundingSources.has(receiver) && receiver !== sender) {
+          fundingSources.set(receiver, sender);
         }
       }
     }
