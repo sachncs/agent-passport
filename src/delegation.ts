@@ -1,5 +1,5 @@
 import { config } from './config';
-import { fetchWithTimeout } from './lib/timeout';
+import { fetchWithTimeout, withTimeout } from './lib/timeout';
 import { algod } from './lib/algorand-client';
 import { logger } from './lib/logger';
 import { isValidWallet, MICRO_ALGO } from './lib/constants';
@@ -94,10 +94,10 @@ export function computeSponsorCountScore(
 }
 
 export function computeAmountScore(amountMicroAlgo: number): number {
+  if (!Number.isFinite(amountMicroAlgo) || amountMicroAlgo <= 0) return 0;
   const algo = amountMicroAlgo / MICRO_ALGO;
-  if (algo <= 0) return 0;
   if (algo >= 10000) return 100;
-  return Math.round(Math.min(100, Math.log10(Math.max(1, algo) + 1) * 25));
+  return Math.round(Math.min(100, Math.log10(algo + 1) * 25));
 }
 
 export function computeDelegationTrustScore(breakdown: {
@@ -234,7 +234,11 @@ async function isTrustAnchor(wallet: string): Promise<boolean> {
   if (REGISTRY_APP_ID === 0) return false;
 
   try {
-    const info = await algod.accountInformation(wallet).do();
+    const info = await withTimeout(
+      algod.accountInformation(wallet).do(),
+      config.requestTimeoutMs,
+      'isTrustAnchor.accountInformation',
+    );
     const createdApps = info.createdApps ?? [];
     return createdApps.some((app) => Number(app.id) === REGISTRY_APP_ID);
   } catch (e) {
