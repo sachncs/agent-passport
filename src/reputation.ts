@@ -181,6 +181,7 @@ export { stopDedupCleanup, startDedupCleanup };
 // wallet -> set of wallets it endorsed
 const endorsementGraph = new Map<string, Set<string>>();
 const MAX_ENDORSEMENT_DEPTH = 5;
+const MAX_ENDORSEES_PER_WALLET = 500; // (M6) cap graph size per wallet
 
 /**
  * Checks if endorsing targetWallet from sourceWallet would create a cycle.
@@ -230,7 +231,15 @@ function recordEndorsement(sourceWallet: string, targetWallet: string): void {
   if (!endorsementGraph.has(sourceWallet)) {
     endorsementGraph.set(sourceWallet, new Set());
   }
-  endorsementGraph.get(sourceWallet)!.add(targetWallet);
+  const set = endorsementGraph.get(sourceWallet)!;
+  if (set.size >= MAX_ENDORSEES_PER_WALLET) {
+    // (M6) Refuse further endorsements from a saturating wallet. Use FIFO:
+    // drop the oldest entry (insertion order). This bounds per-wallet cost
+    // and prevents the BFS in wouldCreateEndorsementCycle from blowing up.
+    const oldest = set.values().next().value;
+    if (oldest !== undefined) set.delete(oldest);
+  }
+  set.add(targetWallet);
 }
 
 /**
