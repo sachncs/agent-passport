@@ -124,8 +124,12 @@ export function clearIdempotencyStore(): void {
 }
 
 export function idempotencyStoreSize(): number {
-  sweep();
   return store.size;
+}
+
+/** Manually trigger a sweep. Use sparingly; periodic sweep handles eviction. */
+export function sweepIdempotencyStore(): void {
+  sweep();
 }
 
 declare module 'express-serve-static-core' {
@@ -145,15 +149,21 @@ export function idempotencyMiddleware(
   }
 
   const headerKey = req.header('Idempotency-Key');
-  let key: string;
-  if (headerKey === undefined) {
-    key = generateServerKey();
-  } else if (!isValidIdempotencyKey(headerKey)) {
+  if (headerKey === undefined || headerKey === '') {
+    // ponytail: rejecting instead of auto-generating prevents the unbounded
+    // operator-signed-transaction issue (combined with no auth) and preserves
+    // the contract that idempotency is opt-in by the caller.
+    recordIdempotencyConflict();
+    res.status(400).json({
+      error: 'Idempotency-Key header is required for mutating requests',
+    });
+    return;
+  }
+  if (!isValidIdempotencyKey(headerKey)) {
     res.status(400).json({ error: 'Invalid Idempotency-Key format. Must be 8-255 chars of [A-Za-z0-9_-:]' });
     return;
-  } else {
-    key = headerKey;
   }
+  const key = headerKey;
 
   req.idempotencyKey = key;
   res.setHeader('idempotency-key', key);

@@ -11,6 +11,7 @@ import {
   getIdempotencyRecord,
   setIdempotencyRecord,
   clearIdempotencyStore,
+  sweepIdempotencyStore,
   idempotencyStoreSize,
   idempotencyMiddleware,
   stopIdempotencySweeper,
@@ -232,6 +233,7 @@ describe('idempotencyStoreSize', () => {
   it('sweeps expired records', () => {
     clearIdempotencyStore();
     setIdempotencyRecord('expired', 'h', 200, {}, -1);
+    sweepIdempotencyStore();
     expect(idempotencyStoreSize()).toBe(0);
   });
 });
@@ -293,19 +295,20 @@ describe('idempotencyMiddleware', () => {
     expect(res.statusCode).toBe(400);
   });
 
-  it('generates server key when header missing', () => {
+  it('rejects missing Idempotency-Key with 400', () => {
     const next = vi.fn();
-    const req = mockReq('POST', { data: 1 });
-    idempotencyMiddleware(req, mockRes(), next);
-    expect(next).toHaveBeenCalled();
-    expect(req.idempotencyKey).toMatch(/^srv_/);
+    const res = mockRes();
+    idempotencyMiddleware(mockReq('POST', { data: 1 }), res, next);
+    expect(next).not.toHaveBeenCalled();
+    expect(res.statusCode).toBe(400);
   });
 
-  it('sets idempotency-key header on response', () => {
+  it('rejects missing Idempotency-Key without setting header', () => {
     const next = vi.fn();
     const res = mockRes();
     idempotencyMiddleware(mockReq('POST', {}), res, next);
-    expect(res.headers['idempotency-key']).toBeDefined();
+    expect(res.headers['idempotency-key']).toBeUndefined();
+    expect(res.statusCode).toBe(400);
   });
 
   it('replays cached response for same key and same body', () => {
