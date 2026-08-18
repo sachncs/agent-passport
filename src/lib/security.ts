@@ -195,7 +195,7 @@ export function corsMiddleware(opts: { origin?: string } = {}) {
       }
     }
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Request-ID');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Request-ID, Idempotency-Key, x-payment, X-Auth-Timestamp, X-Auth-Nonce, X-Auth-KeyId, X-Auth-Signature');
     res.setHeader('Access-Control-Max-Age', '86400');
 
     if (req.method === 'OPTIONS') {
