@@ -47,6 +47,7 @@ function loadRateLimitState(): Map<string, RateLimitEntry> {
 // queue (mirrors system-exposure.ts) serializes writes so concurrent saves
 // can't race or regress to an older snapshot. (H7)
 let writeQueue: Promise<void> = Promise.resolve();
+let lastCleanupSaveAt: number | null = null;
 function saveRateLimitState(clients: Map<string, RateLimitEntry>): void {
   writeQueue = writeQueue.then(async () => {
     try {
@@ -68,6 +69,16 @@ function saveRateLimitState(clients: Map<string, RateLimitEntry>): void {
 export function resetRateLimiter(): void {
   if (globalClients) globalClients.clear();
   globalClients = null;
+  cleanupTimer = null;
+}
+
+let cleanupTimer: NodeJS.Timeout | null = null;
+
+export function stopRateLimiter(): void {
+  if (cleanupTimer) {
+    clearInterval(cleanupTimer);
+    cleanupTimer = null;
+  }
 }
 
 /**
@@ -117,7 +128,12 @@ export function rateLimiter(opts: { windowMs?: number; max?: number } = {}) {
   const clients = globalClients ?? loadRateLimitState();
   globalClients = clients;
 
-  const cleanupTimer = setInterval(() => {
+  // (M11) Read once at module load instead of every request.
+  const LOAD_TEST = process.env.LOAD_TEST_MODE === '1';
+  const TRUSTED_IPS = (process.env.RATE_LIMIT_TRUSTED_IPS || '')
+    .split(',').map(s => s.trim()).filter(Boolean);
+
+  cleanupTimer = setInterval(() => {
     const now = Date.now();
     let changed = false;
     for (const [key, entry] of clients) {
@@ -126,7 +142,14 @@ export function rateLimiter(opts: { windowMs?: number; max?: number } = {}) {
         changed = true;
       }
     }
-    if (changed) saveRateLimitState(clients);
+    if (changed) {
+      const now2 = Date.now();
+      // Coalesce: only persist if at least 60s since last save. (M2)
+      if (!lastCleanupSaveAt || now2 - lastCleanupSaveAt >= 60_000) {
+        saveRateLimitState(clients);
+        lastCleanupSaveAt = now2;
+      }
+    }
   }, 300_000);
   cleanupTimer.unref?.();
 
@@ -136,13 +159,12 @@ export function rateLimiter(opts: { windowMs?: number; max?: number } = {}) {
       return next();
     }
 
-    if (process.env.LOAD_TEST_MODE === '1') return next();
+    if (LOAD_TEST) return next();
 
     // Trusted-IP bypass — exact match. CIDR support deferred until a real
     // operator needs it (a single dep for one boolean check is not worth it).
-    const trustedIps = (process.env.RATE_LIMIT_TRUSTED_IPS || '').split(',').map(s => s.trim()).filter(Boolean);
     const clientIp = req.ip ?? req.socket.remoteAddress ?? '';
-    if (trustedIps.length > 0 && trustedIps.includes(clientIp)) return next();
+    if (TRUSTED_IPS.length > 0 && TRUSTED_IPS.includes(clientIp)) return next();
 
     const override = lookupOverride(req.method, req.path);
     const windowMs = override?.windowMs ?? defaultWindowMs;

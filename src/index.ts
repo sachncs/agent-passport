@@ -7,6 +7,8 @@ import { initOperatorWallet } from './lib/operator-wallet';
 import { stopMetricsCollectors } from './lib/metrics-collectors';
 import { stopIdempotencySweeper } from './lib/idempotency';
 import { stopDedupCleanup } from './reputation';
+import { stopRateLimiter } from './lib/security';
+import { isHmacAuthEnabled } from './lib/hmac-auth';
 
 dotenv.config();
 
@@ -19,6 +21,11 @@ function main() {
   if (!initOperatorWallet()) {
     logger.warn(
       'Operator wallet not initialized — on-chain /delegate, /revoke, /reputation/record will be no-ops',
+    );
+  }
+  if (!isHmacAuthEnabled()) {
+    logger.warn(
+      'HMAC auth not configured (HMAC_SECRET unset). State-changing endpoints (/delegate, /revoke, /reputation/record, /reputation/subscribe) are UNAUTHENTICATED. Set HMAC_SECRET before exposing this service publicly.',
     );
   }
   server = app.listen(PORT, () => {
@@ -34,6 +41,7 @@ function gracefulShutdown(signal: string) {
   stopMetricsCollectors();
   stopIdempotencySweeper();
   stopDedupCleanup();
+  stopRateLimiter();
   closeLoggerStreams();
   if (server) {
     server.close(() => {
