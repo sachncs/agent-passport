@@ -66,9 +66,9 @@
     "benchmark": "vitest run src/__tests__/benchmark.test.ts --reporter=verbose"
   },
   "dependencies": {
-    "@x402/core": "^2.18.0",
-    "@x402/evm": "^2.18.0",
-    "@x402/express": "^2.18.0",
+    "@x402/core": "^2.20.0",
+    "@x402/evm": "^2.20.0",
+    "@x402/express": "^2.20.0",
     "algosdk": "^3.2.0",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
