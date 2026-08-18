@@ -14,10 +14,22 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import request from 'supertest';
+import type { Test } from 'supertest';
 import { app, responseCache } from '../app';
 
 const VALID_WALLET = 'GD64YIY3TWGDMCNPP553DZPPR6LDUSFQOIJVFDPPXWEG3FVOJCCDBBHU5A';
 const VALID_WALLET_2 = 'A2YR3UXLBTMZK6BLCV6ABNG5JGNOX7TXQFTAVAPF5A4JOI5EFWZ2LETCEA';
+
+// Helper: every mutating test request must carry an Idempotency-Key
+// (mandatory since the C2 fix). Each test gets a unique key so idempotency
+// replay between tests is impossible.
+let idemSeq = 0;
+function post(path: string): Test {
+  idemSeq++;
+  return request(app)
+    .post(path)
+    .set('Idempotency-Key', `test_${Date.now()}_${idemSeq}`);
+}
 
 beforeEach(() => {
   responseCache.clear();
@@ -75,24 +87,24 @@ describe('GET /delegation', () => {
 
 describe('POST /counterparty-check', () => {
   it('rejects missing buyer with 400', async () => {
-    const res = await request(app).post('/counterparty-check').send({});
+    const res = await post('/counterparty-check').send({});
     expect(res.status).toBe(400);
   });
 
   it('rejects malformed buyer with 400', async () => {
-    const res = await request(app).post('/counterparty-check').send({ buyer: 'X' });
+    const res = await post('/counterparty-check').send({ buyer: 'X' });
     expect(res.status).toBe(400);
   });
 });
 
 describe('POST /credit-estimate', () => {
   it('rejects missing wallet with 400', async () => {
-    const res = await request(app).post('/credit-estimate').send({});
+    const res = await post('/credit-estimate').send({});
     expect(res.status).toBe(400);
   });
 
   it('rejects non-positive amount with 400', async () => {
-    const res = await request(app).post('/credit-estimate').send({
+    const res = await post('/credit-estimate').send({
       wallet: VALID_WALLET,
        amount: -100
     });
@@ -117,13 +129,13 @@ describe('GET /reputation', () => {
 
 describe('POST /reputation/record', () => {
   it('rejects missing eventType with 400', async () => {
-    const res = await request(app).post('/reputation/record').send({ wallet: VALID_WALLET });
+    const res = await post('/reputation/record').send({ wallet: VALID_WALLET });
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/eventType/);
   });
 
   it('rejects invalid eventType with 400', async () => {
-    const res = await request(app).post('/reputation/record').send({
+    const res = await post('/reputation/record').send({
       wallet: VALID_WALLET,
        eventType: 'unknown'
     });
@@ -132,7 +144,7 @@ describe('POST /reputation/record', () => {
   });
 
   it('rejects dispute events without round with 400', async () => {
-    const res = await request(app).post('/reputation/record').send({
+    const res = await post('/reputation/record').send({
       wallet: VALID_WALLET,
       eventType: 'dispute',
       counterparty: VALID_WALLET_2,
@@ -142,7 +154,7 @@ describe('POST /reputation/record', () => {
   });
 
   it('rejects dispute events with round=0 with 400', async () => {
-    const res = await request(app).post('/reputation/record').send({
+    const res = await post('/reputation/record').send({
       wallet: VALID_WALLET,
       eventType: 'dispute',
       counterparty: VALID_WALLET_2,
@@ -152,7 +164,7 @@ describe('POST /reputation/record', () => {
   });
 
   it('rejects malformed counterparty with 400', async () => {
-    const res = await request(app).post('/reputation/record').send({
+    const res = await post('/reputation/record').send({
       wallet: VALID_WALLET,
       eventType: 'payment',
       counterparty: 'X',
@@ -189,7 +201,7 @@ describe('GET /passport', () => {
 
 describe('POST /delegate', () => {
   it('rejects when sponsor == agent with 400', async () => {
-    const res = await request(app).post('/delegate').send({
+    const res = await post('/delegate').send({
       sponsor: VALID_WALLET,
       agent: VALID_WALLET,
       amount: 100,
@@ -199,7 +211,7 @@ describe('POST /delegate', () => {
   });
 
   it('rejects missing amount with 400', async () => {
-    const res = await request(app).post('/delegate').send({
+    const res = await post('/delegate').send({
       sponsor: VALID_WALLET,
        agent: VALID_WALLET_2
     });
@@ -207,7 +219,7 @@ describe('POST /delegate', () => {
   });
 
   it('rejects negative amount with 400', async () => {
-    const res = await request(app).post('/delegate').send({
+    const res = await post('/delegate').send({
       sponsor: VALID_WALLET,
        agent: VALID_WALLET_2,
        amount: -1
@@ -218,7 +230,7 @@ describe('POST /delegate', () => {
 
 describe('POST /revoke', () => {
   it('rejects missing sponsor with 400', async () => {
-    const res = await request(app).post('/revoke').send({ agent: VALID_WALLET });
+    const res = await post('/revoke').send({ agent: VALID_WALLET });
     expect(res.status).toBe(400);
   });
 });
@@ -292,6 +304,14 @@ describe('GET /health, /ready, /version, /metrics, /openapi.json', () => {
 });
 
 describe('Idempotency-Key middleware', () => {
+  it('returns 400 when Idempotency-Key is missing on a mutating request', async () => {
+    const res = await request(app)
+      .post('/counterparty-check')
+      .send({ buyer: VALID_WALLET });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/Idempotency-Key/);
+  });
+
   it('returns 400 for an invalid Idempotency-Key', async () => {
     const res = await request(app)
       .post('/counterparty-check')
@@ -321,10 +341,19 @@ describe('CORS', () => {
 
   it('echoes a configured origin', async () => {
     // Default CORS_ALLOWED_ORIGINS is "*"; production deploys set a
-    // comma-separated allow-list. Verify the header is present (either
+    // comma-separated origin allow-list. Verify the header is present (either
     // wildcard or echoed origin).
     const res = await request(app).get('/health').set('Origin', 'https://app.example.com');
     expect(res.headers['access-control-allow-origin']).toBeDefined();
+  });
+
+  it('permits Idempotency-Key, x-payment, and HMAC headers in CORS preflight', async () => {
+    const res = await request(app)
+      .options('/counterparty-check')
+      .set('Access-Control-Request-Headers', 'idempotency-key,x-payment,x-auth-signature');
+    expect(res.headers['access-control-allow-headers']).toMatch(/idempotency-key/i);
+    expect(res.headers['access-control-allow-headers']).toMatch(/x-payment/i);
+    expect(res.headers['access-control-allow-headers']).toMatch(/x-auth-signature/i);
   });
 });
 
@@ -334,7 +363,46 @@ describe('JSON body size limit', () => {
     const res = await request(app)
       .post('/counterparty-check')
       .set('Content-Type', 'application/json')
+      .set('Idempotency-Key', 'oversize_test_1')
       .send({ buyer: VALID_WALLET, garbage: huge });
     expect([413, 400]).toContain(res.status);
+  });
+});
+
+describe('Webhook URL validation', () => {
+  it('rejects loopback URLs', async () => {
+    const res = await post('/reputation/subscribe').send({
+      wallet: VALID_WALLET,
+      url: 'http://localhost:6379/hook',
+    });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/loopback|private/i);
+  });
+
+  it('rejects AWS metadata URLs', async () => {
+    const res = await post('/reputation/subscribe').send({
+      wallet: VALID_WALLET,
+      url: 'http://169.254.169.254/latest/meta-data/',
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it('rejects userinfo URLs', async () => {
+    const res = await post('/reputation/subscribe').send({
+      wallet: VALID_WALLET,
+      url: 'https://user:pass@example.com/hook',
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it('accepts a valid https URL and returns a subscriber with secret', async () => {
+    const res = await post('/reputation/subscribe').send({
+      wallet: VALID_WALLET,
+      url: 'https://example.com/hook',
+    });
+    expect(res.status).toBe(201);
+    expect(res.body).toHaveProperty('id');
+    expect(res.body).toHaveProperty('secret');
+    expect(res.body.secret).toMatch(/^[a-f0-9]{64}$/);
   });
 });

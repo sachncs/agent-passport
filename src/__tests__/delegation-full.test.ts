@@ -37,12 +37,14 @@ vi.mock('../lib/algorand-client', () => ({
 
 vi.mock('../lib/timeout', () => ({
   fetchWithTimeout: vi.fn(),
+  withTimeout: vi.fn(async (promise: Promise<unknown>) => promise),
 }));
 
 vi.mock('../config', () => ({
   config: {
     indexerUrl: 'https://testnet-idx.algonode.cloud:443',
     registryAppId: 12345,
+    requestTimeoutMs: 10_000,
   },
 }));
 

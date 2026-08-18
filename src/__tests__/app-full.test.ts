@@ -28,6 +28,8 @@ vi.mock('../lib/idempotency', () => ({
 }));
 
 vi.mock('../lib/metrics', () => ({
+  recordCacheHit: vi.fn(),
+  recordCacheMiss: vi.fn(),
   recordCounterpartyCheck: vi.fn(),
   recordDiscoverySearch: vi.fn(),
   recordUnderwritingDecision: vi.fn(),
@@ -82,10 +84,19 @@ vi.mock('../lib/openapi', () => ({
 }));
 
 vi.mock('../lib/webhooks', () => ({
-  addSubscriber: vi.fn(() => ({ id: 'sub-1', wallet: 'w', url: 'http://x', createdAt: '' })),
+  addSubscriber: vi.fn(() => ({ id: 'sub-1', wallet: 'w', url: 'http://x', createdAt: '', secret: 'sec' })),
   removeSubscriber: vi.fn(() => true),
   listSubscribers: vi.fn(() => []),
   fireWebhook: vi.fn(() => Promise.resolve()),
+  validateWebhookUrl: vi.fn((url: string) => {
+    try {
+      const u = new URL(url);
+      if (u.protocol !== 'http:' && u.protocol !== 'https:') return { ok: false, reason: 'protocol' };
+      if (u.username || u.password) return { ok: false, reason: 'userinfo' };
+      if (u.hash) return { ok: false, reason: 'fragment' };
+      return { ok: true };
+    } catch { return { ok: false, reason: 'malformed' }; }
+  }),
 }));
 
 vi.mock('../lib/algorand-client', () => ({
