@@ -87,28 +87,35 @@ export const x402VerificationDurationSeconds = new client.Histogram({
 });
 
 // ── Smart-contract metrics ──────────────────────────────────────
+// Each contract event label includes the Algorand network (testnet /
+// mainnet) so a single Prometheus scrape distinguishes them. (L3)
+const NETWORK = process.env.ALGO_NETWORK || 'testnet';
 
 export const contractEndorsementsTotal = new client.Counter({
   name: `${PREFIX}contract_endorsements_total`,
   help: 'Total on-chain endorsement events',
+  labelNames: ['network'] as const,
   registers: [baseRegistry],
 });
 
 export const contractRevocationsTotal = new client.Counter({
   name: `${PREFIX}contract_revocations_total`,
   help: 'Total on-chain revocation events',
+  labelNames: ['network'] as const,
   registers: [baseRegistry],
 });
 
 export const contractDisputesTotal = new client.Counter({
   name: `${PREFIX}contract_disputes_total`,
   help: 'Total on-chain dispute events',
+  labelNames: ['network'] as const,
   registers: [baseRegistry],
 });
 
 export const contractSuccessEventsTotal = new client.Counter({
   name: `${PREFIX}contract_success_events_total`,
   help: 'Total on-chain success events',
+  labelNames: ['network'] as const,
   registers: [baseRegistry],
 });
 
@@ -218,10 +225,10 @@ type ContractEventType = 'endorsement' | 'revocation' | 'dispute' | 'success';
 
 export function recordContractEvent(event: ContractEventType): void {
   switch (event) {
-    case 'endorsement': contractEndorsementsTotal.inc(); break;
-    case 'revocation': contractRevocationsTotal.inc(); break;
-    case 'dispute': contractDisputesTotal.inc(); break;
-    case 'success': contractSuccessEventsTotal.inc(); break;
+    case 'endorsement': contractEndorsementsTotal.inc({ network: NETWORK }); break;
+    case 'revocation': contractRevocationsTotal.inc({ network: NETWORK }); break;
+    case 'dispute': contractDisputesTotal.inc({ network: NETWORK }); break;
+    case 'success': contractSuccessEventsTotal.inc({ network: NETWORK }); break;
     default: {
       const _exhaustive: never = event;
       throw new Error(`Unhandled contract event: ${String(_exhaustive)}`);
