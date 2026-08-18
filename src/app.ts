@@ -32,6 +32,7 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { hmacAuth, HMAC_BYPASS_PATHS, isHmacAuthEnabled } from './lib/hmac-auth';
 import { setRateLimitOverrides } from './lib/security';
+import { requestDeadlineMiddleware } from './lib/request-deadline';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -62,6 +63,7 @@ app.use(helmet());
 // Request ID and logging
 app.use(requestIdMiddleware);
 app.use(requestLoggingMiddleware);
+app.use(requestDeadlineMiddleware);
 
 // CORS with configurable origins
 app.use(corsMiddleware({ origin: config.corsAllowedOrigins }));

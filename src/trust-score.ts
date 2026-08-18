@@ -12,6 +12,7 @@ import {
 } from './lib/constants';
 import { TTLCache } from './lib/cache';
 import { singleflight } from './lib/singleflight';
+import { recordTrustScoreDuration } from './lib/metrics';
 
 const INDEXER_URL = config.indexerUrl;
 
@@ -425,6 +426,8 @@ async function scoreWalletInternal(
 ): Promise<WalletTrustScore | null> {
   if (!isValidWallet(wallet)) return null;
 
+  const t0 = process.hrtime.bigint();
+
   const [accountInfo, txHistory] = await Promise.all([
     fetchAccountInfo(wallet, fresh),
     fetchTransactionHistory(wallet, fresh),
@@ -481,6 +484,9 @@ async function scoreWalletInternal(
   const riskLevel = classifyRisk(adjustedTrustScore);
   const recommendedLimit = computeRecommendedLimit(adjustedTrustScore);
   const explanation = generateExplanation(onChain, adjustedTrustScore);
+
+  const durationMs = Number(process.hrtime.bigint() - t0) / 1e6;
+  recordTrustScoreDuration(durationMs, riskLevel);
 
   return {
     wallet,

@@ -5,6 +5,7 @@ import { logger } from './lib/logger';
 import { isValidWallet, MICRO_ALGO } from './lib/constants';
 import { TTLCache } from './lib/cache';
 import { scoreWallet } from './trust-score';
+import { recordGraphTraversal } from './lib/metrics';
 
 const INDEXER_URL = config.indexerUrl;
 
@@ -176,6 +177,8 @@ export async function analyzeTrustGraph(
 ): Promise<TrustGraphResult | null> {
   if (!isValidWallet(wallet)) return null;
 
+  const t0 = process.hrtime.bigint();
+
   const allEdges: GraphEdge[] = [];
   const visited = new Map<string, GraphNode>();
   const queue: Array<{ address: string; depth: number }> = [
@@ -305,6 +308,9 @@ export async function analyzeTrustGraph(
   if (whatIfs.length > 0) {
     explanation.push(`${whatIfs.length} what-if scenario${whatIfs.length > 1 ? 's' : ''} analyzed`);
   }
+
+  const durationMs = Number(process.hrtime.bigint() - t0) / 1e6;
+  recordGraphTraversal(durationMs, nodeCount);
 
   return {
     wallet,
