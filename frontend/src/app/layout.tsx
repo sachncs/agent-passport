@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
 
 import { AppSidebar, SidebarWrapper } from "@/components/sidebar"
@@ -59,6 +60,7 @@ export default function RootLayout({
                   </footer>
                 </SidebarInset>
               </SidebarWrapper>
+              <Toaster position="top-right" />
             </TooltipProvider>
           </QueryProvider>
         </ThemeProvider>
