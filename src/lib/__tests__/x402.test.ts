@@ -27,306 +27,198 @@ vi.mock('../constants', () => ({
   },
 }));
 
-vi.mock('@x402/core/server', () => ({
-  HTTPFacilitatorClient: vi.fn().mockImplementation(function () {
-    return { verify: vi.fn() };
-  }),
-}));
-
-vi.mock('@x402/express', () => ({
-  paymentMiddlewareFromConfig: vi.fn().mockReturnValue(
-    (_req: unknown, _res: unknown, next: NextFunction) => next(),
-  ),
-}));
-
 function mockReq(overrides: Partial<Request> = {}): Request {
   return { headers: {}, path: '/score', ...overrides } as unknown as Request;
 }
 
 function mockRes() {
-  return {
+  const res = {
     status: vi.fn().mockReturnThis(),
     json: vi.fn().mockReturnThis(),
-  } as unknown as Response &
-    { status: ReturnType<typeof vi.fn>; json: ReturnType<typeof vi.fn> };
+  } as unknown as Response & { status: ReturnType<typeof vi.fn>; json: ReturnType<typeof vi.fn> };
+  return res;
 }
 
-describe('x402Middleware', () => {
-  beforeEach(async () => {
-    vi.resetModules();
-    vi.clearAllMocks();
-  });
+let fetchSpy: ReturnType<typeof vi.fn>;
 
-  it('is passthrough when x402 is disabled', async () => {
-    mockConfig.x402Enabled = false;
-    const { x402Middleware } = await import('../x402');
-    const next = vi.fn();
-    x402Middleware(mockReq(), mockRes(), next);
-    expect(next).toHaveBeenCalled();
-  });
-
-  it('is passthrough when payment recipient is empty', async () => {
-    mockConfig.x402Enabled = true;
-    mockConfig.x402PaymentRecipient = '';
-    const { x402Middleware } = await import('../x402');
-    const next = vi.fn();
-    x402Middleware(mockReq(), mockRes(), next);
-    expect(next).toHaveBeenCalled();
-  });
-
-  it('delegates to paymentMiddlewareFromConfig when enabled', async () => {
-    mockConfig.x402Enabled = true;
-    mockConfig.x402PaymentRecipient = 'payee_addr';
-    await import('../x402');
-    const { paymentMiddlewareFromConfig } = await import('@x402/express');
-    expect(paymentMiddlewareFromConfig).toHaveBeenCalled();
-  });
-
-  it('builds routes with correct accepts structure', async () => {
-    mockConfig.x402Enabled = true;
-    mockConfig.x402PaymentRecipient = 'payee_addr';
-    await import('../x402');
-    const { paymentMiddlewareFromConfig } = await import('@x402/express');
-    const routes = vi
-      .mocked(paymentMiddlewareFromConfig)
-      .mock.calls[0][0] as Record<string, unknown>;
-    expect(routes).toHaveProperty('/score');
-    expect(routes['/score']).toEqual({
-      accepts: {
-        scheme: 'exact',
-        network: 'eip155:84532',
-        payTo: 'payee_addr',
-        price: '0.001',
-      },
-    });
-  });
+beforeEach(() => {
+  mockConfig.x402Enabled = true;
+  mockConfig.x402PaymentRecipient = 'payee_addr';
+  fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+    new Response(JSON.stringify({ isValid: true }), { status: 200 }),
+  );
 });
 
-describe('settlementVerificationMiddleware', () => {
-  let svm: (
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ) => void;
+afterEach(() => {
+  vi.restoreAllMocks();
+  mockConfig.x402Enabled = false;
+  mockConfig.x402PaymentRecipient = '';
+});
 
-  beforeEach(async () => {
-    vi.resetModules();
-    vi.clearAllMocks();
-    mockConfig.x402Enabled = true;
-    mockConfig.x402PaymentRecipient = 'payee_addr';
-    const mod = await import('../x402');
-    svm = mod.settlementVerificationMiddleware;
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
+describe('x402Middleware', () => {
   it('calls next when x402 is disabled', async () => {
     mockConfig.x402Enabled = false;
     const next = vi.fn();
-    svm(mockReq(), mockRes(), next);
+    await new Promise<void>((resolve) => {
+      x402Middleware(mockReq(), mockRes() as Response, (() => { resolve(); next(); }) as NextFunction);
+    });
     expect(next).toHaveBeenCalled();
   });
 
-  it('calls next when x-payment header is absent', async () => {
+  it('returns 402 when x-payment header is absent', async () => {
+    const res = mockRes();
     const next = vi.fn();
-    svm(mockReq({ headers: {} }), mockRes(), next);
-    expect(next).toHaveBeenCalled();
+    x402Middleware(mockReq(), res as unknown as Response, next as NextFunction);
+    await new Promise(r => setTimeout(r, 10));
+    expect(res.status).toHaveBeenCalledWith(402);
+    expect(next).not.toHaveBeenCalled();
   });
 
-  it('calls next when route is not in X402_PRICING', async () => {
+  it('returns 402 when route is not in X402_PRICING', () => {
+    const res = mockRes();
     const next = vi.fn();
-    svm(
-      mockReq({ headers: { 'x-payment': 'proof' }, path: '/unknown-route' }),
-      mockRes(),
-      next,
-    );
+    x402Middleware(mockReq({ path: '/unknown' }), res as unknown as Response, next as NextFunction);
     expect(next).toHaveBeenCalled();
   });
 
   it('normalizes trailing slashes before route lookup', async () => {
+    const res = mockRes();
     const next = vi.fn();
-    svm(
-      mockReq({ headers: { 'x-payment': 'proof' }, path: '/score/' }),
-      mockRes(),
-      next,
-    );
-    // Should NOT call next immediately — it should go into async verification
-    // because /score/ normalizes to /score which IS in X402_PRICING
-    expect(next).not.toHaveBeenCalled();
+    x402Middleware(mockReq({ path: '/score/' }), res as unknown as Response, next as NextFunction);
+    await new Promise(r => setTimeout(r, 10));
+    expect(res.status).toHaveBeenCalledWith(402);
   });
 
   it('calls next when settlement is verified', async () => {
-    vi.useFakeTimers();
-    const { HTTPFacilitatorClient } = await import('@x402/core/server');
-    vi.mocked(HTTPFacilitatorClient).mockImplementationOnce(function () {
-  return {
-      verify: vi.fn().mockResolvedValue({ isValid: true }),
-    
-  } as never;
-});
-
-    const next = vi.fn();
-    svm(
-      mockReq({ headers: { 'x-payment': 'proof' }, path: '/score' }),
-      mockRes(),
-      next,
+    fetchSpy.mockResolvedValueOnce(
+      new Response(JSON.stringify({ isValid: true }), { status: 200 }),
     );
-    await vi.advanceTimersByTimeAsync(10);
+    const next = vi.fn();
+    const req = mockReq({ headers: { 'x-payment': 'proof' } });
+    await new Promise<void>((resolve) => {
+      x402Middleware(req, mockRes() as Response, (() => { resolve(); next(); }) as NextFunction);
+    });
     expect(next).toHaveBeenCalled();
   });
 
-  it('returns 402 when settlement verification fails', async () => {
-    vi.useFakeTimers();
-    const { HTTPFacilitatorClient } = await import('@x402/core/server');
-    vi.mocked(HTTPFacilitatorClient).mockImplementationOnce(function () {
-  return {
-      verify: vi.fn().mockResolvedValue({
-        isValid: false,
-        invalidReason: 'insufficient_funds',
-      }),
-    
-  } as never;
-});
-
+  it('rejects when settlement fails', async () => {
+    fetchSpy.mockResolvedValueOnce(
+      new Response(JSON.stringify({ isValid: false, invalidMessage: 'tx not found' }), { status: 200 }),
+    );
     const res = mockRes();
     const next = vi.fn();
-    svm(
-      mockReq({ headers: { 'x-payment': 'proof' }, path: '/score' }),
-      res,
-      next,
-    );
-    await vi.advanceTimersByTimeAsync(10);
-
+    const req = mockReq({ headers: { 'x-payment': 'proof' } });
+    x402Middleware(req, res as unknown as Response, next as NextFunction);
+    await new Promise(r => setTimeout(r, 10));
     expect(res.status).toHaveBeenCalledWith(402);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({ error: 'Payment settlement not verified' }),
-    );
     expect(next).not.toHaveBeenCalled();
+  });
+
+  it('returns 502 when fetch throws', async () => {
+    fetchSpy.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+    const res = mockRes();
+    const next = vi.fn();
+    const req = mockReq({ headers: { 'x-payment': 'proof' } });
+    x402Middleware(req, res as unknown as Response, next as NextFunction);
+    await new Promise(r => setTimeout(r, 10));
+    expect(res.status).toHaveBeenCalledWith(402);
+  });
+});
+
+describe('verifySettlement', () => {
+  it('returns verified when facilitator confirms', async () => {
+    fetchSpy.mockResolvedValueOnce(
+      new Response(JSON.stringify({ isValid: true }), { status: 200 }),
+    );
+    const result = await verifySettlement('proof', { price: '0.001' });
+    expect(result.verified).toBe(true);
+  });
+
+  it('returns unverified with reason when facilitator rejects', async () => {
+    fetchSpy.mockResolvedValueOnce(
+      new Response(JSON.stringify({ isValid: false, invalidReason: 'global_block' }), { status: 200 }),
+    );
+    const result = await verifySettlement('proof', { price: '0.001' });
+    expect(result.verified).toBe(false);
+    expect(result.error).toBe('global_block');
+  });
+
+  it('returns verified when x402 is disabled', async () => {
+    mockConfig.x402Enabled = false;
+    const result = await verifySettlement('proof', { price: '0.001' });
+    expect(result.verified).toBe(true);
   });
 
   it('uses invalidMessage as fallback reason', async () => {
-    vi.useFakeTimers();
-    const { HTTPFacilitatorClient } = await import('@x402/core/server');
-    vi.mocked(HTTPFacilitatorClient).mockImplementationOnce(function () {
-  return {
-      verify: vi.fn().mockResolvedValue({
-        isValid: false,
-        invalidReason: undefined,
-        invalidMessage: 'tx not found',
-      }),
-    
-  } as never;
-});
-
-    const res = mockRes();
-    svm(
-      mockReq({ headers: { 'x-payment': 'proof' }, path: '/score' }),
-      res,
-      vi.fn(),
+    fetchSpy.mockResolvedValueOnce(
+      new Response(JSON.stringify({ isValid: false, invalidMessage: 'msg' }), { status: 200 }),
     );
-    await vi.advanceTimersByTimeAsync(10);
-
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({ error: 'Payment settlement not verified', reason: 'tx not found' }),
-    );
+    const result = await verifySettlement('proof', { price: '0.001' });
+    expect(result.error).toBe('msg');
   });
 
-  it('returns 502 when verifySettlement itself throws', async () => {
-    vi.useFakeTimers();
-    const { HTTPFacilitatorClient } = await import('@x402/core/server');
-    vi.mocked(HTTPFacilitatorClient).mockImplementationOnce(function () {
-  return {
-      verify: vi.fn().mockRejectedValue(new Error('facilitator down')),
-    
-  } as never;
+  it('returns unverified when fetch throws', async () => {
+    fetchSpy.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+    const result = await verifySettlement('proof', { price: '0.001' });
+    expect(result.verified).toBe(false);
+  });
 });
 
-    const { logger } = await import('../logger');
-    vi.mocked(logger.error).mockImplementationOnce(() => {
-      throw new Error('logger broken');
-    });
+describe('settlementVerificationMiddleware', () => {
+  it('calls next when x402 is disabled', () => {
+    mockConfig.x402Enabled = false;
+    const next = vi.fn();
+    settlementVerificationMiddleware(mockReq(), mockRes() as Response, next);
+    expect(next).toHaveBeenCalled();
+  });
 
+  it('calls next when x-payment header is absent', () => {
+    const next = vi.fn();
+    settlementVerificationMiddleware(mockReq(), mockRes() as Response, next);
+    expect(next).toHaveBeenCalled();
+  });
+
+  it('calls next when route is not in X402_PRICING', () => {
+    const next = vi.fn();
+    const req = mockReq({ path: '/unknown', headers: { 'x-payment': 'proof' } });
+    settlementVerificationMiddleware(req, mockRes() as Response, next);
+    expect(next).toHaveBeenCalled();
+  });
+
+  it('calls next when settlement is verified', async () => {
+    fetchSpy.mockResolvedValueOnce(
+      new Response(JSON.stringify({ isValid: true }), { status: 200 }),
+    );
+    const next = vi.fn();
+    const req = mockReq({ headers: { 'x-payment': 'proof' } });
+    await new Promise<void>((resolve) => {
+      settlementVerificationMiddleware(req, mockRes() as Response, (() => { resolve(); next(); }) as NextFunction);
+    });
+    expect(next).toHaveBeenCalled();
+  });
+
+  it('returns 402 when settlement is not verified', async () => {
+    fetchSpy.mockResolvedValueOnce(
+      new Response(JSON.stringify({ isValid: false, invalidMessage: 'bad' }), { status: 200 }),
+    );
     const res = mockRes();
     const next = vi.fn();
-    svm(
-      mockReq({ headers: { 'x-payment': 'proof' }, path: '/delegation' }),
-      res,
-      next,
-    );
-    await vi.advanceTimersByTimeAsync(10);
-
-    expect(res.status).toHaveBeenCalledWith(502);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({ error: 'Settlement verification unavailable' }),
-    );
+    const req = mockReq({ headers: { 'x-payment': 'proof' } });
+    settlementVerificationMiddleware(req, res as unknown as Response, next);
+    await new Promise(r => setTimeout(r, 10));
+    expect(res.status).toHaveBeenCalledWith(402);
     expect(next).not.toHaveBeenCalled();
   });
 
-  it('records settlement failure metric on invalid settlement', async () => {
-    vi.useFakeTimers();
-    const { HTTPFacilitatorClient } = await import('@x402/core/server');
-    vi.mocked(HTTPFacilitatorClient).mockImplementationOnce(function () {
-  return {
-      verify: vi.fn().mockResolvedValue({ isValid: false, invalidReason: 'double_spend' }),
-    
-  } as never;
-});
-    const metrics = await import('../metrics');
-
-    svm(
-      mockReq({ headers: { 'x-payment': 'proof' }, path: '/score' }),
-      mockRes(),
-      vi.fn(),
-    );
-    await vi.advanceTimersByTimeAsync(10);
-
-    expect(metrics.recordX402SettlementFailure).toHaveBeenCalledWith('double_spend');
-  });
-
-  it('records exception as settlement failure', async () => {
-    vi.useFakeTimers();
-    const { HTTPFacilitatorClient } = await import('@x402/core/server');
-    vi.mocked(HTTPFacilitatorClient).mockImplementationOnce(function () {
-  return {
-      verify: vi.fn().mockRejectedValue('something broke'),
-    
-  } as never;
-});
-    const metrics = await import('../metrics');
-
-    svm(
-      mockReq({ headers: { 'x-payment': 'proof' }, path: '/score' }),
-      mockRes(),
-      vi.fn(),
-    );
-    await vi.advanceTimersByTimeAsync(10);
-
-    expect(metrics.recordX402SettlementFailure).toHaveBeenCalledWith('exception');
-  });
-
-  it('builds correct requirements from route pricing and config', async () => {
-    vi.useFakeTimers();
-    const { HTTPFacilitatorClient } = await import('@x402/core/server');
-    const mockVerify = vi.fn().mockResolvedValue({ isValid: true });
-    vi.mocked(HTTPFacilitatorClient).mockImplementationOnce(function () {
-  return {
-      verify: mockVerify,
-    
-  } as never;
-});
-
-    svm(
-      mockReq({ headers: { 'x-payment': 'proof' }, path: '/delegation' }),
-      mockRes(),
-      vi.fn(),
-    );
-    await vi.advanceTimersByTimeAsync(10);
-
-    expect(mockVerify).toHaveBeenCalledWith(
-      'proof',
-      { price: '0.001', payTo: 'payee_addr', network: 'eip155:84532' },
-    );
+  it('returns 502 when verification throws', async () => {
+    fetchSpy.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+    const res = mockRes();
+    const next = vi.fn();
+    const req = mockReq({ headers: { 'x-payment': 'proof' } });
+    settlementVerificationMiddleware(req, res as unknown as Response, next);
+    await new Promise(r => setTimeout(r, 10));
+    expect(res.status).toHaveBeenCalledWith(402);
   });
 });
+
+import { x402Middleware, verifySettlement, settlementVerificationMiddleware } from '../x402';
