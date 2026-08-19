@@ -24,37 +24,37 @@ truth for architecture, algorithms, operations, and contributing.
 
 - **Composite trust score (0–100)** — explainable sub-scores (age, activity,
   volume, velocity, compliance). See
-  [docs/concepts/trust-scoring.md](docs/concepts/trust-scoring.md).
+  [docs/concepts.md#1-trust-scoring](docs/concepts.md#1-trust-scoring).
 - **Delegated trust graph** — cycle detection, depth attenuation, and
   quality-weighted sponsor counts. See
-  [docs/concepts/delegation.md](docs/concepts/delegation.md).
+  [docs/concepts.md#2-delegation-trust](docs/concepts.md#2-delegation-trust).
 - **Underwriting decisions** — credit capacity estimation, default
   propagation, $100k system exposure cap. See
-  [docs/concepts/credit-and-underwriting.md](docs/concepts/credit-and-underwriting.md).
+  [docs/concepts.md#5-credit--underwriting](docs/concepts.md#5-credit--underwriting).
 - **Sybil detection** — 12 signals (clustering, timing, amount fingerprint,
   funding correlation, balance similarity, interaction density, circular
   activity, plus 4 graph-traversal signals). See
-  [docs/concepts/sybil-detection.md](docs/concepts/sybil-detection.md).
+  [docs/concepts.md#3-sybil-detection](docs/concepts.md#3-sybil-detection).
 - **On-chain reputation events** — `registry.teal` and `reputation.teal`
   Algorand contracts. See
-  [docs/architecture/smart-contracts.md](docs/architecture/smart-contracts.md).
+  [docs/architecture.md#4-smart-contracts](docs/architecture.md#4-smart-contracts).
 - **Optional x402 micropayments** — pay-per-query in USDC, settled
   on-chain, with replay protection.
 - **Stateless service** — every request fetches from Algorand and caches
   in-memory for 60 s. No database, no message queue, no shared state.
   Scale horizontally by adding pods.
-- **Production-grade observability** — Prometheus metrics, 21 alert
+- **Production-grade observability** — Prometheus metrics, 19 alert
   rules, 17-panel Grafana dashboard, runbooks per alert, two SLO profiles.
-  See [docs/operations/observability.md](docs/operations/observability.md).
+  See [docs/operations.md#5-observability](docs/operations.md#5-observability).
 - **First-class SDKs** — TypeScript (`@agent-passport/sdk`) and Python
   (`agent-passport-sdk`), both with typed errors, idempotency helpers,
   and x402 payment callbacks. See
-  [docs/development/sdk-typescript.md](docs/development/sdk-typescript.md)
-  and [docs/development/sdk-python.md](docs/development/sdk-python.md).
+  [../sdk/README.md](../sdk/README.md)
+  and [../sdk/python/README.md](../sdk/python/README.md).
 - **Security hardened** — Helmet headers, 600 req/min/IP rate limit, CORS,
   100 KB body limit, 30 s request timeout, per-request UUID,
   `Idempotency-Key` middleware, on-chain payment verification. See
-  [docs/security/threat-model.md](docs/security/threat-model.md).
+  [docs/security.md](docs/security.md).
 
 ---
 
@@ -93,7 +93,7 @@ docker run --rm -p 3000:3000 --env-file .env agent-passport:0.1.0
 ```
 
 For production deployment, see
-[docs/operations/deployment.md](docs/operations/deployment.md).
+[docs/operations.md#4-deployment](docs/operations.md#4-deployment).
 
 **Requirements:** Node.js ≥ 20.
 
@@ -122,7 +122,7 @@ curl -s "http://localhost:3000/underwrite?wallet=GD64YIY3TWGDMCNPP553DZPPR6LDUSF
 ```
 
 A 5-minute walkthrough is in
-[docs/introduction/getting-started.md](docs/introduction/getting-started.md).
+[../README.md](../README.md#installation).
 
 ### Node.js / TypeScript SDK
 
@@ -155,8 +155,8 @@ print(client.get_score("GD64YIY3TWGDMCNPP553DZPPR6LDUSFQOIJVFDPPXWEG3FVOJCCDBBHU
 ```
 
 Full SDK reference:
-[docs/development/sdk-typescript.md](docs/development/sdk-typescript.md)
-and [docs/development/sdk-python.md](docs/development/sdk-python.md).
+[../sdk/README.md](../sdk/README.md)
+and [../sdk/python/README.md](../sdk/python/README.md).
 
 ---
 
@@ -167,7 +167,7 @@ All configuration is via environment variables. Copy `.env.example` to
 `.gitignore`.
 
 The canonical env-var table (every var, every default, every scope) is
-at [docs/operations/environment-variables.md](docs/operations/environment-variables.md).
+at [docs/operations.md#1-environment-variables](docs/operations.md#1-environment-variables).
 
 ### Service
 
@@ -298,7 +298,7 @@ agent-passport/
 │   ├── trust-graph.ts      # Trust graph analytics, exposure, what-ifs
 │   ├── counterparty.ts     # Merchant counterparty check
 │   ├── registry.ts         # On-chain delegate + revoke
-│   ├── __tests__/          # 1 145 unit tests + 8 integration tests
+│   ├── __tests__/          # 58 unit test files (1 569 tests passing)
 │   └── lib/                # 13 helper modules (cache, idempotency, x402, …)
 ├── sdk/                    # TypeScript + Python SDKs
 │   ├── src/                # TypeScript SDK
@@ -309,8 +309,16 @@ agent-passport/
 ├── contracts/              # Algorand TEAL contracts
 │   ├── registry.teal       # Delegation registry
 │   └── reputation.teal     # Reputation events
-├── scripts/                # 9 operational CLIs
-├── docs/                   # Full documentation (see docs/README.md)
+├── scripts/                # Operational CLIs
+├── apps/frontend/               # Vite + React + shadcn/ui frontend
+├── docs/                   # Flattened docs (README + 5 topical .md + api/)
+│   ├── README.md          # Index
+│   ├── architecture.md    # System design, middleware, modules, scaling
+│   ├── api.md             # HTTP endpoints, error codes, health/metrics
+│   ├── concepts.md        # Trust, delegation, sybil, reputation, underwriting
+│   ├── security.md        # Threat model, defence-in-depth, HMAC, limits
+│   ├── operations.md      # Env vars, deploy, observability, SLOs, alerts
+│   └── api/               # OpenAPI spec, Postman collection
 ├── alerts/                 # Prometheus / Alertmanager / Grafana / runbooks
 ├── load-tests/             # k6 scenarios + helpers
 ├── public/                 # Static dashboard HTML
@@ -326,7 +334,7 @@ agent-passport/
 npm run dev              # Start with hot reload
 npm run build            # Build TypeScript
 npm run typecheck        # Type checking
-npm test                 # All unit tests (1 145 passing)
+npm test                 # All unit tests (1 569 passing)
 npm run test:integration # Live testnet integration suite
 npm run lint             # ESLint
 ```
@@ -355,7 +363,7 @@ cd load-tests
 LOAD_TEST_MODE=1 ./run-all.sh
 ```
 
-See [docs/operations/load-testing.md](docs/operations/load-testing.md)
+See [docs/operations.md#10-load-testing](docs/operations.md#10-load-testing)
 for thresholds and output interpretation.
 
 ### Code Style
@@ -384,7 +392,7 @@ chore: bump @x402/core to 2.18.0
 ## Testing
 
 ```bash
-npm test                       # 1 145 unit tests
+npm test                       # 58 test files (1 569 tests)
 npm run test:integration       # Live Algorand testnet integration
 npm run test:coverage          # Unit tests with coverage
 ```
@@ -419,7 +427,7 @@ npm run build --workspaces   # All workspace packages
 ## Deployment
 
 The service is **production-ready** and fully stateless. See
-[docs/operations/deployment.md](docs/operations/deployment.md) for the
+[docs/operations.md#4-deployment](docs/operations.md#4-deployment) for the
 full checklist.
 
 The default deployment works against the public Algorand testnet out of
@@ -432,7 +440,7 @@ tighter SLOs (P95 < 500 ms), use a low-latency endpoint.
 ## Observability
 
 Prometheus metrics exposed at `/metrics`. Full inventory in
-  [docs/operations/observability.md](docs/operations/observability.md).
+  [docs/operations.md#5-observability](docs/operations.md#5-observability).
 Two SLO profiles:
 
 - `alerts/slo-prod-relaxed.yml` — default (P95<1.5s, 99% availability)
@@ -474,7 +482,7 @@ Grafana dashboard JSON in `alerts/grafana-dashboard.json` (17 panels).
   operator wallet + KMS guidance.
 - **v0.2.0** (next) — sanctions screening provider integration
   (Chainalysis / Elliptic) — see
-  [docs/security/sanctions-integration.md](docs/security/sanctions-integration.md),
+  [docs/security.md](docs/security.md),
   Redis-backed idempotency store for multi-replica deployments, webhook
   subscriptions for reputation event consumers.
 - **Backlog** — gRPC interface alongside HTTP, multi-chain adapters
@@ -505,7 +513,7 @@ are expected to uphold this code. Report unacceptable behaviour to
 Please do **not** file security vulnerabilities as public GitHub
 issues. See [SECURITY.md](SECURITY.md) for the disclosure policy and
 contact information. The full threat model is in
-[docs/security/threat-model.md](docs/security/threat-model.md).
+[docs/security.md](docs/security.md).
 
 ## License
 

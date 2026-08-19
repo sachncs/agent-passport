@@ -47,8 +47,8 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "tsx watch src/index.ts",
-    "lint": "eslint src/ apps/web/src",
-    "typecheck": "tsc --noEmit && pnpm --filter @agent-passport/web exec tsc --noEmit",
+    "lint": "eslint src/ apps/frontend/src",
+    "typecheck": "tsc --noEmit && pnpm --filter @agent-passport/frontend exec tsc --noEmit",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
@@ -64,18 +64,15 @@
     "check-reputation": "tsx scripts/check-reputation.ts",
     "dashboard": "echo 'Dashboard at http://localhost:3000/dashboard.html'",
     "benchmark": "vitest run src/__tests__/benchmark.test.ts --reporter=verbose",
-    "codegen:web-types": "pnpm --filter @agent-passport/web run codegen",
-    "web:dev": "pnpm --filter @agent-passport/web run dev",
-    "web:build": "pnpm --filter @agent-passport/web run build"
+    "codegen:web-types": "pnpm --filter @agent-passport/frontend run codegen",
+    "web:dev": "pnpm --filter @agent-passport/frontend run dev",
+    "web:build": "pnpm --filter @agent-passport/frontend run build"
   },
   "workspaces": [
     "apps/*",
     "sdk"
   ],
   "dependencies": {
-    "@x402/core": "^2.20.0",
-    "@x402/evm": "^2.20.0",
-    "@x402/express": "^2.20.0",
     "algosdk": "^3.2.0",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",

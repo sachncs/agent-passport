@@ -84,7 +84,7 @@ export function MonitorPage() {
           </code>
           <p className="text-xs text-muted-foreground">
             Includes agent_passport_* counters and histograms. See
-            docs/operations/observability.md for the full inventory.
+            docs/operations.md#5-observability for the full inventory.
           </p>
           <Button variant="outline" size="sm" asChild>
             <a href="/metrics" target="_blank" rel="noreferrer">Open /metrics</a>

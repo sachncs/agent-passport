@@ -292,18 +292,18 @@ Slugs are lowercase, hyphenated, and descriptive (e.g.
 ## Documentation Expectations
 
 - Public APIs in `src/app.ts` and any new route must be reflected in
-  `docs/api/openapi.yaml` and the [Postman collection](docs/api/postman-collection.json).
+  `docs/api.mdopenapi.yaml` and the [Postman collection](docs/api.mdpostman-collection.json).
 - New SDK methods require an entry in
-  [docs/development/sdk-typescript.md](docs/development/sdk-typescript.md)
-  (TS) or [docs/development/sdk-python.md](docs/development/sdk-python.md)
+  [../sdk/README.md](../sdk/README.md)
+  (TS) or [../sdk/python/README.md](../sdk/python/README.md)
   (Python) and a CHANGELOG entry.
 - New environment variables must be added to `.env.example` **and**
-  [docs/operations/environment-variables.md](docs/operations/environment-variables.md).
+  [docs/operations.md#1-environment-variables](docs/operations.md#1-environment-variables).
 - New Prometheus metrics must be documented in
-  [docs/operations/observability.md](docs/operations/observability.md)
+  [docs/operations.md#5-observability](docs/operations.md#5-observability)
   with label cardinality guidance.
 - New alerts must include a runbook under `alerts/runbooks/` and an entry
-  in [docs/operations/runbooks.md](docs/operations/runbooks.md).
+  in [docs/operations.md#7-alert-to-runbook-map](docs/operations.md#7-alert-to-runbook-map).
 
 ## Release Process
 

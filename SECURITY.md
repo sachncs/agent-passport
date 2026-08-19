@@ -92,7 +92,7 @@ please give us a reasonable window to patch before public disclosure.
 The full threat model — trust amplification, circular delegation, depth
 amplification, whale delegation, replay attacks, payment verification,
 rate limiting, idempotency, system exposure cap — is documented in
-[docs/security/threat-model.md](docs/security/threat-model.md). If you
+[docs/security.md](docs/security.md). If you
 are deploying Agent Passport in a security-sensitive context, read it
 first.
 

@@ -4,7 +4,7 @@
  * delegation, sybil, credit, reputation, underwriting, passport,
  * trust-graph}.counterparty.ts and friends. Single source of truth:
  * any drift between these schemas and the actual response shape will
- * show up in openapi-typescript generation in apps/web.
+ * show up in openapi-typescript generation in apps/frontend.
  *
  * Generated at startup; served at /openapi.json. (M13)
  */
@@ -470,7 +470,7 @@ export const openApiSpec = {
     description:
       'Stateless trust scoring, delegation, credit, sybil, reputation, ' +
       'and underwriting for AI agents on Algorand. Single source of truth: ' +
-      'apps/web consumes this spec via openapi-typescript codegen.',
+      'apps/frontend consumes this spec via openapi-typescript codegen.',
   },
   servers,
   paths,
@@ -482,7 +482,7 @@ export const openApiSpec = {
         name: 'X-Auth-Signature',
         description:
           'HMAC-SHA256 over METHOD\\nPATH\\nsha256(body)\\nTIMESTAMP\\nNONCE ' +
-          'with the per-tenant secret. See docs/security/hmac-auth.md.',
+          'with the per-tenant secret. See docs/security.md#hmac-auth.',
       },
       IdempotencyKey: {
         type: 'apiKey',

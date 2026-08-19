@@ -83,8 +83,8 @@ export function getSanctionsProvider(): SanctionsProvider {
 
 /**
  * Test-only injection point. Real deployments swap providers via a
- * future setSanctionsProvider() in the boot path (see docs/security/
- * sanctions-integration.md).
+ * future setSanctionsProvider() in the boot path (see docs/security.md
+ * § 14.5 Sanctions).
  */
 export function setSanctionsProvider(p: SanctionsProvider): void {
   provider = p;

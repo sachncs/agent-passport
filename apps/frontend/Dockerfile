@@ -2,21 +2,21 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY apps/web/package.json ./apps/web/
+COPY apps/frontend/package.json ./apps/frontend/
 COPY sdk/package.json ./sdk/
 
 RUN npm install -g pnpm@9.15.0 \
   && pnpm install --frozen-lockfile --ignore-scripts
 
-COPY apps/web ./apps/web
-COPY apps/web/tsconfig.json ./apps/web/
-RUN pnpm --filter @agent-passport/web run build
+COPY apps/frontend ./apps/frontend
+COPY apps/frontend/tsconfig.json ./apps/frontend/
+RUN pnpm --filter @agent-passport/frontend run build
 
 
 FROM nginx:1.27-alpine
 
-COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
-COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=builder /app/apps/frontend/dist /usr/share/nginx/html
+COPY apps/frontend/nginx.conf /etc/nginx/conf.d/default.conf
 
 # Run as non-root
 RUN addgroup -g 1001 -S appgroup \

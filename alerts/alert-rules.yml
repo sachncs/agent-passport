@@ -3,7 +3,7 @@
 # These rules define alerting thresholds for the Agent Passport service.
 # Deploy with Prometheus Alertmanager for production monitoring.
 #
-# Runbook URLs point to docs/operations/runbooks.md and the corresponding
+# Runbook URLs point to docs/operations.md#7-alert-to-runbook-map and the corresponding
 # sub-runnbook under alerts/runbooks/.
 
 groups:
