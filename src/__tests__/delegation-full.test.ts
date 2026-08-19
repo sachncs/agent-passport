@@ -36,7 +36,7 @@ vi.mock('../lib/algorand-client', () => ({
 }));
 
 vi.mock('../lib/timeout', () => ({
-  fetchWithTimeout: vi.fn(),
+  fetch: vi.fn(),
   withTimeout: vi.fn(async (promise: Promise<unknown>) => promise),
 }));
 
@@ -83,12 +83,13 @@ import {
   clearDelegationCache,
 } from '../delegation';
 import { algod } from '../lib/algorand-client';
-import { fetchWithTimeout } from '../lib/timeout';
+
 import { scoreWallet } from '../trust-score';
 
 const mockAlgod = vi.mocked(algod);
-const mockFetchWithTimeout = vi.mocked(fetchWithTimeout);
-const mockScoreWallet = vi.mocked(scoreWallet);
+const fetch = vi.fn<
+  (input: string | URL, init?: RequestInit) => Promise<Response>
+>();const mockScoreWallet = vi.mocked(scoreWallet);
 
 function mockIndexerResponse(transactions: unknown[]) {
   return {
@@ -112,6 +113,8 @@ function mockIndexerError() {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  fetch.mockReset();
+  vi.stubGlobal('fetch', fetch);
   clearDelegationCache();
   mockAlgod.accountInformation.mockReturnValue({
     do: vi.fn().mockResolvedValue({
@@ -124,6 +127,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 
 describe('scoreDelegation()', () => {
@@ -147,7 +151,7 @@ describe('scoreDelegation()', () => {
 
   describe('no delegations', () => {
     it('returns delegation score with zero depth', async () => {
-      mockFetchWithTimeout.mockResolvedValue(
+      fetch.mockResolvedValue(
         mockIndexerEmpty() as never,
       );
 
@@ -163,7 +167,7 @@ describe('scoreDelegation()', () => {
     });
 
     it('returns depth 0 explanation', async () => {
-      mockFetchWithTimeout.mockResolvedValue(
+      fetch.mockResolvedValue(
         mockIndexerEmpty() as never,
       );
 
@@ -179,7 +183,7 @@ describe('scoreDelegation()', () => {
 
   describe('with delegations', () => {
     it('computes delegation depth and sponsor count', async () => {
-      mockFetchWithTimeout.mockResolvedValue(
+      fetch.mockResolvedValue(
         mockIndexerResponse([
           {
             sender: VALID_WALLET,
@@ -203,7 +207,7 @@ describe('scoreDelegation()', () => {
     });
 
     it('filters out self-delegations', async () => {
-      mockFetchWithTimeout.mockResolvedValue(
+      fetch.mockResolvedValue(
         mockIndexerResponse([
           {
             sender: VALID_WALLET,
@@ -223,7 +227,7 @@ describe('scoreDelegation()', () => {
     });
 
     it('filters out invalid delegatee addresses', async () => {
-      mockFetchWithTimeout.mockResolvedValue(
+      fetch.mockResolvedValue(
         mockIndexerResponse([
           {
             sender: VALID_WALLET,
@@ -243,7 +247,7 @@ describe('scoreDelegation()', () => {
     });
 
     it('aggregates multiple delegations', async () => {
-      mockFetchWithTimeout.mockResolvedValue(
+      fetch.mockResolvedValue(
         mockIndexerResponse([
           {
             sender: VALID_WALLET,
@@ -277,18 +281,18 @@ describe('scoreDelegation()', () => {
 
   describe('fresh mode', () => {
     it('clears cache and fetches fresh data', async () => {
-      mockFetchWithTimeout.mockResolvedValue(
+      fetch.mockResolvedValue(
         mockIndexerEmpty() as never,
       );
 
       await scoreDelegation(VALID_WALLET);
       const firstCallCount =
-        mockFetchWithTimeout.mock.calls.length;
+        fetch.mock.calls.length;
 
       await scoreDelegationFresh(VALID_WALLET);
 
       expect(
-        mockFetchWithTimeout.mock.calls.length,
+        fetch.mock.calls.length,
       ).toBeGreaterThan(firstCallCount);
     });
   });
@@ -302,7 +306,7 @@ describe('scoreDelegation()', () => {
           createdAtRound: 100,
         }),
       } as never);
-      mockFetchWithTimeout.mockResolvedValue(
+      fetch.mockResolvedValue(
         mockIndexerEmpty() as never,
       );
 
@@ -326,7 +330,7 @@ describe('scoreDelegation()', () => {
           createdAtRound: 100,
         }),
       } as never);
-      mockFetchWithTimeout.mockResolvedValue(
+      fetch.mockResolvedValue(
         mockIndexerEmpty() as never,
       );
 
@@ -341,7 +345,7 @@ describe('scoreDelegation()', () => {
 
 describe('fetchDelegationsFromIndexer()', () => {
   it('returns empty on network error', async () => {
-    mockFetchWithTimeout.mockRejectedValue(
+    fetch.mockRejectedValue(
       new Error('network down'),
     );
 
@@ -351,7 +355,7 @@ describe('fetchDelegationsFromIndexer()', () => {
   });
 
   it('returns empty on non-OK response', async () => {
-    mockFetchWithTimeout.mockResolvedValue(
+    fetch.mockResolvedValue(
       mockIndexerError() as never,
     );
 
@@ -361,15 +365,15 @@ describe('fetchDelegationsFromIndexer()', () => {
   });
 
   it('calls correct indexer URL', async () => {
-    mockFetchWithTimeout.mockResolvedValue(
+    fetch.mockResolvedValue(
       mockIndexerEmpty() as never,
     );
 
     await scoreDelegation(VALID_WALLET);
 
-    expect(mockFetchWithTimeout).toHaveBeenCalledWith(
+    expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/v2/accounts/'),
-      expect.objectContaining({ timeoutMs: 10_000 }),
+      expect.objectContaining({ signal: expect.anything() }),
     );
   });
 });
@@ -395,7 +399,7 @@ describe('fetchWalletTrustScore()', () => {
       },
       explanation: [],
     });
-    mockFetchWithTimeout.mockResolvedValue(
+    fetch.mockResolvedValue(
       mockIndexerResponse([
         {
           sender: VALID_WALLET,
@@ -420,7 +424,7 @@ describe('fetchWalletTrustScore()', () => {
     mockScoreWallet.mockRejectedValue(
       new Error('fail'),
     );
-    mockFetchWithTimeout.mockResolvedValue(
+    fetch.mockResolvedValue(
       mockIndexerResponse([
         {
           sender: VALID_WALLET,
@@ -451,7 +455,7 @@ describe('findAllTrustedAncestors()', () => {
         createdAtRound: 100,
       }),
     } as never);
-    mockFetchWithTimeout.mockResolvedValue(
+    fetch.mockResolvedValue(
       mockIndexerResponse([
         {
           sender: VALID_WALLET,
@@ -489,7 +493,7 @@ describe('BFS traversal — depth cap', () => {
       }),
     );
 
-    mockFetchWithTimeout.mockResolvedValue(
+    fetch.mockResolvedValue(
       mockIndexerResponse(manyDelegates) as never,
     );
 
@@ -525,7 +529,7 @@ describe('Sponsor quality scoring', () => {
       },
       explanation: [],
     });
-    mockFetchWithTimeout.mockResolvedValue(
+    fetch.mockResolvedValue(
       mockIndexerResponse([
         {
           sender: VALID_WALLET,
@@ -568,7 +572,7 @@ describe('Trust score cap', () => {
       },
       explanation: [],
     });
-    mockFetchWithTimeout.mockResolvedValue(
+    fetch.mockResolvedValue(
       mockIndexerResponse([
         {
           sender: VALID_WALLET,
@@ -760,7 +764,7 @@ describe('Pure math functions (delegation module)', () => {
 
 describe('scoreDelegationFresh()', () => {
   it('clears cache before scoring', async () => {
-    mockFetchWithTimeout.mockResolvedValue(
+    fetch.mockResolvedValue(
       mockIndexerEmpty() as never,
     );
 
@@ -774,7 +778,7 @@ describe('scoreDelegationFresh()', () => {
 
 describe('Explanation generation', () => {
   it('includes delegation depth info', async () => {
-    mockFetchWithTimeout.mockResolvedValue(
+    fetch.mockResolvedValue(
       mockIndexerResponse([
         {
           sender: VALID_WALLET,
@@ -817,7 +821,7 @@ describe('Explanation generation', () => {
       },
       explanation: [],
     });
-    mockFetchWithTimeout.mockResolvedValue(
+    fetch.mockResolvedValue(
       mockIndexerResponse([
         {
           sender: VALID_WALLET,
@@ -841,7 +845,7 @@ describe('Explanation generation', () => {
   });
 
   it('includes trust profile summary', async () => {
-    mockFetchWithTimeout.mockResolvedValue(
+    fetch.mockResolvedValue(
       mockIndexerEmpty() as never,
     );
 

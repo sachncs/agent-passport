@@ -1,5 +1,5 @@
 import { config } from './config';
-import { withTimeout, fetchWithTimeout } from './lib/timeout';
+import { withTimeout } from './lib/timeout';
 import { algod } from './lib/algorand-client';
 import { logger } from './lib/logger';
 import { isValidWallet, MICRO_ALGO } from './lib/constants';
@@ -408,7 +408,10 @@ async function fetchTransactions(wallet: string, _fresh = false): Promise<{
       url.searchParams.set('limit', String(SYBIL_INDEXER_PAGE_SIZE));
       if (nextToken) url.searchParams.set('next', nextToken);
 
-      const res = await fetchWithTimeout(url.toString(), { timeoutMs: 10_000 });
+      const res = await fetch(
+        url.toString(),
+        { signal: AbortSignal.timeout(10_000) },
+      );
       if (!res.ok) break;
 
       const data = (await res.json()) as SybilIndexerResponse;

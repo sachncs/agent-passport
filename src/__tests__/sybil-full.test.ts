@@ -57,7 +57,7 @@ vi.mock('../lib/algorand-client', () => ({
 
 vi.mock('../lib/timeout', () => ({
   withTimeout: vi.fn(async (p: Promise<unknown>) => p),
-  fetchWithTimeout: vi.fn(),
+  fetch: vi.fn(),
 }));
 
 vi.mock('../config', () => ({
@@ -102,10 +102,9 @@ import {
 import {
   algod,
 } from '../lib/algorand-client';
-import {
-  fetchWithTimeout,
-} from '../lib/timeout';
-import {
+const fetch = vi.fn<
+  (input: string | URL, init?: RequestInit) => Promise<Response>
+>();import {
   computeGraphSignals,
 } from '../lib/graph';
 
@@ -164,6 +163,12 @@ function emptyPage() {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  fetch.mockReset();
+  vi.stubGlobal('fetch', fetch);
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
 });
 
 // ── Pure math (included for full coverage) ──
@@ -658,7 +663,7 @@ describe('detectSybil - fetchAccountInfo', () => {
   it('succeeds with valid account info', async () => {
     const m = algod.accountInformation as MockFn;
     m.mockReturnValue(mockAccountInfo());
-    const f = fetchWithTimeout as MockFn;
+    const f = fetch as MockFn;
     f.mockResolvedValue(emptyPage());
 
     const result = await detectSybil(VALID_W);
@@ -677,7 +682,7 @@ describe('detectSybil - fetchTransactions', () => {
   it('handles empty transaction list', async () => {
     const m = algod.accountInformation as MockFn;
     m.mockReturnValue(mockAccountInfo());
-    const f = fetchWithTimeout as MockFn;
+    const f = fetch as MockFn;
     f.mockResolvedValue(emptyPage());
 
     const result = await detectSybil(VALID_W);
@@ -688,7 +693,7 @@ describe('detectSybil - fetchTransactions', () => {
   it('handles non-ok indexer response', async () => {
     const m = algod.accountInformation as MockFn;
     m.mockReturnValue(mockAccountInfo());
-    const f = fetchWithTimeout as MockFn;
+    const f = fetch as MockFn;
     f.mockResolvedValue({ ok: false });
 
     const result = await detectSybil(VALID_W);
@@ -698,7 +703,7 @@ describe('detectSybil - fetchTransactions', () => {
   it('handles fetchTransactions error', async () => {
     const m = algod.accountInformation as MockFn;
     m.mockReturnValue(mockAccountInfo());
-    const f = fetchWithTimeout as MockFn;
+    const f = fetch as MockFn;
     f.mockRejectedValue(
       new Error('network'),
     );
@@ -731,7 +736,7 @@ describe('detectSybil - fetchTransactions', () => {
       }),
     );
 
-    const f = fetchWithTimeout as MockFn;
+    const f = fetch as MockFn;
     f.mockResolvedValueOnce(
       mockIndexerPage(page1Txns, 'token123'),
     ).mockResolvedValueOnce(
@@ -741,7 +746,7 @@ describe('detectSybil - fetchTransactions', () => {
     const result = await detectSybil(VALID_W);
     expect(result).not.toBeNull();
     expect(
-      fetchWithTimeout,
+      fetch,
     ).toHaveBeenCalledTimes(2);
   });
 
@@ -749,7 +754,7 @@ describe('detectSybil - fetchTransactions', () => {
     const m = algod.accountInformation as MockFn;
     m.mockReturnValue(mockAccountInfo());
 
-    const f = fetchWithTimeout as MockFn;
+    const f = fetch as MockFn;
     f.mockResolvedValue(
       mockIndexerPage([{
         sender: VALID_W,
@@ -774,7 +779,7 @@ describe('detectSybilInternal - all 11 signals', () => {
   it('computes all 11 signals in result', async () => {
     const m = algod.accountInformation as MockFn;
     m.mockReturnValue(mockAccountInfo());
-    const f = fetchWithTimeout as MockFn;
+    const f = fetch as MockFn;
     f.mockResolvedValue(emptyPage());
 
     const result = await detectSybil(VALID_W);
@@ -820,7 +825,7 @@ describe('detectSybilInternal - all 11 signals', () => {
   it('calls computeGraphSignals with correct args', async () => {
     const m = algod.accountInformation as MockFn;
     m.mockReturnValue(mockAccountInfo());
-    const f = fetchWithTimeout as MockFn;
+    const f = fetch as MockFn;
     f.mockResolvedValue(
       mockIndexerPage([
         {
@@ -840,7 +845,7 @@ describe('detectSybilInternal - all 11 signals', () => {
   it('builds correct cluster with counterparties', async () => {
     const m = algod.accountInformation as MockFn;
     m.mockReturnValue(mockAccountInfo());
-    const f = fetchWithTimeout as MockFn;
+    const f = fetch as MockFn;
     f.mockResolvedValue(
       mockIndexerPage([
         {
@@ -880,7 +885,7 @@ describe('detectSybilInternal - all 11 signals', () => {
 
     const m = algod.accountInformation as MockFn;
     m.mockReturnValue(mockAccountInfo());
-    const f = fetchWithTimeout as MockFn;
+    const f = fetch as MockFn;
     f.mockResolvedValue(
       mockIndexerPage(txns),
     );
@@ -902,7 +907,7 @@ describe('detectSybilInternal - all 11 signals', () => {
         mockAccountInfo(5_000_000, 1010),
       );
 
-    const f = fetchWithTimeout as MockFn;
+    const f = fetch as MockFn;
     f.mockResolvedValue(
       mockIndexerPage([{
         sender: VALID_W,
@@ -932,7 +937,7 @@ describe('detectSybilInternal - all 11 signals', () => {
 
     const m = algod.accountInformation as MockFn;
     m.mockReturnValue(mockAccountInfo());
-    const f = fetchWithTimeout as MockFn;
+    const f = fetch as MockFn;
     f.mockResolvedValue(
       mockIndexerPage(txns),
     );
@@ -962,7 +967,7 @@ describe('detectSybilInternal - all 11 signals', () => {
 
     const m = algod.accountInformation as MockFn;
     m.mockReturnValue(mockAccountInfo());
-    const f = fetchWithTimeout as MockFn;
+    const f = fetch as MockFn;
     f.mockResolvedValue(
       mockIndexerPage(txns),
     );
@@ -987,7 +992,7 @@ describe('detectSybilInternal - all 11 signals', () => {
 
     const m = algod.accountInformation as MockFn;
     m.mockReturnValue(mockAccountInfo());
-    const f = fetchWithTimeout as MockFn;
+    const f = fetch as MockFn;
     f.mockResolvedValue(
       mockIndexerPage(txns),
     );
@@ -1012,7 +1017,7 @@ describe('detectSybilInternal - all 11 signals', () => {
 
     const m = algod.accountInformation as MockFn;
     m.mockReturnValue(mockAccountInfo());
-    const f = fetchWithTimeout as MockFn;
+    const f = fetch as MockFn;
     f.mockResolvedValue(
       mockIndexerPage(txns),
     );
@@ -1034,7 +1039,7 @@ describe('detectSybilInternal - all 11 signals', () => {
         ),
       });
 
-    const f = fetchWithTimeout as MockFn;
+    const f = fetch as MockFn;
     f.mockResolvedValue(
       mockIndexerPage([{
         sender: VALID_W,
@@ -1055,7 +1060,7 @@ describe('detectSybilFresh', () => {
   it('bypasses cache by calling with fresh=true', async () => {
     const m = algod.accountInformation as MockFn;
     m.mockReturnValue(mockAccountInfo());
-    const f = fetchWithTimeout as MockFn;
+    const f = fetch as MockFn;
     f.mockResolvedValue(emptyPage());
 
     const result = await detectSybilFresh(
@@ -1087,7 +1092,7 @@ describe('detectSybilFresh', () => {
   it('uses fresh data (no cache)', async () => {
     const m = algod.accountInformation as MockFn;
     m.mockReturnValue(mockAccountInfo());
-    const f = fetchWithTimeout as MockFn;
+    const f = fetch as MockFn;
     f.mockResolvedValue(
       mockIndexerPage([{
         sender: VALID_W,
@@ -1110,7 +1115,7 @@ describe('cluster building', () => {
   it('includes target wallet as first cluster member', async () => {
     const m = algod.accountInformation as MockFn;
     m.mockReturnValue(mockAccountInfo());
-    const f = fetchWithTimeout as MockFn;
+    const f = fetch as MockFn;
     f.mockResolvedValue(
       mockIndexerPage([{
         sender: VALID_W,
@@ -1129,7 +1134,7 @@ describe('cluster building', () => {
   it('flagged wallets exclude the target wallet', async () => {
     const m = algod.accountInformation as MockFn;
     m.mockReturnValue(mockAccountInfo());
-    const f = fetchWithTimeout as MockFn;
+    const f = fetch as MockFn;
     f.mockResolvedValue(
       mockIndexerPage([
         {
@@ -1163,7 +1168,7 @@ describe('cluster building', () => {
   it('returns empty flaggedWallets when no counterparties', async () => {
     const m = algod.accountInformation as MockFn;
     m.mockReturnValue(mockAccountInfo());
-    const f = fetchWithTimeout as MockFn;
+    const f = fetch as MockFn;
     f.mockResolvedValue(emptyPage());
 
     const result = await detectSybil(VALID_W);
@@ -1177,7 +1182,7 @@ describe('cluster building', () => {
   it('explanation includes cluster details', async () => {
     const m = algod.accountInformation as MockFn;
     m.mockReturnValue(mockAccountInfo());
-    const f = fetchWithTimeout as MockFn;
+    const f = fetch as MockFn;
     f.mockResolvedValue(emptyPage());
 
     const result = await detectSybil(VALID_W);
@@ -1190,7 +1195,7 @@ describe('cluster building', () => {
   it('confidence computation works with data', async () => {
     const m = algod.accountInformation as MockFn;
     m.mockReturnValue(mockAccountInfo());
-    const f = fetchWithTimeout as MockFn;
+    const f = fetch as MockFn;
     f.mockResolvedValue(
       mockIndexerPage(
         Array.from({ length: 25 }, (_, i) => ({
@@ -1218,7 +1223,7 @@ describe('fetchTransactions - self-transaction filtering', () => {
   it('ignores self-transactions (sender === receiver)', async () => {
     const m = algod.accountInformation as MockFn;
     m.mockReturnValue(mockAccountInfo());
-    const f = fetchWithTimeout as MockFn;
+    const f = fetch as MockFn;
     f.mockResolvedValue(
       mockIndexerPage([
         {

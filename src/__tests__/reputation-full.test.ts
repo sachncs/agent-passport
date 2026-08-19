@@ -18,7 +18,7 @@ vi.mock('../lib/algorand-client', () => ({
 
 vi.mock('../lib/timeout', () => ({
   withTimeout: vi.fn(async (p: Promise<unknown>) => p),
-  fetchWithTimeout: vi.fn(),
+  fetch: vi.fn(),
 }));
 
 vi.mock('../config', () => ({

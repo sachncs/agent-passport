@@ -1,5 +1,5 @@
 import { config } from './config';
-import { fetchWithTimeout, withTimeout } from './lib/timeout';
+import { withTimeout } from './lib/timeout';
 import { algod } from './lib/algorand-client';
 import { logger } from './lib/logger';
 import { isValidWallet, MICRO_ALGO } from './lib/constants';
@@ -137,7 +137,7 @@ async function fetchDelegationsFromIndexer(
 ): Promise<Delegation[]> {
   try {
     const url = `${INDEXER_URL}/v2/accounts/${wallet}/transactions?limit=500&tx-type=axfer`;
-    const res = await fetchWithTimeout(url, { timeoutMs: 10_000 });
+    const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
     if (!res.ok) return [];
 
     const data = (await res.json()) as { transactions?: IndexerTransaction[] };

@@ -22,9 +22,11 @@ vi.mock('../lib/algorand-client', () => ({
 
 vi.mock('../lib/timeout', () => ({
   withTimeout: vi.fn(async (p: Promise<unknown>) => p),
-  fetchWithTimeout: vi.fn(),
 }));
 
+const fetch = vi.fn<
+  (input: string | URL, init?: RequestInit) => Promise<Response>
+>();
 vi.mock('../trust-score', () => ({
   scoreWallet: vi.fn(),
 }));
@@ -51,7 +53,7 @@ import {
   simulateSponsorAdd,
 } from '../trust-graph';
 import { algod } from '../lib/algorand-client';
-import { fetchWithTimeout } from '../lib/timeout';
+
 import { scoreWallet } from '../trust-score';
 
 function mockAccountInfo(balance: bigint = 5_000_000n) {
@@ -91,6 +93,8 @@ function emptyIndexerResponse() {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  fetch.mockReset();
+  vi.stubGlobal('fetch', fetch);
 });
 
 // Pure math (already covered in trust-graph.test.ts)
@@ -168,7 +172,7 @@ describe('analyzeTrustGraph', () => {
       typeof vi.fn
     >;
     ai.mockReturnValue(mockAccountInfo(1_000_000n));
-    const fwt = fetchWithTimeout as ReturnType<typeof vi.fn>;
+    const fwt = fetch as ReturnType<typeof vi.fn>;
     fwt.mockResolvedValue(emptyIndexerResponse());
     const sw = scoreWallet as ReturnType<typeof vi.fn>;
     sw.mockResolvedValue({ trustScore: 50 });
@@ -193,7 +197,7 @@ describe('analyzeTrustGraph', () => {
       .mockReturnValueOnce(mockAccountInfo(5_000_000n))
       .mockReturnValueOnce(mockAccountInfo(3_000_000n));
 
-    const fwt = fetchWithTimeout as ReturnType<typeof vi.fn>;
+    const fwt = fetch as ReturnType<typeof vi.fn>;
     fwt.mockResolvedValueOnce(
       mockIndexerResponse([
         { receiver: VALID_B, amount: 2000, round: 100 },
@@ -227,7 +231,7 @@ describe('analyzeTrustGraph', () => {
       typeof vi.fn
     >;
     ai.mockReturnValue(mockAccountInfo());
-    const fwt = fetchWithTimeout as ReturnType<typeof vi.fn>;
+    const fwt = fetch as ReturnType<typeof vi.fn>;
     fwt.mockResolvedValueOnce(
       mockIndexerResponse([
         { receiver: VALID_B, amount: 1000 },
@@ -249,7 +253,7 @@ describe('analyzeTrustGraph', () => {
       typeof vi.fn
     >;
     ai.mockReturnValue(mockAccountInfo());
-    const fwt = fetchWithTimeout as ReturnType<typeof vi.fn>;
+    const fwt = fetch as ReturnType<typeof vi.fn>;
     fwt.mockResolvedValueOnce(
       mockIndexerResponse([
         { receiver: VALID_B, amount: 5000 },
@@ -272,7 +276,7 @@ describe('analyzeTrustGraph', () => {
       typeof vi.fn
     >;
     ai.mockReturnValue(mockAccountInfo());
-    const fwt = fetchWithTimeout as ReturnType<typeof vi.fn>;
+    const fwt = fetch as ReturnType<typeof vi.fn>;
     fwt.mockRejectedValue(new Error('network'));
     const sw = scoreWallet as ReturnType<typeof vi.fn>;
     sw.mockResolvedValue({ trustScore: 0 });
@@ -287,7 +291,7 @@ describe('analyzeTrustGraph', () => {
       typeof vi.fn
     >;
     ai.mockReturnValue(mockAccountInfo());
-    const fwt = fetchWithTimeout as ReturnType<typeof vi.fn>;
+    const fwt = fetch as ReturnType<typeof vi.fn>;
     fwt.mockResolvedValue({ ok: false });
     const sw = scoreWallet as ReturnType<typeof vi.fn>;
     sw.mockResolvedValue({ trustScore: 0 });
@@ -302,7 +306,7 @@ describe('analyzeTrustGraph', () => {
       typeof vi.fn
     >;
     ai.mockReturnValue(mockAccountInfo());
-    const fwt = fetchWithTimeout as ReturnType<typeof vi.fn>;
+    const fwt = fetch as ReturnType<typeof vi.fn>;
     fwt.mockResolvedValue(emptyIndexerResponse());
     const sw = scoreWallet as ReturnType<typeof vi.fn>;
     sw.mockRejectedValue(new Error('score fail'));
@@ -317,7 +321,7 @@ describe('analyzeTrustGraph', () => {
       typeof vi.fn
     >;
     ai.mockReturnValue(mockAccountInfo());
-    const fwt = fetchWithTimeout as ReturnType<typeof vi.fn>;
+    const fwt = fetch as ReturnType<typeof vi.fn>;
     fwt.mockResolvedValueOnce(
       mockIndexerResponse([
         { receiver: VALID_B, amount: 1000 },
@@ -346,7 +350,7 @@ describe('analyzeTrustGraph', () => {
       typeof vi.fn
     >;
     ai.mockReturnValue(mockAccountInfo());
-    const fwt = fetchWithTimeout as ReturnType<typeof vi.fn>;
+    const fwt = fetch as ReturnType<typeof vi.fn>;
     fwt.mockResolvedValueOnce(
       mockIndexerResponse([
         { receiver: VALID_B, amount: 1000 },
@@ -380,7 +384,7 @@ describe('analyzeTrustGraph', () => {
       typeof vi.fn
     >;
     ai.mockReturnValue(mockAccountInfo());
-    const fwt = fetchWithTimeout as ReturnType<typeof vi.fn>;
+    const fwt = fetch as ReturnType<typeof vi.fn>;
     fwt.mockResolvedValueOnce(mockIndexerResponse(edges))
       .mockResolvedValue(emptyIndexerResponse());
     const sw = scoreWallet as ReturnType<typeof vi.fn>;
@@ -418,7 +422,7 @@ describe('simulateSponsorLoss', () => {
       typeof vi.fn
     >;
     ai.mockReturnValue(mockAccountInfo());
-    const fwt = fetchWithTimeout as ReturnType<typeof vi.fn>;
+    const fwt = fetch as ReturnType<typeof vi.fn>;
     fwt.mockResolvedValueOnce(
       mockIndexerResponse([
         { receiver: VALID_B, amount: 2000 },
@@ -453,7 +457,7 @@ describe('simulateSponsorLoss', () => {
       typeof vi.fn
     >;
     ai.mockReturnValue(mockAccountInfo());
-    const fwt = fetchWithTimeout as ReturnType<typeof vi.fn>;
+    const fwt = fetch as ReturnType<typeof vi.fn>;
     fwt.mockResolvedValueOnce(
       mockIndexerResponse([
         { receiver: VALID_B, amount: 1000 },
@@ -540,7 +544,7 @@ describe('simulateSponsorAdd', () => {
       typeof vi.fn
     >;
     ai.mockReturnValue(mockAccountInfo());
-    const fwt = fetchWithTimeout as ReturnType<typeof vi.fn>;
+    const fwt = fetch as ReturnType<typeof vi.fn>;
     fwt.mockResolvedValue(emptyIndexerResponse());
     const sw = scoreWallet as ReturnType<typeof vi.fn>;
     sw.mockResolvedValue({ trustScore: 50 });
@@ -571,7 +575,7 @@ describe('simulateSponsorAdd', () => {
       typeof vi.fn
     >;
     ai.mockReturnValue(mockAccountInfo());
-    const fwt = fetchWithTimeout as ReturnType<typeof vi.fn>;
+    const fwt = fetch as ReturnType<typeof vi.fn>;
     fwt.mockResolvedValue(emptyIndexerResponse());
     const sw = scoreWallet as ReturnType<typeof vi.fn>;
     sw.mockResolvedValue({ trustScore: 50 });
