@@ -3,6 +3,7 @@ import { TooltipProvider } from "@/components/ui/tooltip"
 
 import { Sidebar } from "@/components/sidebar"
 import { TopBar } from "@/components/topbar"
+import { QueryProvider } from "@/components/query-provider"
 
 import "./globals.css"
 
@@ -21,35 +22,37 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className="min-h-screen bg-background text-foreground antialiased">
-        <TooltipProvider delay={150}>
-          <div className="flex min-h-screen">
-            <Sidebar />
-            <div className="flex min-h-screen flex-1 flex-col">
-              <TopBar />
-              <main className="flex-1 px-4 py-6 md:px-8 md:py-8">
-                <div className="mx-auto max-w-6xl">{children}</div>
-              </main>
-              <footer className="border-t border-border px-4 py-4 text-xs text-muted-foreground md:px-8">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span>Agent Passport — trust and underwriting for AI agents on Algorand.</span>
-                  <span>
-                    <a href="/openapi.json" className="underline-offset-2 hover:underline">
-                      OpenAPI
-                    </a>
-                    {" · "}
-                    <a href="/health" className="underline-offset-2 hover:underline">
-                      /health
-                    </a>
-                    {" · "}
-                    <a href="/metrics" className="underline-offset-2 hover:underline">
-                      /metrics
-                    </a>
-                  </span>
-                </div>
-              </footer>
+        <QueryProvider>
+          <TooltipProvider delay={150}>
+            <div className="flex min-h-screen">
+              <Sidebar />
+              <div className="flex min-h-screen flex-1 flex-col">
+                <TopBar />
+                <main className="flex-1 px-4 py-6 md:px-8 md:py-8">
+                  <div className="mx-auto max-w-6xl">{children}</div>
+                </main>
+                <footer className="border-t border-border px-4 py-4 text-xs text-muted-foreground md:px-8">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span>Agent Passport — trust and underwriting for AI agents on Algorand.</span>
+                    <span>
+                      <a href="/openapi.json" className="underline-offset-2 hover:underline">
+                        OpenAPI
+                      </a>
+                      {" · "}
+                      <a href="/health" className="underline-offset-2 hover:underline">
+                        /health
+                      </a>
+                      {" · "}
+                      <a href="/metrics" className="underline-offset-2 hover:underline">
+                        /metrics
+                      </a>
+                    </span>
+                  </div>
+                </footer>
+              </div>
             </div>
-          </div>
-        </TooltipProvider>
+          </TooltipProvider>
+        </QueryProvider>
       </body>
     </html>
   )
