@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { api, ApiError } from '@/lib/api';
+import { useWalletQuery } from '@/hooks/useWalletQuery';
 import { WalletLookup } from '@/components/WalletLookup';
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle,
@@ -23,16 +23,16 @@ import type { DelegationResponse } from '@/types/api';
 import { isValidWallet } from '@/lib/wallet';
 
 export function DelegationPage() {
-  const [wallet, setWallet] = useState<string | null>(() => {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('wallet');
-  });
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['delegation', wallet],
-    queryFn: () => api.getDelegation(wallet!),
-    enabled: !!wallet,
-    staleTime: 30_000,
-  });
+  const initial = (() => {
+    if (typeof window === 'undefined') return null;
+    return new URLSearchParams(window.location.search).get('wallet');
+  })();
+  const { wallet, setWallet, query } = useWalletQuery<DelegationResponse>(
+    'delegation',
+    api.getDelegation,
+    initial,
+  );
+  const { data, isLoading, error } = query;
 
   return (
     <div className="space-y-6">

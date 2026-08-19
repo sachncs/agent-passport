@@ -1,6 +1,5 @@
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { api, ApiError } from '@/lib/api';
+import { useWalletQuery } from '@/hooks/useWalletQuery';
 import { WalletLookup } from '@/components/WalletLookup';
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle,
@@ -53,14 +52,11 @@ function CopyButton({ value, label }: { value: string; label: string }) {
 }
 
 export function TrustScorePage() {
-  const [wallet, setWallet] = useState<string | null>(null);
-
-  const { data, isLoading, error, refetch, isFetching } = useQuery({
-    queryKey: ['score', wallet],
-    queryFn: () => api.getScore(wallet!),
-    enabled: !!wallet,
-    staleTime: 30_000,
-  });
+  const { wallet, setWallet, query } = useWalletQuery<import('@/types/api').TrustScoreResponse>(
+    'score',
+    api.getScore,
+  );
+  const { data, isLoading, error, refetch, isFetching } = query;
 
   return (
     <div className="space-y-6">

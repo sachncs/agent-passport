@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '@/lib/api';
+import { useWalletQuery } from '@/hooks/useWalletQuery';
 import { WalletLookup } from '@/components/WalletLookup';
+import type { ReputationResponse } from '@/types/api';
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle,
 } from '@/components/ui/card';
@@ -31,17 +33,17 @@ const EVENT_TYPES = [
 ] as const;
 
 export function ReputationPage() {
-  const [wallet, setWallet] = useState<string | null>(() => {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('wallet');
-  });
+  const initial = (() => {
+    if (typeof window === 'undefined') return null;
+    return new URLSearchParams(window.location.search).get('wallet');
+  })();
+  const { wallet, setWallet, query } = useWalletQuery<ReputationResponse>(
+    'reputation',
+    api.getReputation,
+    initial,
+  );
+  const { data, isLoading, error } = query;
   const qc = useQueryClient();
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['reputation', wallet],
-    queryFn: () => api.getReputation(wallet!),
-    enabled: !!wallet,
-    staleTime: 30_000,
-  });
 
   return (
     <div className="space-y-6">
@@ -86,7 +88,7 @@ function ReputationSkeleton() {
   );
 }
 
-function ReputationCard({ data }: { data: import('@/types/api').ReputationResponse }) {
+function ReputationCard({ data }: { data: ReputationResponse }) {
   return (
     <Card>
       <CardHeader>

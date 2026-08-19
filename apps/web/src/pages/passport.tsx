@@ -1,6 +1,5 @@
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { api, ApiError } from '@/lib/api';
+import { useWalletQuery } from '@/hooks/useWalletQuery';
 import { WalletLookup } from '@/components/WalletLookup';
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle,
@@ -30,17 +29,16 @@ function riskColor(risk: RiskLevel): string {
 }
 
 export function PassportPage() {
-  const [wallet, setWallet] = useState<string | null>(() => {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('wallet');
-  });
-
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['passport', wallet],
-    queryFn: () => api.getPassport(wallet!),
-    enabled: !!wallet,
-    staleTime: 30_000,
-  });
+  const initial = (() => {
+    if (typeof window === 'undefined') return null;
+    return new URLSearchParams(window.location.search).get('wallet');
+  })();
+  const { wallet, setWallet, query } = useWalletQuery<PassportResponse>(
+    'passport',
+    api.getPassport,
+    initial,
+  );
+  const { data, isLoading, error, refetch } = query;
 
   return (
     <div className="space-y-6">
