@@ -11,9 +11,9 @@
  */
 
 import { createHmac, randomUUID } from 'crypto';
-import { existsSync, mkdirSync, readFileSync, writeFileSync, renameSync } from 'fs';
-import { dirname, join } from 'path';
+import { join } from 'path';
 import { logger } from './logger';
+import { queueJsonWrite, readJsonFile } from './json-store';
 
 interface WebhookSubscriber {
   id: string;
@@ -34,38 +34,23 @@ function loadFromDisk(): void {
   if (loaded) return;
   loaded = true;
   if (PERSISTENCE_DISABLED) return;
-  try {
-    if (existsSync(PERSISTENCE_PATH)) {
-      const data = readFileSync(PERSISTENCE_PATH, 'utf-8');
-      const parsed = JSON.parse(data);
-      if (Array.isArray(parsed)) {
-        for (const sub of parsed) {
-          if (sub && typeof sub.id === 'string') {
-            subscribers.set(sub.id, sub as WebhookSubscriber);
-          }
-        }
+  const parsed = readJsonFile<WebhookSubscriber[]>(PERSISTENCE_PATH, []);
+  if (Array.isArray(parsed)) {
+    for (const sub of parsed) {
+      if (sub && typeof sub.id === 'string') {
+        subscribers.set(sub.id, sub);
       }
     }
-  } catch (e) {
-    logger.warn('Failed to load webhook subscribers', { error: String(e) });
   }
 }
 
 function persistToDisk(): void {
   if (PERSISTENCE_DISABLED) return;
-  try {
-    const dir = dirname(PERSISTENCE_PATH);
-    if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-    const tmp = PERSISTENCE_PATH + '.tmp';
-    writeFileSync(
-      tmp,
-      JSON.stringify(Array.from(subscribers.values()), null, 2),
-      { mode: 0o600 },
-    );
-    renameSync(tmp, PERSISTENCE_PATH);
-  } catch (e) {
-    logger.warn('Failed to persist webhook subscribers', { error: String(e) });
-  }
+  queueJsonWrite(
+    PERSISTENCE_PATH,
+    Array.from(subscribers.values()),
+    (e) => logger.warn('Failed to persist webhook subscribers', { error: String(e) }),
+  );
 }
 
 function isPrivateOrLoopback(hostname: string): boolean {

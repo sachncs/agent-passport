@@ -10,19 +10,18 @@
  * for a wallet, and `addWalletExposure` enforces both the global cap and
  * a per-wallet cap (default MAX_SYSTEM_EXPOSURE / 10 — see MAX_WALLET_SHARE).
  *
- * Concurrency: All mutating ops serialize through a single promise queue so
- * read-cap-and-write cannot race in a single process. Multi-process deployments
- * still need a shared store (Redis/PostgreSQL) — the on-disk file is for
- * restart durability only.
+ * Concurrency: All mutating ops serialize through a single promise queue
+ * (see json-store.ts) so read-cap-and-write cannot race in a single
+ * process. Multi-process deployments still need a shared store
+ * (Redis/PostgreSQL) — the on-disk file is for restart durability only.
  */
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
-import { join, dirname } from 'path';
+import { join } from 'path';
 import { logger } from './logger';
+import { queueJsonWrite, readJsonFile } from './json-store';
 
 const MAX_SYSTEM_EXPOSURE = 100_000;
 const MAX_WALLET_SHARE = MAX_SYSTEM_EXPOSURE / 10;
-// 10k — no single wallet gets more than 10% of the cap
 
 let totalSystemExposure = 0;
 const walletExposure = new Map<string, number>();
@@ -36,37 +35,21 @@ interface PersistedState {
 }
 
 function loadFromDisk(): void {
-  try {
-    if (existsSync(PERSISTENCE_PATH)) {
-      const data = readFileSync(PERSISTENCE_PATH, 'utf-8');
-      const parsed = JSON.parse(data);
-      const state = parsed as Partial<PersistedState>;
-      if (typeof state.total === 'number' && Number.isFinite(state.total)) {
-        totalSystemExposure = Math.max(0, state.total);
-      }
-      if (state.wallets && typeof state.wallets === 'object') {
-        for (const [wallet, amount] of Object.entries(state.wallets)) {
-          if (typeof amount === 'number' && Number.isFinite(amount) && amount > 0) {
-            walletExposure.set(wallet, amount);
-          }
-        }
-      }
-      logger.info('Loaded system exposure from disk', {
-        total: totalSystemExposure,
-        wallets: walletExposure.size,
-      });
-    }
-  } catch (e) {
-    logger.warn('Failed to load system exposure from disk — starting from zero', { error: String(e) });
+  const state = readJsonFile<Partial<PersistedState>>(PERSISTENCE_PATH, {});
+  if (typeof state.total === 'number' && Number.isFinite(state.total)) {
+    totalSystemExposure = Math.max(0, state.total);
   }
-}
-
-// Serialize all mutating ops through a single chained promise.
-// ponytail: in-process mutex; remove when this moves to Redis.
-let writeQueue: Promise<void> = Promise.resolve();
-function enqueueWrite(task: () => void): void {
-  // In-process mutex; remove when this moves to Redis.
-  writeQueue = writeQueue.then(task).catch(() => { /* logged in task */ });
+  if (state.wallets && typeof state.wallets === 'object') {
+    for (const [wallet, amount] of Object.entries(state.wallets)) {
+      if (typeof amount === 'number' && Number.isFinite(amount) && amount > 0) {
+        walletExposure.set(wallet, amount);
+      }
+    }
+  }
+  logger.info('Loaded system exposure from disk', {
+    total: totalSystemExposure,
+    wallets: walletExposure.size,
+  });
 }
 
 function saveToDisk(): void {
@@ -74,20 +57,11 @@ function saveToDisk(): void {
     total: totalSystemExposure,
     wallets: Object.fromEntries(walletExposure),
   };
-  enqueueWrite(() => {
-    try {
-      const dir = dirname(PERSISTENCE_PATH);
-      if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-      const payload = JSON.stringify(
-        { ...snapshot, updatedAt: new Date().toISOString() },
-        null,
-        2,
-      );
-      writeFileSync(PERSISTENCE_PATH, payload, { mode: 0o600 });
-    } catch (e) {
-      logger.warn('Failed to persist system exposure to disk', { error: String(e) });
-    }
-  });
+  queueJsonWrite(
+    PERSISTENCE_PATH,
+    { ...snapshot, updatedAt: new Date().toISOString() },
+    (e) => logger.warn('Failed to persist system exposure to disk', { error: String(e) }),
+  );
 }
 
 loadFromDisk();

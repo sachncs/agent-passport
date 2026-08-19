@@ -1,9 +1,9 @@
 import { randomUUID } from 'crypto';
-import { existsSync, mkdirSync, readFileSync } from 'fs';
-import { promises as fsp } from 'fs';
-import { join, dirname } from 'path';
+import { existsSync, readFileSync } from 'fs';
+import { join } from 'path';
 import type { NextFunction, Request, Response } from 'express';
 import { logger } from './logger';
+import { queueJsonWrite } from './json-store';
 
 interface RateLimitEntry {
   count: number;
@@ -43,27 +43,15 @@ function loadRateLimitState(): Map<string, RateLimitEntry> {
   return clients;
 }
 
-// Async save — sync writes block the event loop on a busy host. Promise
-// queue (mirrors system-exposure.ts) serializes writes so concurrent saves
-// can't race or regress to an older snapshot. (H7)
-let writeQueue: Promise<void> = Promise.resolve();
+// (H7) queueJsonWrite serializes writes so concurrent saves can't
+// race or regress to an older snapshot.
 let lastCleanupSaveAt: number | null = null;
 function saveRateLimitState(clients: Map<string, RateLimitEntry>): void {
-  writeQueue = writeQueue.then(async () => {
-    try {
-      const dir = dirname(RATE_LIMIT_PATH);
-      if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-      const obj: Record<string, RateLimitEntry> = {};
-      for (const [key, entry] of clients) obj[key] = entry;
-      await fsp.writeFile(
-        RATE_LIMIT_PATH,
-        JSON.stringify(obj),
-        { mode: 0o600 },
-      );
-    } catch (e) {
-      logger.warn('Failed to persist rate limit state', { error: String(e) });
-    }
-  });
+  queueJsonWrite(
+    RATE_LIMIT_PATH,
+    Object.fromEntries(clients),
+    (e) => logger.warn('Failed to persist rate limit state', { error: String(e) }),
+  );
 }
 
 export function resetRateLimiter(): void {
