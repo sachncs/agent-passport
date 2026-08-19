@@ -9,6 +9,15 @@ All notable changes to **Agent Passport** are documented in this file.
 > dependency cleanup) plus a complete frontend redesign using the
 > official [shadcn/ui](https://ui.shadcn.com/docs/components) recipe.
 > Treat the v0.1.0 tag as a dev preview.
+>
+> **Most recent** ([unreleased](#unreleased)) also adds: a
+> real persisted dark/light theme via `next-themes`, the
+> full Next.js 16 file convention set (loading.tsx, error.tsx,
+> global-error.tsx, proxy.ts), a full shadcn/ui v4 component
+> suite, comprehensive Vitest + Testing Library + MSW frontend
+> tests (58 tests, 12 files), a proxy to the backend via
+> Next.js rewrites, and a human-readable `LOG_FORMAT=pretty`
+> mode for the backend.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
