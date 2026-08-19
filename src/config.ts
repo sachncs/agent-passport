@@ -18,6 +18,13 @@ function validateConfig() {
     }
   }
 
+  if (process.env.LOG_FORMAT) {
+    const normalized = process.env.LOG_FORMAT.toLowerCase();
+    if (!['json', 'pretty'].includes(normalized)) {
+      errors.push(`Invalid LOG_FORMAT: ${process.env.LOG_FORMAT}. Must be json|pretty`);
+    }
+  }
+
   // HMAC_SECRET must be ≥ 32 chars if provided (256 bits).
   if (process.env.HMAC_SECRET !== undefined && process.env.HMAC_SECRET !== '') {
     if (process.env.HMAC_SECRET.length < 32) {
@@ -75,6 +82,11 @@ export const config = {
   gitCommit: process.env.GIT_COMMIT || 'unknown',
 
   logLevel: ((process.env.LOG_LEVEL || 'info').toLowerCase()) as 'debug' | 'info' | 'warn' | 'error',
+  logFormat: (() => {
+    const explicit = process.env.LOG_FORMAT?.toLowerCase();
+    if (explicit === 'json' || explicit === 'pretty') return explicit;
+    return process.stdout.isTTY ? 'pretty' : 'json';
+  })() as 'json' | 'pretty',
   logFile: process.env.LOG_FILE,
   logErrorFile: process.env.LOG_ERROR_FILE,
 } as const;

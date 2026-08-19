@@ -24,6 +24,7 @@ const LOG_LEVEL_PRIORITY: Record<LogLevel, number> = {
 };
 
 const configuredLevel: LogLevel = config.logLevel;
+const LOG_FORMAT: 'json' | 'pretty' = config.logFormat;
 const LOG_FILE = config.logFile;
 const LOG_ERROR_FILE = config.logErrorFile;
 
@@ -72,66 +73,99 @@ function sanitize(value: unknown): unknown {
   return value;
 }
 
-function formatEntry(entry: LogEntry): string {
-  return JSON.stringify(sanitize(entry));
+export const LEVEL_COLORS: Record<LogLevel, string> = {
+  debug: '\x1b[90m', // gray
+  info: '\x1b[36m',  // cyan
+  warn: '\x1b[33m',  // yellow
+  error: '\x1b[31m', // red
+}
+export const LEVEL_RESET = '\x1b[0m'
+export const LEVEL_PADDED: Record<LogLevel, string> = {
+  debug: 'DEBUG',
+  info: 'INFO ',
+  warn: 'WARN ',
+  error: 'ERROR',
 }
 
-function writeOutput(line: string, level: LogLevel): void {
-  // Default to stdout only (k8s / Docker best practice). File streams
-  // are only used when explicitly opted in via LOG_FILE. (L2)
-  if (logStream) logStream.write(line + '\n');
+export function formatEntry(entry: LogEntry): string {
+  return JSON.stringify(sanitize(entry))
+}
+
+export function formatPretty(entry: LogEntry, useColor = process.stdout.isTTY): string {
+  const ts = entry.timestamp
+  const level = LEVEL_PADDED[entry.level]
+  const color = useColor ? LEVEL_COLORS[entry.level] : ''
+  const reset = useColor ? LEVEL_RESET : ''
+  const { level: _l, timestamp: _t, message: _m, ...rest } = entry
+  const meta = Object.keys(rest).length
+    ? ' ' + JSON.stringify(sanitize(rest))
+    : ''
+  return `${ts} ${color}${level}${reset} ${entry.message}${meta}`
+}
+
+function writeOutput(line: string, level: LogLevel, pretty: string): void {
+  if (logStream) logStream.write(line + '\n')
   if (errorStream && (level === 'error' || level === 'warn')) {
-    errorStream.write(line + '\n');
+    errorStream.write(line + '\n')
   }
-  if (STDOUT_DISABLED) return;
-  if (level === 'error') console.error(line);
-  else if (level === 'warn') console.warn(line);
-  else if (level === 'debug') console.debug(line);
-  else console.log(line);
+  if (STDOUT_DISABLED) return
+  const out = LOG_FORMAT === 'json' ? line : pretty
+  if (level === 'error') console.error(out)
+  else if (level === 'warn') console.warn(out)
+  else if (level === 'debug') console.debug(out)
+  else console.log(out)
 }
 
 export const logger = {
   debug(message: string, meta?: Record<string, unknown>) {
     if (shouldLog('debug')) {
+      const entry = {
+        level: 'debug', message, timestamp: new Date().toISOString(), ...meta,
+      }
       writeOutput(
-        formatEntry({
-          level: 'debug', message, timestamp: new Date().toISOString(), ...meta,
-        }),
+        formatEntry(entry),
         'debug',
-      );
+        formatPretty(entry),
+      )
     }
   },
   info(message: string, meta?: Record<string, unknown>) {
     if (shouldLog('info')) {
+      const entry = {
+        level: 'info', message, timestamp: new Date().toISOString(), ...meta,
+      }
       writeOutput(
-        formatEntry({
-          level: 'info', message, timestamp: new Date().toISOString(), ...meta,
-        }),
+        formatEntry(entry),
         'info',
-      );
+        formatPretty(entry),
+      )
     }
   },
   warn(message: string, meta?: Record<string, unknown>) {
     if (shouldLog('warn')) {
+      const entry = {
+        level: 'warn', message, timestamp: new Date().toISOString(), ...meta,
+      }
       writeOutput(
-        formatEntry({
-          level: 'warn', message, timestamp: new Date().toISOString(), ...meta,
-        }),
+        formatEntry(entry),
         'warn',
-      );
+        formatPretty(entry),
+      )
     }
   },
   error(message: string, meta?: Record<string, unknown>) {
     if (shouldLog('error')) {
+      const entry = {
+        level: 'error', message, timestamp: new Date().toISOString(), ...meta,
+      }
       writeOutput(
-        formatEntry({
-          level: 'error', message, timestamp: new Date().toISOString(), ...meta,
-        }),
+        formatEntry(entry),
         'error',
-      );
+        formatPretty(entry),
+      )
     }
   },
-};
+}
 
 /** Closes the file streams. Call from graceful shutdown. */
 export function closeLoggerStreams(): void {
