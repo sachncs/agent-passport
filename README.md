@@ -310,7 +310,7 @@ agent-passport/
 │   ├── registry.teal       # Delegation registry
 │   └── reputation.teal     # Reputation events
 ├── scripts/                # Operational CLIs
-├── apps/frontend/               # Vite + React + shadcn/ui frontend
+├── frontend/                   # Next.js 16 + shadcn/ui v4 + Tailwind v4 frontend (App Router)
 ├── docs/                   # Flattened docs (README + 5 topical .md + api/)
 │   ├── README.md          # Index
 │   ├── architecture.md    # System design, middleware, modules, scaling
@@ -353,6 +353,33 @@ cd sdk/python
 pip install -e ".[dev]"
 pytest
 ```
+
+### Frontend development
+
+The `frontend/` workspace is a [Next.js 16](https://nextjs.org/docs) App
+Router app using [shadcn/ui v4](https://ui.shadcn.com) and
+[TanStack React Query](https://tanstack.com/query). It expects the
+Express service at `http://localhost:3000` (override with
+`NEXT_PUBLIC_API_BASE_URL`).
+
+```bash
+cd frontend
+pnpm install
+pnpm dev        # http://localhost:3001
+pnpm build      # production build
+pnpm test       # 58 unit + component tests via Vitest
+pnpm test:watch
+pnpm test:ui
+pnpm test:coverage
+pnpm lint
+pnpm typecheck
+```
+
+Adding a page follows the `page.tsx` (server) + `*-client.tsx`
+(client) split, with the client using `useSearchParams()` and React
+Query against the API client in `src/lib/api.ts`. UI primitives are
+installed via the shadcn CLI (`pnpm dlx shadcn@latest add <name>`)
+and live in `src/components/ui/`.
 
 ### Load tests
 
@@ -469,6 +496,8 @@ Grafana dashboard JSON in `alerts/grafana-dashboard.json` (17 panels).
 | SDK — Python   | Python 3.9+, `requests`, dataclasses, type hints |
 | Contracts      | [TEAL](https://developer.algorand.org/docs/get-details/dapps/avm/teal/) (Algorand v10) |
 | Observability  | Prometheus, Alertmanager, Grafana JSON (17 panels), [k6](https://k6.io) |
+| Frontend       | [Next.js 16](https://nextjs.org) (App Router), [shadcn/ui v4](https://ui.shadcn.com) (Base UI), [Tailwind v4](https://tailwindcss.com), [TanStack React Query](https://tanstack.com/query) |
+| Frontend tests | [Vitest](https://vitest.dev), [Testing Library](https://testing-library.com), [MSW](https://mswjs.io) |
 
 ---
 
