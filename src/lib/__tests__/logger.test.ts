@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { logger } from '../logger';
+import { formatPretty, logger } from '../logger';
 
 describe('Logger', () => {
   let consoleSpy: {
@@ -78,5 +78,68 @@ describe('Logger request-scoped usage', () => {
     const calls = (console.log as LogCall).mock.calls as Array<[string]>;
     const output = JSON.parse(calls[0]![0]);
     expect(output.requestId).toBe('req-123');
+  });
+});
+
+describe('formatPretty', () => {
+  it('emits timestamp + padded level + message + JSON meta (no duplicates)', () => {
+    const out = formatPretty(
+      {
+        level: 'info',
+        message: 'Loaded system exposure from disk',
+        timestamp: '2026-08-19T18:01:28.766Z',
+        total: 10000,
+        wallets: 1,
+      },
+      false,
+    );
+    expect(out).toBe(
+      '2026-08-19T18:01:28.766Z INFO  Loaded system exposure from disk {"total":10000,"wallets":1}',
+    );
+    expect(out).not.toContain('"message"');
+  });
+
+  it('omits the meta section when only standard fields are present', () => {
+    const out = formatPretty(
+      {
+        level: 'warn',
+        message: 'OPERATOR_MNEMONIC not set',
+        timestamp: '2026-08-19T18:01:28.766Z',
+      },
+      false,
+    );
+    expect(out).toBe('2026-08-19T18:01:28.766Z WARN  OPERATOR_MNEMONIC not set');
+    expect(out).not.toContain('{"message"');
+  });
+
+  it('does not duplicate the message in the meta JSON', () => {
+    // Regression: when the entry is built from the call-site with
+    // a message, the pretty format should only render the message
+    // once (in the body), not also inside the meta JSON object.
+    const out = formatPretty(
+      {
+        level: 'warn',
+        message: 'real message',
+        timestamp: '2026-08-19T18:01:28.766Z',
+        extra: 'data',
+      },
+      false,
+    );
+    expect(out).toContain('real message')
+    expect(out).not.toContain('"message"')
+    expect(out).toContain('"extra":"data"')
+  });
+
+  it('includes ANSI colors only when useColor is true', () => {
+    const plain = formatPretty(
+      { level: 'error', message: 'kaboom', timestamp: '2026-08-19T18:01:28.766Z' },
+      false,
+    );
+    const colored = formatPretty(
+      { level: 'error', message: 'kaboom', timestamp: '2026-08-19T18:01:28.766Z' },
+      true,
+    );
+    expect(plain).not.toContain('\x1b[');
+    expect(colored).toContain('\x1b[31m');
   });
 });

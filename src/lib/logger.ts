@@ -91,12 +91,17 @@ export function formatEntry(entry: LogEntry): string {
   return JSON.stringify(sanitize(entry))
 }
 
+const STANDARD_FIELDS = new Set(['level', 'timestamp', 'message'])
+
 export function formatPretty(entry: LogEntry, useColor = process.stdout.isTTY): string {
   const ts = entry.timestamp
   const level = LEVEL_PADDED[entry.level]
   const color = useColor ? LEVEL_COLORS[entry.level] : ''
   const reset = useColor ? LEVEL_RESET : ''
-  const { level: _l, timestamp: _t, message: _m, ...rest } = entry
+  const rest: Record<string, unknown> = {}
+  for (const [k, v] of Object.entries(entry)) {
+    if (!STANDARD_FIELDS.has(k)) rest[k] = v
+  }
   const meta = Object.keys(rest).length
     ? ' ' + JSON.stringify(sanitize(rest))
     : ''
