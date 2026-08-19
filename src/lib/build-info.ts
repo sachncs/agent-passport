@@ -7,7 +7,11 @@
  */
 
 import { existsSync, readFileSync } from 'fs';
-import { join } from 'path';
+import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 interface BuildInfo {
   version: string;
@@ -18,7 +22,6 @@ interface BuildInfo {
 function readVersion(): string {
   for (const p of [
     join(process.cwd(), 'package.json'),
-    join(process.cwd(), '..', 'package.json'),
     join(__dirname, '..', '..', 'package.json'),
   ]) {
     try {
