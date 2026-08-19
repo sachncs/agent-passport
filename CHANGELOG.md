@@ -20,7 +20,152 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Web frontend (apps/frontend) — REDESIGN
+### Web frontend (frontend/) — Next.js 16 + shadcn/ui v4 + tests
+
+Migrated the frontend to fully conform with the
+[Next.js 16 project structure](https://nextjs.org/docs/app/getting-started/project-structure)
+and the current [shadcn/ui](https://ui.shadcn.com/docs/components)
+recipe. Supersedes the previous "REDESIGN" section below.
+
+#### Rendering & framework
+
+- **Removed `output: "export"`** from `next.config.ts`. The previous
+  static export contradicted the per-page `force-dynamic` exports and
+  prevented use of `loading.tsx`, `proxy.ts`, and other Next.js 16
+  conventions. The app now builds as full SSR with prerendered
+  static pages.
+- **Dropped `export const dynamic = "force-dynamic"`** from every
+  `page.tsx` and `not-found.tsx`. With client-side data fetching
+  via React Query, server components can prerender statically.
+- **Added `app/loading.tsx`** (Suspense fallback using shadcn
+  `Card` + `Skeleton`).
+- **Added `app/error.tsx`** (Client Component error boundary using
+  shadcn `Alert` + `Button`, exposes `reset()`).
+- **Added `app/global-error.tsx`** with own `<html>`/`<body>` per
+  Next.js 16 docs, catches root-layout crashes.
+- **Added `proxy.ts`** (replaces the deprecated `middleware.ts`
+  in Next.js 16). Trusts an incoming `X-Request-ID` if it looks
+  like a token, otherwise generates a fresh one; attaches it to
+  both downstream request headers and response headers. Matcher
+  excludes `_next/static`, `_next/image`, `favicon.ico`, and image
+  assets.
+
+#### Theme persistence
+
+- **Replaced the cosmetic theme toggle** with a real persisted
+  theme via `next-themes`. The previous TopBar toggle updated a
+  local `useState` that no DOM code read — the `dark` class on
+  `<html>` was hardcoded in `layout.tsx` so light mode never
+  activated. Now:
+  - `next-themes` (`ThemeProvider` wrapper at
+    `src/components/theme-provider.tsx`) writes the theme to
+    `localStorage` with `attribute="class"` and `enableSystem`.
+  - `layout.tsx` adds `suppressHydrationWarning` on `<html>` and
+    drops the hardcoded `dark` class.
+  - `TopBar` calls `setTheme()` from `useTheme()` and renders
+    via a `mounted` flag to avoid SSR/CSR icon mismatch.
+
+#### shadcn/ui full suite
+
+- **Installed the full shadcn/ui v4 component set** (base-nova
+  style, `@base-ui/react` primitives) via `pnpm dlx shadcn@latest add`:
+  accordion, alert-dialog, avatar, breadcrumb, chart, checkbox,
+  collapsible, combobox, command, context-menu, drawer, dropdown-menu,
+  empty, field, hover-card, input-group, input-otp, menubar,
+  navigation-menu, pagination, popover, radio-group, scroll-area,
+  sheet, sidebar, sonner, spinner, table, toggle, toggle-group.
+  Pulls in `cmdk`, `input-otp`, `recharts`, `sonner` as runtime
+  deps.
+- **Replaced the hand-rolled `Sidebar`** with the official shadcn
+  `Sidebar` component: collapsible icon-only mode, responsive
+  mobile drawer, cookie-persisted open/closed state, and `b`
+  keyboard shortcut to toggle. New `useIsMobile` hook.
+- **Mounted Sonner `<Toaster />`** in the root layout (top-right)
+  for API feedback. Pages can now call `toast.success / error()`.
+- **Created `AppBreadcrumb`** at `src/components/breadcrumb.tsx`
+  using shadcn `Breadcrumb`. Renders a route-aware nav indicator
+  from the current `usePathname()`. Mounted at the top of `TopBar`.
+- **Rewrote `src/components/page-header.tsx`** helpers to use
+  shadcn `Empty`, `Spinner`, and `Alert` (`ErrorBlock` is now a
+  destructive `Alert`; `EmptyState` uses the shadcn `Empty`
+  compound).
+
+#### shadcn v4 API migration
+
+- **Replaced `asChild` pattern with `render` prop.** The shadcn v4
+  base-nova components use base-ui's `useRender` hook with a
+  `render` prop instead of the Radix-style `asChild` boolean.
+  Migrated `BreadcrumbLink`, `SidebarMenuButton`, and `Button` in
+  the `not-found` page.
+- **Made form pages client components.** `counterparty`,
+  `discovery`, `endorse`, and `monitor` `page.tsx` files were
+  using `useState`/`useEffect` without a `"use client"` directive —
+  they were being treated as server components, which broke the
+  build under full SSR. Added the directive.
+- **Wrapped `TopBar` in `<Suspense>`** in the root layout because
+  it uses `useSearchParams()` for wallet-search init; the prerender
+  of `/_not-found` needs a Suspense boundary around any component
+  that calls `useSearchParams`, per the Next.js 16 csr-bailout rule.
+
+#### Test infrastructure
+
+- **Added Vitest + Testing Library + MSW.** Was previously zero
+  frontend tests. New `vitest.config.ts` (jsdom env, `@/` alias,
+  v8 coverage with sensible excludes), `src/test-setup.ts`
+  (jest-dom matchers + matchMedia polyfill + `crypto.randomUUID`
+  shim + `NEXT_PUBLIC_API_BASE_URL` default for MSW), and scripts
+  `test`, `test:watch`, `test:ui`, `test:coverage`, `typecheck`.
+- **Wrote 58 tests across 12 files**:
+  - `src/lib/utils.test.ts` (5) — `cn()` helper
+  - `src/lib/wallet.test.ts` (8) — `isValidWallet` (length,
+    case, character set, type guards, regex shape)
+  - `src/lib/api.test.ts` (5) — MSW-driven: `X-Request-ID`,
+    query encoding, POST `Idempotency-Key`, `ApiError` on non-2xx,
+    fallback to `HTTP <status>` on non-JSON bodies
+  - `src/components/page-header.test.tsx` (8) — `PageHeader`,
+    `EmptyState`, `LoadingBlock`, `ErrorBlock`,
+    `WalletRequiredAlert`
+  - `src/components/breadcrumb.test.tsx` (5) — `AppBreadcrumb`
+    path resolution for /, known segments, multi-segment paths,
+    unknown-segment fallback
+  - `src/components/topbar.test.tsx` (4) — render + theme toggle
+  - `src/components/sidebar.test.tsx` (6) — brand, all 11 nav
+    items, active state, nested-path matching, `/` exclusive
+    highlight, footer link
+  - `src/components/home-page.test.tsx` (3) — brand, tool
+    grid, route links
+  - `src/app/score/trust-score-client.test.tsx` (4) —
+    `WalletRequiredAlert`, loading, success, error
+  - `src/app/counterparty/page.test.tsx` (4) — render,
+    validation, allow, deny/error
+  - `src/app/not-found.test.tsx` (2) — heading + back link
+  - `src/app/error.test.tsx` (4) — title, message, fallback,
+    reset click, no-digest
+- **Fixed `pnpm-workspace.yaml`** to point at the new
+  `frontend/` path (was still `apps/*` after the rename in
+  commit `6a08afb`). Without this, `node_modules/.pnpm/` symlinks
+  resolved to the wrong directory and Vitest couldn't resolve
+  `lucide-react`.
+
+#### Documentation
+
+- **Updated root `README.md`** to reference the actual frontend
+  (Next.js 16 + shadcn/ui v4 + Tailwind v4 + TanStack React Query)
+  in the project-structure tree and tech-stack table. Added a
+  "Frontend development" section with install/dev/build/test
+  commands and the `page.tsx` + `*-client.tsx` convention.
+- **Replaced `frontend/README.md`** create-next-app boilerplate
+  with real documentation: stack, directory layout, scripts,
+  environment variables, conventions (no `force-dynamic`, shadcn
+  in `src/components/ui/`, MSW in tests), and how to add a page
+  or component.
+
+### Web frontend (apps/frontend) — REDESIGN (superseded)
+
+> **Superseded by the "Next.js 16 + shadcn/ui v4 + tests" section
+> above.** The shadcn/ui v4 base-nova style uses `@base-ui/react`
+> with a `useRender` `render` prop instead of Radix + `asChild` +
+> `forwardRef`. The previous primitives have been replaced.
 
 The previous UI was a hand-rolled mix of utilities and ad-hoc Radix
 wrappers. Replaced with the official [shadcn/ui](https://ui.shadcn.com/docs/components)
