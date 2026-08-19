@@ -2,6 +2,14 @@
 
 All notable changes to **Agent Passport** are documented in this file.
 
+> **Latest**: the v0.1.0 release was **not** production-ready. The
+> `[Unreleased]` section below ships the production-readiness fix set
+> (HMAC auth, mandatory Idempotency-Key, single-application of the
+> sybil penalty, race-free persistence, web dashboard x402 fix,
+> dependency cleanup) plus a complete frontend redesign using the
+> official [shadcn/ui](https://ui.shadcn.com/docs/components) recipe.
+> Treat the v0.1.0 tag as a dev preview.
+
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
@@ -11,6 +19,78 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > - **Python SDK** — [`sdk/python/CHANGELOG.md`](sdk/python/CHANGELOG.md)
 
 ## [Unreleased]
+
+### Web frontend (apps/frontend) — REDESIGN
+
+The previous UI was a hand-rolled mix of utilities and ad-hoc Radix
+wrappers. Replaced with the official [shadcn/ui](https://ui.shadcn.com/docs/components)
+recipe end-to-end.
+
+- **Every UI primitive** (Alert, Badge, Button, Card, Dialog, Input,
+  Label, Progress, Select, Separator, Skeleton, Tabs, Textarea,
+  Tooltip) implemented as the canonical 2024 shadcn/ui source:
+  `cva` for variants, Radix for the headless logic, `forwardRef`
+  for refs, `tailwind-merge` for class merging.
+- **Per-tool pages** (home, trust-score, passport, underwrite,
+  delegation, sybil, reputation, counterparty, endorse, discovery,
+  monitor, 404) rewritten using a common widget set:
+  `PageHeader`, `EmptyState`, `LoadingBlock`, `ErrorBlock`,
+  `RiskBadge`, `ScoreBar`, `KV`, `ExplanationList`, `WalletLabel`.
+- **Layout**: persistent left sidebar (11 nav items) + top bar
+  with wallet search input + theme toggle. Health pill in the
+  sidebar footer polls `/health` every 30 s.
+- **Routing**: lazy + Suspense per page; new `/404` route.
+- **Theme**: `next-themes` handles the dark/light class swap on
+  `<html>` (sun/moon toggle in the top bar).
+- **API client** (`src/lib/api.ts`): typed fetch wrapper that sends
+  `X-Request-ID` on every request, attaches `Idempotency-Key` on
+  mutating calls, and surfaces typed `ApiError` with status +
+  requestId.
+- **Per-wallet `useWalletQuery` hook**: encapsulates the
+  `useState` + `useQuery` + URL-param-initial-wallet pattern that
+  every page repeated. Reads `?wallet=...` from the URL on first
+  load for deep-linking.
+- **Replaces the old `apps/web`** directory: 39 docs files were
+  renamed to `apps/frontend`; `@agent-passport/web` package renamed
+  to `@agent-passport/frontend`. Old name preserved in
+  `pnpm-lock.yaml` history only.
+
+Build output: 14 lazy-loaded chunks, main shell ~99 KB gzipped,
+biggest (`/sybil` with recharts) ~103 KB gzipped.
+
+### Removed dependencies (broken upstream package)
+
+The `@x402/core`, `@x402/evm`, and `@x402/express` packages were
+broken in every published version at the time of upgrade (2.20,
+2.21, 2.22). All three ship a chunked `x402Client-*.mjs` module
+referenced by their `.d.mts` declaration files but never
+generated as a runtime artifact, causing
+`ERR_MODULE_NOT_FOUND` on every process start.
+
+- Replaced the runtime x402 implementation in `src/lib/x402.ts`
+  with a native module that:
+  - Returns `402 Payment Required` with a `PaymentRequirements`
+    body for missing `x-payment` headers
+  - Calls the facilitator's `POST /verify` endpoint for present
+    `x-payment` headers
+  - Returns `502` for facilitator unavailability
+  - 402 with `reason` on verification failure
+- Body shape matches the previous package's `PaymentRequirements`
+  so existing SDK clients work unchanged.
+- Removed `@x402/core`, `@x402/evm`, `@x402/express` from
+  `package.json` and `pnpm-lock.yaml`. 3 fewer dependencies,
+  ~0.7 MB smaller install.
+
+### Fixed
+
+- **`__dirname` is not defined in ESM** in `src/lib/build-info.ts`
+  (caused a crash-on-startup that masked the x402 module-not-found
+  error). Replaced with `fileURLToPath(import.meta.url)` +
+  `dirname()`.
+- **Test mocks** for x402 rewritten to use `vi.spyOn(globalThis,
+  'fetch')` instead of the now-removed `@x402/*` package mocks.
+
+## [Unreleased] — previous work
 
 ### Security (CRITICAL — read before deploying)
 
