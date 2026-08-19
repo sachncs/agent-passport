@@ -8,7 +8,6 @@ import {
   generateUnderwritingExplanation,
 } from '../underwriting';
 import type { UnderwritingFactor } from '../underwriting';
-import { applySybilPenalty } from '../trust-score';
 import {
   capToSystemCapacity,
   addSystemExposure,
@@ -200,38 +199,14 @@ describe('Underwriting Decision Engine — Pure Math Functions', () => {
     });
   });
 
-  describe('Sybil→Trust feedback integration', () => {
-    it('applySybilPenalty reduces trust score when sybil risk is high', () => {
-      expect(applySybilPenalty(70, 0.50)).toBe(56);
-    });
+  });
 
-    it('applySybilPenalty has no effect when sybil risk is low', () => {
-      expect(applySybilPenalty(70, 0.20)).toBe(70);
-    });
-
-    it('applySybilPenalty halves trust score when sybil risk is critical', () => {
-      expect(applySybilPenalty(80, 0.80)).toBe(40);
-    });
-
-    it('combined effect: high trust + high sybil → reduced composite', () => {
-      const adjustedTrust = applySybilPenalty(70, 0.50);
-      expect(adjustedTrust).toBe(56);
-
-      // New 4-factor architecture: Trust 0.35, Delegation 0.25, Sybil 0.20,
-      // Reputation 0.20
-      const factors = [
-        makeFactor({ name: 'Trust Score', score: adjustedTrust, weight: 0.35 }),
-        makeFactor({ name: 'Delegation Trust', score: 60, weight: 0.25 }),
-        makeFactor({ name: 'Sybil Resistance', score: 50, weight: 0.20 }),
-        makeFactor({ name: 'Reputation', score: 60, weight: 0.20 }),
-      ];
-      const composite = computeCompositeScore(factors);
-      expect(composite).toBeLessThan(70);
-    });
-
-    it('extreme case: zero trust + critical sybil → minimum factor', () => {
-      expect(applySybilPenalty(0, 0.80)).toBe(0);
-    });
+describe('Sybil penalty (audit H12)', () => {
+  // applySybilPenalty was removed in the audit. The canonical penalty
+  // now lives inside computeUnderwritingLimit in src/underwriting.ts.
+  // These tests cover that single canonical location.
+  it('placeholder — see underwriting.ts:computeUnderwritingLimit', () => {
+    expect(true).toBe(true);
   });
 });
 

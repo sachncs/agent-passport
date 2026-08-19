@@ -13,11 +13,6 @@ vi.mock('../lib/logger', () => ({
 
 vi.mock('../trust-score', () => ({
   scoreWalletFresh: vi.fn(),
-  applySybilPenalty: (score: number, risk: number) => {
-    if (risk < 0.45) return score;
-    if (risk < 0.70) return Math.round(score * 0.8 * 10) / 10;
-    return Math.round(score * 0.5 * 10) / 10;
-  },
 }));
 
 vi.mock('../delegation', () => ({

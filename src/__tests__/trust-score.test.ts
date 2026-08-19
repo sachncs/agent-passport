@@ -11,7 +11,6 @@ import {
   generateExplanation,
   computeStalenessPenalty,
   applyFreshWalletCap,
-  applySybilPenalty,
 } from '../trust-score';
 import { isValidWallet } from '../lib/constants';
 
@@ -526,52 +525,6 @@ describe('Trust Score — Pure Math Functions', () => {
     it('preserves score for old wallets regardless of value', () => {
       expect(applyFreshWalletCap(100, 1000)).toBe(100);
       expect(applyFreshWalletCap(0, 1000)).toBe(0);
-    });
-  });
-
-  describe('applySybilPenalty', () => {
-    it('no penalty for low sybil risk (< 0.25)', () => {
-      expect(applySybilPenalty(70, 0)).toBe(70);
-      expect(applySybilPenalty(70, 0.10)).toBe(70);
-      expect(applySybilPenalty(70, 0.24)).toBe(70);
-    });
-
-    it('no penalty for medium sybil risk (0.25-0.44)', () => {
-      expect(applySybilPenalty(70, 0.25)).toBe(70);
-      expect(applySybilPenalty(70, 0.44)).toBe(70);
-    });
-
-    it('20% reduction for high sybil risk (0.45-0.69)', () => {
-      // 70 * 0.8 = 56
-      expect(applySybilPenalty(70, 0.45)).toBe(56);
-      expect(applySybilPenalty(70, 0.55)).toBe(56);
-      expect(applySybilPenalty(70, 0.69)).toBe(56);
-    });
-
-    it('50% reduction for critical sybil risk (>= 0.70)', () => {
-      // 70 * 0.5 = 35
-      expect(applySybilPenalty(70, 0.70)).toBe(35);
-      expect(applySybilPenalty(70, 0.90)).toBe(35);
-      expect(applySybilPenalty(70, 1.0)).toBe(35);
-    });
-
-    it('boundary: 0.44 → no penalty, 0.45 → 20% penalty', () => {
-      expect(applySybilPenalty(100, 0.44)).toBe(100);
-      expect(applySybilPenalty(100, 0.45)).toBe(80);
-    });
-
-    it('boundary: 0.69 → 20%, 0.70 → 50%', () => {
-      expect(applySybilPenalty(100, 0.69)).toBe(80);
-      expect(applySybilPenalty(100, 0.70)).toBe(50);
-    });
-
-    it('handles zero trust score', () => {
-      expect(applySybilPenalty(0, 0.80)).toBe(0);
-    });
-
-    it('handles low trust score with high sybil', () => {
-      // 20 * 0.5 = 10
-      expect(applySybilPenalty(20, 0.80)).toBe(10);
     });
   });
 
