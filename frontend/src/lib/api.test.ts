@@ -2,7 +2,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest"
 import { http, HttpResponse } from "msw"
 import { setupServer } from "msw/node"
 
-import { ApiError, api } from "@/lib/api"
+import { api } from "@/lib/api"
 
 const server = setupServer()
 

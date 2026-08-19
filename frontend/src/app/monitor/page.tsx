@@ -24,7 +24,8 @@ export default function MonitorPage() {
     }
   }
   useEffect(() => {
-    tick()
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void tick()
     const id = setInterval(tick, 15_000)
     return () => clearInterval(id)
   }, [])

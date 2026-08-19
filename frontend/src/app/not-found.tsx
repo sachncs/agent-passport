@@ -13,7 +13,7 @@ export default function NotFound() {
           <div className="space-y-2">
             <h1 className="text-xl font-semibold">Page not found</h1>
             <p className="max-w-sm text-sm text-muted-foreground">
-              The route you tried to open doesn't exist on this service.
+              The route you tried to open doesn&apos;t exist on this service.
               Check the sidebar for the list of available tools.
             </p>
           </div>

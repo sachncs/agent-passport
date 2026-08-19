@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { EmptyState, ErrorBlock, LoadingBlock, PageHeader } from "@/components/page-header"
+import { EmptyState, LoadingBlock, PageHeader } from "@/components/page-header"
 import type { BazaarSearchResponse } from "@/lib/api-types"
 export default function DiscoveryPage() {
   const [q, setQ] = useState("")

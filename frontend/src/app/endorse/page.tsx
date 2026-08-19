@@ -1,6 +1,5 @@
 import { useState } from "react"
 
-import { api, ApiError } from "@/lib/api"
 import { isValidWallet } from "@/lib/wallet"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
