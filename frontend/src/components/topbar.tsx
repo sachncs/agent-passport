@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
+import { useTheme } from "next-themes"
 import { Moon, Search, Sun } from "lucide-react"
 
 import { Input } from "@/components/ui/input"
@@ -13,7 +14,12 @@ export function TopBar() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const [wallet, setWallet] = useState(searchParams.get("wallet") ?? "")
-  const [isDark, setIsDark] = useState(true)
+  const { resolvedTheme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -23,6 +29,8 @@ export function TopBar() {
     params.set("wallet", trimmed)
     router.push(`${pathname}?${params.toString()}`)
   }
+
+  const isDark = resolvedTheme === "dark"
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur md:px-6">
@@ -46,10 +54,19 @@ export function TopBar() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => setIsDark((d) => !d)}
+          onClick={() => setTheme(isDark ? "light" : "dark")}
           aria-label="Toggle theme"
+          suppressHydrationWarning
         >
-          {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          {mounted ? (
+            isDark ? (
+              <Sun className="h-4 w-4" />
+            ) : (
+              <Moon className="h-4 w-4" />
+            )
+          ) : (
+            <span className="block h-4 w-4" />
+          )}
         </Button>
       </div>
     </header>
