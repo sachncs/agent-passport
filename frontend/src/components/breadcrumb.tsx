@@ -34,9 +34,7 @@ export function AppBreadcrumb() {
     <Breadcrumb>
       <BreadcrumbList>
         <BreadcrumbItem>
-          <BreadcrumbLink asChild>
-            <Link href="/">Overview</Link>
-          </BreadcrumbLink>
+          <BreadcrumbLink render={<Link href="/" />}>Overview</BreadcrumbLink>
         </BreadcrumbItem>
         {segments.length > 0 && <BreadcrumbSeparator />}
         {segments.map((segment, index) => {
@@ -48,8 +46,8 @@ export function AppBreadcrumb() {
               {isLast ? (
                 <BreadcrumbPage>{label}</BreadcrumbPage>
               ) : (
-                <BreadcrumbLink asChild>
-                  <Link href={href}>{label}</Link>
+                <BreadcrumbLink render={<Link href={href} />}>
+                  {label}
                 </BreadcrumbLink>
               )}
               {!isLast && <BreadcrumbSeparator />}

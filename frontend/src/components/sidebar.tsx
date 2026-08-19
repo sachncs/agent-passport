@@ -54,17 +54,17 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
-              asChild
               size="lg"
               tooltip="Agent Passport"
-            >
-              <Link href="/">
-                <Shield className="h-5 w-5" />
-                <span className="font-semibold tracking-tight">
-                  Agent Passport
-                </span>
-              </Link>
-            </SidebarMenuButton>
+              render={
+                <Link href="/">
+                  <Shield className="h-5 w-5" />
+                  <span className="font-semibold tracking-tight">
+                    Agent Passport
+                  </span>
+                </Link>
+              }
+            />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
@@ -82,15 +82,15 @@ export function AppSidebar() {
                 return (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
-                      asChild
                       isActive={active}
                       tooltip={item.label}
-                    >
-                      <Link href={item.href}>
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.label}</span>
-                      </Link>
-                    </SidebarMenuButton>
+                      render={
+                        <Link href={item.href}>
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.label}</span>
+                        </Link>
+                      }
+                    />
                   </SidebarMenuItem>
                 )
               })}
@@ -101,12 +101,15 @@ export function AppSidebar() {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Service status">
-              <Link href="/monitor">
-                <Activity className="h-4 w-4" />
-                <span>Service status</span>
-              </Link>
-            </SidebarMenuButton>
+            <SidebarMenuButton
+              tooltip="Service status"
+              render={
+                <Link href="/monitor">
+                  <Activity className="h-4 w-4" />
+                  <span>Service status</span>
+                </Link>
+              }
+            />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>

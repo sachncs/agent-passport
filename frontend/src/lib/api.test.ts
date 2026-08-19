@@ -41,21 +41,20 @@ describe("api client", () => {
   })
 
   it("POST sends JSON body and Idempotency-Key", async () => {
-    let seen: { idempotencyKey: string | null; body: unknown } | null = null
+    type Seen = { idempotencyKey: string | null; body: unknown }
+    const seen: Seen = { idempotencyKey: null, body: null }
     server.use(
       http.post("http://localhost/counterparty-check", async ({ request }) => {
         const text = await request.text()
-        seen = {
-          idempotencyKey: request.headers.get("idempotency-key"),
-          body: JSON.parse(text),
-        }
+        seen.idempotencyKey = request.headers.get("idempotency-key")
+        seen.body = JSON.parse(text)
         return HttpResponse.json({ allow: true, trustScore: 90 })
       }),
     )
     const result = await api.checkCounterparty(WALLET)
     expect(result.allow).toBe(true)
-    expect(seen?.body).toEqual({ buyer: WALLET })
-    expect(seen?.idempotencyKey).toMatch(/^web-/)
+    expect(seen.body).toEqual({ buyer: WALLET })
+    expect(seen.idempotencyKey).toMatch(/^web-/)
   })
 
   it("throws ApiError with status + requestId on non-2xx", async () => {

@@ -17,9 +17,7 @@ export default function NotFound() {
               Check the sidebar for the list of available tools.
             </p>
           </div>
-          <Button asChild>
-            <Link href="/">Back to overview</Link>
-          </Button>
+          <Button render={<Link href="/">Back to overview</Link>} />
         </CardContent>
       </Card>
     </div>
