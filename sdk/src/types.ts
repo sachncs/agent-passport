@@ -14,17 +14,6 @@ export interface AgentPassportConfig {
   headers?: Record<string, string>;
 }
 
-export interface PaginationOptions {
-  pageSize?: number;
-  cursor?: string;
-}
-
-export interface Page<T> {
-  items: T[];
-  nextCursor?: string;
-  hasMore: boolean;
-}
-
 export interface TrustScoreResponse {
   wallet: string;
   trustScore: number;
@@ -274,9 +263,4 @@ export interface RevocationResponse {
   agent: string;
   round: number;
   timestamp: number;
-}
-
-export interface CreatePassportOptions {
-  wallet: string;
-  refresh?: boolean;
 }

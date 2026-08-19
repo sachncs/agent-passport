@@ -158,7 +158,6 @@ describe('AgentPassportClient', () => {
         agent: ALT_WALLET,
         amount: 1000,
         idempotencyKey: 'key-12345678',
-      });
       expect(capturedHeaders['Idempotency-Key']).toBe('key-12345678');
     });
   });
@@ -209,17 +208,6 @@ describe('AgentPassportClient', () => {
       const body = JSON.parse(captured.init.body);
       expect(body.sponsor).toBe(VALID_WALLET);
       expect(body.agent).toBe(ALT_WALLET);
-    });
-  });
-
-  describe('createPassport', () => {
-    it('is an alias for getPassport', async () => {
-      const c = new AgentPassportClient({ baseUrl: 'http://x' });
-      globalThis.fetch = vi.fn(async () =>
-        mockFetchResponse(200, { wallet: VALID_WALLET, checksum: 'abc' }),
-      ) as any;
-      const p = await c.createPassport({ wallet: VALID_WALLET });
-      expect(p.wallet).toBe(VALID_WALLET);
     });
   });
 

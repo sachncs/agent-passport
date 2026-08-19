@@ -47,8 +47,7 @@ import {
   EndorsementResponse,
   RevocationRequest,
   RevocationResponse,
-  CreatePassportOptions,
-} from './types';
+  } from './types';
 import { computeBackoff, sleep, isRetryableStatus } from './retry';
 
 export * from './errors';
@@ -317,13 +316,6 @@ export class AgentPassportClient {
   async getPassport(wallet: string): Promise<PassportResponse> {
     this.validateWallet(wallet);
     return this.request<PassportResponse>('GET', `/passport?wallet=${wallet}`);
-  }
-
-  // ── Create Passport (explicit alias) ─────────────────────────
-
-  async createPassport(options: CreatePassportOptions): Promise<PassportResponse> {
-    this.validateWallet(options.wallet);
-    return this.getPassport(options.wallet);
   }
 
   // ── Endorse (POST /delegate on-chain) ────────────────────────
