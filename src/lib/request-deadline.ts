@@ -41,9 +41,3 @@ export function requestDeadlineMiddleware(
 
   next();
 }
-
-/** True when the request has exceeded its deadline. */
-export function isPastDeadline(res: Response): boolean {
-  const d = res.locals.deadlineAt;
-  return typeof d === 'number' && Date.now() > d;
-}

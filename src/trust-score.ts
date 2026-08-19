@@ -199,32 +199,9 @@ export function applyFreshWalletCap(
   return trustScore;
 }
 
-/**
- * Applies sybil risk penalty to trust score.
- *
- * Design rationale:
- * - Sybil clusters indicate coordinated inauthentic behavior
- * - Penalty scales with severity: low risk -> no penalty, high risk ->
- *   50% reduction
- * - Applied in underwriting layer (not base trust score) because
- *   sybil detection
- *   requires cluster analysis that isn't available in single-wallet scoring
- * - Thresholds align with classifySybilRisk boundaries
- *
- * Tiers:
- *   sybilRisk < 0.25 (low)      → no penalty
- *   sybilRisk < 0.45 (medium)   → no penalty (monitoring threshold)
- *   sybilRisk < 0.70 (high)     → 20% reduction
- *   sybilRisk >= 0.70 (critical) → 50% reduction
- */
-export function applySybilPenalty(
-  trustScore: number,
-  sybilRisk: number,
-): number {
-  if (sybilRisk < 0.45) return trustScore;
-  if (sybilRisk < 0.70) return Math.round(trustScore * 0.8 * 10) / 10;
-  return Math.round(trustScore * 0.5 * 10) / 10;
-}
+// applySybilPenalty was removed in the audit (H12): the underwriting
+// pipeline applies the penalty directly inside computeUnderwritingLimit
+// to avoid double-counting. The function and its tests are gone.
 
 export function classifyRisk(score: number): 'low' | 'medium' | 'high' | 'critical' {
   if (score >= 70) return 'low';
