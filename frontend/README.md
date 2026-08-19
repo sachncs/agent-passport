@@ -64,7 +64,7 @@ frontend/
 
 ```bash
 pnpm install
-pnpm dev           # http://localhost:3001 (with backend on :3000)
+pnpm dev           # http://localhost:3000 (proxies API to backend on :3000)
 pnpm build
 pnpm start
 pnpm lint
@@ -75,14 +75,36 @@ pnpm test:ui
 pnpm test:coverage
 ```
 
+The dev server runs on port **3000** (same as the backend). It uses
+Next.js rewrites to proxy every API call from `localhost:3000/<path>`
+to `localhost:3000/<path>` on the backend — i.e. when you visit
+`/score?wallet=...` in the browser, Next.js fetches it from the
+Express service transparently. No CORS issues, no env vars required.
+
+If you want a different port, set `PORT=<port>`. To point at a
+backend on a different host/port, set `BACKEND_URL`.
+
 ## Environment
 
 | Variable                    | Default              | Purpose                                  |
 |-----------------------------|----------------------|------------------------------------------|
-| `NEXT_PUBLIC_API_BASE_URL`  | `""` (same origin)   | Base URL for the Agent Passport backend  |
+| `PORT`                      | `3000`               | Port the Next.js dev/start server binds to |
+| `BACKEND_URL`               | `http://localhost:3000` | Backend URL that API requests are rewritten to |
+| `NEXT_PUBLIC_API_BASE_URL`  | `""` (use rewrites)  | Client-side API base URL; leave empty for the same-origin proxy |
 
-When `NEXT_PUBLIC_API_BASE_URL` is empty, the frontend calls the
-backend at the same origin (use a reverse proxy in production).
+By default, `NEXT_PUBLIC_API_BASE_URL` is empty, so the browser
+makes same-origin requests. The Next.js rewrites in
+`next.config.ts` then forward them to `BACKEND_URL` on the server
+side. This means:
+
+- No CORS configuration needed in dev
+- No env vars needed to get started
+- The browser never sees the backend URL
+
+If you want the browser to call the backend directly (e.g. in a
+production deployment without a reverse proxy), set
+`NEXT_PUBLIC_API_BASE_URL=http://your-backend:3000` and disable
+the rewrites (or accept the double-hop).
 
 ## Conventions
 
