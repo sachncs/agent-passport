@@ -8,7 +8,3 @@ export const WALLET_REGEX = /^[A-Z2-7]{58}$/;
 export function isValidWallet(s: string): boolean {
   return typeof s === 'string' && WALLET_REGEX.test(s);
 }
-
-export function isValidAlgoAddress(s: string): boolean {
-  return isValidWallet(s);
-}
