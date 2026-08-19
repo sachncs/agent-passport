@@ -25,7 +25,7 @@ import { getSanctionsProvider } from './lib/sanctions';
 import { buildInfo, packageVersion } from './lib/build-info';
 import { openApiSpec } from './lib/openapi';
 import { addSubscriber, fireWebhook, listSubscribers, removeSubscriber, validateWebhookUrl } from './lib/webhooks';
-import { getBazaarCatalog } from './lib/bazaar';
+import { existsSync, readFileSync } from 'fs';
 import { x402Middleware, settlementVerificationMiddleware } from './lib/x402';
 import { algod } from './lib/algorand-client';
 import { withTimeout } from './lib/timeout';
@@ -504,14 +504,89 @@ app.get('/verify', async (req, res) => {
   res.json({ valid, wallet: raw, flags });
 });
 
+// ── Bazaar catalog (M5) ───────────────────────────────────────
+// Inlined: was src/lib/bazaar.ts, ~100 lines for a single consumer.
+// Loads docs/bazaar-metadata.json or data/bazaar-metadata.json if
+// present; otherwise ships a single self-listing.
+interface CatalogEntry {
+  id: string;
+  type: string;
+  category: string;
+  name: string;
+  description: string;
+  tags: string[];
+  endpoints: Record<string, string>;
+  pricing: Record<string, string>;
+  health: string;
+}
+
+const DEFAULT_CATALOG: CatalogEntry[] = [{
+  id: 'agent-passport',
+  type: 'service',
+  category: 'trust',
+  name: 'Agent Passport',
+  description:
+    'Stateless trust scoring, delegation, credit, sybil, reputation, ' +
+    'and underwriting for AI agents on Algorand',
+  tags: ['trust', 'scoring', 'algorand', 'agent', 'wallet', 'x402'],
+  endpoints: {
+    score: '/score',
+    passport: '/passport',
+    underwrite: '/underwrite',
+    counterparty: '/counterparty-check',
+    delegate: '/delegate',
+    revoke: '/revoke',
+  },
+  pricing: {
+    score: '0.001 USDC',
+    passport: '0.005 USDC',
+    underwrite: '0.01 USDC',
+    counterparty: '0.01 USDC',
+  },
+  health: '/health',
+}];
+
+function loadBazaarCatalog(): CatalogEntry[] {
+  for (const p of [
+    join(__dirname, '..', '..', 'data', 'bazaar-metadata.json'),
+    join(__dirname, '..', '..', 'docs', 'bazaar-metadata.json'),
+  ]) {
+    if (existsSync(p)) {
+      try {
+        const parsed = JSON.parse(readFileSync(p, 'utf-8'));
+        if (Array.isArray(parsed)) return parsed as CatalogEntry[];
+        if (parsed && typeof parsed === 'object') {
+          const info = parsed.info || {};
+          const bazaar = parsed['x-bazaar'] || {};
+          return [{
+            id: String(bazaar.id || 'agent-passport'),
+            type: String(bazaar.type || 'service'),
+            category: String(bazaar.category || 'trust'),
+            name: String(info.title || 'Agent Passport'),
+            description: String(info.description || ''),
+            tags: Array.isArray(bazaar.tags) ? bazaar.tags : [],
+            endpoints: parsed.paths && typeof parsed.paths === 'object'
+              ? Object.fromEntries(
+                Object.keys(parsed.paths).slice(0, 50).map(pp => [pp, pp]),
+              )
+              : {},
+            pricing: {},
+            health: '/health',
+          }];
+        }
+      } catch { /* fall through to default */ }
+    }
+  }
+  return DEFAULT_CATALOG;
+}
+
+const BAZAAR_CATALOG = loadBazaarCatalog();
+
 // ── Capability #11: Bazaar Discovery ───────────────────────────
 app.get('/discovery/search', async (req, res) => {
   const q = (req.query.q as string | undefined)?.toLowerCase() ?? '';
   const limit = Math.min(parseInt(req.query.limit as string ?? '20', 10) || 20, 100);
-
-  // Load catalog from docs/bazaar-metadata.json (or data/). Falls back
-  // to a single self-listing. (M5)
-  const catalog = getBazaarCatalog();
+  const catalog = BAZAAR_CATALOG;
 
   const filtered = q
     ? catalog.filter(s =>
