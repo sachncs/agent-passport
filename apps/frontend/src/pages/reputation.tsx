@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Star, Plus, Webhook } from "lucide-react"
+import { Star, Plus } from "lucide-react"
 
 import { api, ApiError } from "@/lib/api"
 import { useWalletQuery } from "@/hooks/useWalletQuery"

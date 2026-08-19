@@ -55,7 +55,10 @@ async function callFacilitator(
   }
 }
 
-function buildRequirements(path: string, pricing: { price: number }): RoutePricing {
+function buildRequirements(
+  path: string,
+  pricing: { price: number },
+): RoutePricing {
   return {
     scheme: 'exact',
     network: config.x402Network,

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { EmptyState, ErrorBlock, LoadingBlock, PageHeader } from "@/components/widgets"
+import { EmptyState, LoadingBlock, PageHeader } from "@/components/widgets"
 
 import type { BazaarSearchResponse } from "@/types/api"
 

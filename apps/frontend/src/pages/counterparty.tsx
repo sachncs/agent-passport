@@ -1,16 +1,14 @@
 import { useState } from "react"
-import { HandCoins, Check, X } from "lucide-react"
+import { Check, HandCoins, X } from "lucide-react"
 
 import { api, ApiError } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import {
   EmptyState,
-  ErrorBlock,
   LoadingBlock,
   PageHeader,
 } from "@/components/widgets"

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Link, NavLink, useLocation } from "react-router-dom"
+import { Link, NavLink } from "react-router-dom"
 import {
   Activity,
   Award,
@@ -14,10 +14,11 @@ import {
   Users,
 } from "lucide-react"
 
-import { cn, truncateAddress } from "@/lib/utils"
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
+import { cn } from "@/lib/utils"
 import { isValidWallet } from "@/lib/wallet"
 
 interface NavItem {

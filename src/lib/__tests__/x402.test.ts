@@ -31,11 +31,25 @@ function mockReq(overrides: Partial<Request> = {}): Request {
   return { headers: {}, path: '/score', ...overrides } as unknown as Request;
 }
 
-function mockRes() {
+type MockRes = Response & {
+  status: ReturnType<typeof vi.fn>
+  json: ReturnType<typeof vi.fn>
+}
+
+// Helper: invoke an async-style middleware and wait for it to settle.
+const callAndWait = (
+  fn: () => void,
+  resolveAfter = 10,
+) => new Promise<void>((resolve) => {
+  fn()
+  setTimeout(resolve, resolveAfter)
+})
+
+function mockRes(): MockRes {
   const res = {
     status: vi.fn().mockReturnThis(),
     json: vi.fn().mockReturnThis(),
-  } as unknown as Response & { status: ReturnType<typeof vi.fn>; json: ReturnType<typeof vi.fn> };
+  } as unknown as Response & MockRes;
   return res;
 }
 
@@ -59,8 +73,8 @@ describe('x402Middleware', () => {
   it('calls next when x402 is disabled', async () => {
     mockConfig.x402Enabled = false;
     const next = vi.fn();
-    await new Promise<void>((resolve) => {
-      x402Middleware(mockReq(), mockRes() as Response, (() => { resolve(); next(); }) as NextFunction);
+    await callAndWait(() => {
+      x402Middleware(mockReq(), mockRes() as Response, next as NextFunction)
     });
     expect(next).toHaveBeenCalled();
   });
@@ -95,8 +109,8 @@ describe('x402Middleware', () => {
     );
     const next = vi.fn();
     const req = mockReq({ headers: { 'x-payment': 'proof' } });
-    await new Promise<void>((resolve) => {
-      x402Middleware(req, mockRes() as Response, (() => { resolve(); next(); }) as NextFunction);
+    await callAndWait(() => {
+      x402Middleware(req, mockRes() as Response, next as NextFunction)
     });
     expect(next).toHaveBeenCalled();
   });
@@ -191,8 +205,12 @@ describe('settlementVerificationMiddleware', () => {
     );
     const next = vi.fn();
     const req = mockReq({ headers: { 'x-payment': 'proof' } });
-    await new Promise<void>((resolve) => {
-      settlementVerificationMiddleware(req, mockRes() as Response, (() => { resolve(); next(); }) as NextFunction);
+    await callAndWait(() => {
+      settlementVerificationMiddleware(
+        req,
+        mockRes() as Response,
+        next as NextFunction,
+      )
     });
     expect(next).toHaveBeenCalled();
   });

@@ -4,7 +4,6 @@ import { api, ApiError } from "@/lib/api"
 import { useWalletQuery } from "@/hooks/useWalletQuery"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
 import {
   EmptyState,
   ErrorBlock,

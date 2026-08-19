@@ -1,15 +1,14 @@
 import { useState } from "react"
-import { HandCoins, AlertTriangle } from "lucide-react"
+import { AlertTriangle } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { EmptyState, PageHeader, WalletLabel } from "@/components/widgets"
+import { PageHeader } from "@/components/widgets"
 import { isValidWallet } from "@/lib/wallet"
 
 export default function Endorse() {

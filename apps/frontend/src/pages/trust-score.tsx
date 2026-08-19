@@ -1,7 +1,6 @@
 import { api, ApiError } from "@/lib/api"
 import { useWalletQuery } from "@/hooks/useWalletQuery"
 import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import {
@@ -22,7 +21,7 @@ export default function TrustScore() {
     "score",
     api.getScore,
   )
-  const { data, isLoading, error, refetch } = query
+  const { data, isLoading, error } = query
 
   if (!wallet) {
     return (
@@ -198,7 +197,6 @@ export default function TrustScore() {
 function KV({
   label,
   children,
-  mono = false,
 }: {
   label: string
   children: React.ReactNode

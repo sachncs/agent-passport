@@ -1,9 +1,7 @@
-import { useState } from "react"
 import { CheckCircle2, XCircle, Award, Download, FileText, Shield } from "lucide-react"
 
 import { api, ApiError } from "@/lib/api"
 import { useWalletQuery } from "@/hooks/useWalletQuery"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -12,7 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   EmptyState,
@@ -22,7 +19,7 @@ import {
   RiskBadge,
   WalletLabel,
 } from "@/components/widgets"
-import { cn, formatAlgo, formatUSDC } from "@/lib/utils"
+import { formatAlgo, formatUSDC } from "@/lib/utils"
 
 import type { PassportResponse } from "@/types/api"
 

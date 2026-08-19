@@ -1,11 +1,10 @@
-import { Shield, Scale, ShieldCheck, ShieldAlert, AlertCircle } from "lucide-react"
+import { Scale, ShieldCheck, ShieldAlert, AlertCircle } from "lucide-react"
 
 import { api, ApiError } from "@/lib/api"
 import { useWalletQuery } from "@/hooks/useWalletQuery"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   EmptyState,
@@ -13,7 +12,6 @@ import {
   LoadingBlock,
   PageHeader,
   RiskBadge,
-  WalletLabel,
 } from "@/components/widgets"
 import { formatUSDC } from "@/lib/utils"
 

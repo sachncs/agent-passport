@@ -1,5 +1,5 @@
 import { Suspense, lazy } from "react"
-import { Navigate, Route, Routes } from "react-router-dom"
+import { Route, Routes } from "react-router-dom"
 
 import { Layout } from "@/components/layout/Layout"
 import { Spinner } from "@/components/widgets/Spinner"
