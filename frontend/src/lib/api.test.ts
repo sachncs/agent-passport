@@ -86,4 +86,32 @@ describe("api client", () => {
       message: "HTTP 500",
     })
   })
+
+  it("rejects empty wallet on wallet-bound endpoints", () => {
+    const expectRejected = (fn: () => unknown, pattern: RegExp) => {
+      expect(fn).toThrow(pattern)
+    }
+    expectRejected(() => api.getScore(""), /getScore.*wallet is required/)
+    expectRejected(
+      () => api.getScore(undefined as unknown as string),
+      /getScore.*wallet is required/,
+    )
+    expectRejected(() => api.getPassport(""), /getPassport.*wallet is required/)
+    expectRejected(() => api.getDelegation(""), /getDelegation.*wallet is required/)
+    expectRejected(() => api.checkSybil(""), /checkSybil.*wallet is required/)
+    expectRejected(() => api.getReputation(""), /getReputation.*wallet is required/)
+    expectRejected(() => api.underwrite(""), /underwrite.*wallet is required/)
+    expectRejected(() => api.verify(""), /verify.*wallet is required/)
+    expectRejected(() => api.getTrustGraph(""), /getTrustGraph.*wallet is required/)
+  })
+
+  it("does not reject empty wallet on non-wallet endpoints", async () => {
+    server.use(
+      http.get("http://localhost/version", () =>
+        HttpResponse.json({ version: "0.1.0" }),
+      ),
+    )
+    const v = await api.version()
+    expect(v.version).toBe("0.1.0")
+  })
 })

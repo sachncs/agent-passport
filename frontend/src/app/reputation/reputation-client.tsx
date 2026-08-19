@@ -126,8 +126,11 @@ export function ReputationClient() {
 
   const { data, isLoading, error } = useQuery<ReputationResponse>({
     queryKey: ["reputation", wallet],
-    queryFn: () => api.getReputation(wallet!),
-    enabled: !!valid,
+    queryFn: () => {
+      if (!valid) throw new Error("wallet is not valid")
+      return api.getReputation(wallet)
+    },
+    enabled: valid,
     staleTime: 30_000,
   })
 

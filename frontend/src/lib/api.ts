@@ -108,14 +108,27 @@ async function request<T>(path: string, opts: FetchOpts = {}): Promise<T> {
   }
 }
 
+function requireWallet(wallet: string | undefined | null, method: string): string {
+  if (typeof wallet !== "string" || wallet.trim() === "") {
+    throw new Error(
+      `api.${method}: wallet is required (got ${JSON.stringify(wallet)})`,
+    )
+  }
+  return wallet
+}
+
 export const api = {
   health: () => request<{ status: string; service: string; version: string }>("/health"),
   version: () => request<VersionResponse>("/version"),
 
-  getScore: (wallet: string) =>
-    request<TrustScoreResponse>(`/score?wallet=${encodeURIComponent(wallet)}`),
-  getDelegation: (wallet: string) =>
-    request<DelegationResponse>(`/delegation?wallet=${encodeURIComponent(wallet)}`),
+  getScore: (wallet: string) => {
+    const w = requireWallet(wallet, "getScore")
+    return request<TrustScoreResponse>(`/score?wallet=${encodeURIComponent(w)}`)
+  },
+  getDelegation: (wallet: string) => {
+    const w = requireWallet(wallet, "getDelegation")
+    return request<DelegationResponse>(`/delegation?wallet=${encodeURIComponent(w)}`)
+  },
   checkCounterparty: (buyer: string) =>
     request<CounterpartyCheckResponse>("/counterparty-check", {
       method: "POST",
@@ -126,10 +139,14 @@ export const api = {
       method: "POST",
       body: { wallet, amount },
     }),
-  checkSybil: (wallet: string) =>
-    request<SybilCheckResponse>(`/sybil-check?wallet=${encodeURIComponent(wallet)}`),
-  getReputation: (wallet: string) =>
-    request<ReputationResponse>(`/reputation?wallet=${encodeURIComponent(wallet)}`),
+  checkSybil: (wallet: string) => {
+    const w = requireWallet(wallet, "checkSybil")
+    return request<SybilCheckResponse>(`/sybil-check?wallet=${encodeURIComponent(w)}`)
+  },
+  getReputation: (wallet: string) => {
+    const w = requireWallet(wallet, "getReputation")
+    return request<ReputationResponse>(`/reputation?wallet=${encodeURIComponent(w)}`)
+  },
   recordReputationEvent: (
     wallet: string,
     eventType: string,
@@ -145,14 +162,22 @@ export const api = {
         round: options.round,
       },
     }),
-  underwrite: (wallet: string) =>
-    request<UnderwriteResponse>(`/underwrite?wallet=${encodeURIComponent(wallet)}`),
-  getTrustGraph: (wallet: string) =>
-    request<unknown>(`/trust-graph?wallet=${encodeURIComponent(wallet)}`),
-  getPassport: (wallet: string) =>
-    request<PassportResponse>(`/passport?wallet=${encodeURIComponent(wallet)}`),
-  verify: (wallet: string) =>
-    request<VerifyResponse>(`/verify?wallet=${encodeURIComponent(wallet)}`),
+  underwrite: (wallet: string) => {
+    const w = requireWallet(wallet, "underwrite")
+    return request<UnderwriteResponse>(`/underwrite?wallet=${encodeURIComponent(w)}`)
+  },
+  getTrustGraph: (wallet: string) => {
+    const w = requireWallet(wallet, "getTrustGraph")
+    return request<unknown>(`/trust-graph?wallet=${encodeURIComponent(w)}`)
+  },
+  getPassport: (wallet: string) => {
+    const w = requireWallet(wallet, "getPassport")
+    return request<PassportResponse>(`/passport?wallet=${encodeURIComponent(w)}`)
+  },
+  verify: (wallet: string) => {
+    const w = requireWallet(wallet, "verify")
+    return request<VerifyResponse>(`/verify?wallet=${encodeURIComponent(w)}`)
+  },
   discoverySearch: (q: string, limit = 20) =>
     request<BazaarSearchResponse>(
       `/discovery/search?q=${encodeURIComponent(q)}&limit=${limit}`,

@@ -141,8 +141,11 @@ export function DelegationClient() {
 
   const { data, isLoading, error } = useQuery<DelegationResponse>({
     queryKey: ["delegation", wallet],
-    queryFn: () => api.getDelegation(wallet!),
-    enabled: !!valid,
+    queryFn: () => {
+      if (!valid) throw new Error("wallet is not valid")
+      return api.getDelegation(wallet)
+    },
+    enabled: valid,
     staleTime: 30_000,
   })
 

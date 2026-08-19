@@ -185,8 +185,11 @@ export function SybilClient() {
 
   const { data, isLoading, error } = useQuery<SybilCheckResponse>({
     queryKey: ["sybil", wallet],
-    queryFn: () => api.checkSybil(wallet!),
-    enabled: !!valid,
+    queryFn: () => {
+      if (!valid) throw new Error("wallet is not valid")
+      return api.checkSybil(wallet)
+    },
+    enabled: valid,
     staleTime: 30_000,
   })
 

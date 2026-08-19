@@ -228,8 +228,11 @@ export function TrustScoreClient() {
 
   const { data, isLoading, error } = useQuery<TrustScoreResponse>({
     queryKey: ["score", wallet],
-    queryFn: () => api.getScore(wallet!),
-    enabled: !!valid,
+    queryFn: () => {
+      if (!valid) throw new Error("wallet is not valid")
+      return api.getScore(wallet)
+    },
+    enabled: valid,
     staleTime: 30_000,
   })
 

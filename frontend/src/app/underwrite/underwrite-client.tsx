@@ -148,8 +148,11 @@ export function UnderwriteClient() {
 
   const { data, isLoading, error } = useQuery<UnderwriteResponse>({
     queryKey: ["underwrite", wallet],
-    queryFn: () => api.underwrite(wallet!),
-    enabled: !!valid,
+    queryFn: () => {
+      if (!valid) throw new Error("wallet is not valid")
+      return api.underwrite(wallet)
+    },
+    enabled: valid,
     staleTime: 30_000,
   })
 

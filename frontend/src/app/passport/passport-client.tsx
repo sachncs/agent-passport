@@ -242,8 +242,11 @@ export function PassportClient() {
 
   const { data, isLoading, error } = useQuery<PassportResponse>({
     queryKey: ["passport", wallet],
-    queryFn: () => api.getPassport(wallet!),
-    enabled: !!valid,
+    queryFn: () => {
+      if (!valid) throw new Error("wallet is not valid")
+      return api.getPassport(wallet)
+    },
+    enabled: valid,
     staleTime: 30_000,
   })
 
