@@ -11,7 +11,7 @@ import {
   TESTNET_GENESIS_ROUND,
 } from './lib/constants';
 import { TTLCache } from './lib/cache';
-import { singleflight } from './lib/singleflight';
+
 import { recordTrustScoreDuration } from './lib/metrics';
 
 const INDEXER_URL = config.indexerUrl;
@@ -302,15 +302,21 @@ async function fetchAccountInfoImpl(
   }
 }
 
-// ponytail: singleflight around fetchAccountInfo - 100 concurrent /score
-// requests on the same wallet share one algod round-trip instead of
-// stampeding the indexer.
+// ponytail: coalesce concurrent fetches for the same wallet — 100 /score
+// requests share one algod round-trip instead of stampeding the
+// indexer. 5-line inlined singleflight (was src/lib/singleflight.ts).
+const inflightAccountInfo = new Map<string, Promise<AccountInfo | null>>();
 async function fetchAccountInfo(
   wallet: string,
   fresh = false,
 ): Promise<AccountInfo | null> {
   if (fresh) return fetchAccountInfoImpl(wallet, fresh);
-  return singleflight(`acctinfo:${wallet}`, () => fetchAccountInfoImpl(wallet, fresh));
+  const existing = inflightAccountInfo.get(wallet);
+  if (existing) return existing;
+  const p = fetchAccountInfoImpl(wallet, fresh)
+    .finally(() => inflightAccountInfo.delete(wallet));
+  inflightAccountInfo.set(wallet, p);
+  return p;
 }
 
 interface TrustScoreIndexerTransaction {
