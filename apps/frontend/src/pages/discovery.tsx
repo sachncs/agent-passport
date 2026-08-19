@@ -1,119 +1,124 @@
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { api, ApiError } from '@/lib/api';
-import {
-  Card, CardContent, CardDescription, CardHeader, CardTitle,
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Search, ExternalLink, Tag } from 'lucide-react';
+import { useState } from "react"
+import { Search } from "lucide-react"
 
-export function DiscoveryPage() {
-  const [q, setQ] = useState('');
-  const [active, setActive] = useState('');
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['discovery', active],
-    queryFn: () => api.discoverySearch(active),
-    enabled: true,
-  });
+import { api, ApiError } from "@/lib/api"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { EmptyState, ErrorBlock, LoadingBlock, PageHeader } from "@/components/widgets"
 
-  const submit = (e?: React.FormEvent) => {
-    e?.preventDefault();
-    setActive(q.trim());
-  };
+import type { BazaarSearchResponse } from "@/types/api"
+
+export default function Discovery() {
+  const [q, setQ] = useState("")
+  const [query, setQuery] = useState<{
+    data: BazaarSearchResponse | null
+    isLoading: boolean
+    error: string | null
+  }>({ data: null, isLoading: false, error: null })
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setQuery({ data: null, isLoading: true, error: null })
+    try {
+      const data = await api.discoverySearch(q)
+      setQuery({ data, isLoading: false, error: null })
+    } catch (e) {
+      setQuery({
+        data: null,
+        isLoading: false,
+        error:
+          e instanceof ApiError
+            ? e.message
+            : "Could not search the Bazaar",
+      })
+    }
+  }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Bazaar Discovery</h1>
-        <p className="text-sm text-muted-foreground">
-          Search registered agent services by name, description, category,
-          or tag.
-        </p>
-      </div>
+    <>
+      <PageHeader
+        title="Bazaar Discovery"
+        description="Search the x402 Bazaar catalog of agent services for trust, credit, or reputation needs."
+      />
 
-      <form onSubmit={submit} className="flex gap-2">
-        <Input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Search (e.g. trust, passport, x402)"
+      <Card>
+        <CardContent className="pt-6">
+          <form onSubmit={submit} className="flex items-end gap-2">
+            <div className="flex-1 space-y-1.5">
+              <Label htmlFor="q">Search</Label>
+              <Input
+                id="q"
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="e.g. trust, passport, x402, algorand"
+              />
+            </div>
+            <Button type="submit" disabled={query.isLoading}>
+              <Search className="h-4 w-4" />
+              {query.isLoading ? "Searching…" : "Search"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      {query.error && (
+        <Card className="mt-4 border-destructive/30 bg-destructive/5">
+          <CardContent className="py-4 text-sm text-destructive">
+            {query.error}
+          </CardContent>
+        </Card>
+      )}
+
+      {query.isLoading && <LoadingBlock rows={3} />}
+
+      {query.data && query.data.total === 0 && (
+        <EmptyState
+          icon={Search}
+          title="No services found"
+          description={`Nothing in the catalog matches "${q}".`}
         />
-        <Button type="submit"><Search className="mr-2 h-4 w-4" /> Search</Button>
-      </form>
-
-      {isLoading && (
-        <Card><CardContent className="py-8">
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="mt-3 h-32 w-full" />
-        </CardContent></Card>
       )}
 
-      {error && (
-        <Alert variant="destructive"><AlertDescription>{error instanceof ApiError ? error.message : 'Unknown error'}</AlertDescription></Alert>
-      )}
-
-      {data && (
-        <div className="space-y-3">
-          <p className="text-sm text-muted-foreground">
-            {data.total} result{data.total === 1 ? '' : 's'} for &ldquo;{data.query || '(all)'}&rdquo;
-          </p>
-          {data.results.map((entry) => (
+      {query.data && query.data.results.length > 0 && (
+        <div className="mt-4 space-y-3">
+          {query.data.results.map((entry) => (
             <Card key={entry.id}>
-              <CardHeader>
+              <CardContent className="pt-6">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <CardTitle className="text-base">{entry.name}</CardTitle>
-                    <CardDescription>{entry.description}</CardDescription>
+                    <h3 className="text-base font-semibold">{entry.name}</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {entry.description}
+                    </p>
                   </div>
                   <Badge variant="secondary">{entry.category}</Badge>
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex flex-wrap gap-1.5">
-                  {entry.tags.map(t => (
-                    <Badge key={t} variant="outline" className="gap-1">
-                      <Tag className="h-2.5 w-2.5" />{t}
-                    </Badge>
-                  ))}
-                </div>
-                {Object.keys(entry.endpoints).length > 0 && (
-                  <div className="space-y-1">
-                    <h4 className="text-xs uppercase tracking-wide text-muted-foreground">Endpoints</h4>
-                    <div className="flex flex-wrap gap-1.5">
-                      {Object.entries(entry.endpoints).map(([k, v]) => (
-                        <code key={k} className="rounded bg-muted px-2 py-0.5 font-mono text-xs">
-                          {k}: {v}
-                        </code>
-                      ))}
-                    </div>
+                {entry.tags.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    {entry.tags.map((t) => (
+                      <Badge key={t} variant="outline" className="text-[0.65rem]">
+                        {t}
+                      </Badge>
+                    ))}
                   </div>
                 )}
                 {Object.keys(entry.pricing).length > 0 && (
-                  <div className="space-y-1">
-                    <h4 className="text-xs uppercase tracking-wide text-muted-foreground">Pricing</h4>
-                    <div className="flex flex-wrap gap-1.5">
-                      {Object.entries(entry.pricing).map(([k, v]) => (
-                        <Badge key={k} variant="info">{k}: {v}</Badge>
-                      ))}
-                    </div>
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    {Object.entries(entry.pricing).map(([k, v]) => (
+                      <Badge key={k} variant="secondary" className="text-[0.65rem]">
+                        {k}: {v}
+                      </Badge>
+                    ))}
                   </div>
                 )}
-                <Button variant="outline" size="sm" asChild>
-                  <a href={entry.health} target="_blank" rel="noreferrer">
-                    <ExternalLink className="mr-2 h-3.5 w-3.5" /> Health
-                  </a>
-                </Button>
               </CardContent>
             </Card>
           ))}
-          {data.results.length === 0 && (
-            <Alert><AlertDescription>No services matched your query.</AlertDescription></Alert>
-          )}
         </div>
       )}
-    </div>
-  );
+    </>
+  )
 }

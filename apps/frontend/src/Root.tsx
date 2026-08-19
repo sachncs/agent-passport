@@ -1,19 +1,19 @@
-import { BrowserRouter } from 'react-router-dom';
-import { ThemeProvider } from 'next-themes';
-import App from './App';
+import { ThemeProvider as NextThemesProvider } from "next-themes"
+import { BrowserRouter } from "react-router-dom"
+
+import App from "./App"
 
 export default function Root() {
   return (
-    <ThemeProvider
+    <NextThemesProvider
       attribute="class"
       defaultTheme="dark"
-      storageKey="agent-passport-theme"
       enableSystem
       disableTransitionOnChange
     >
       <BrowserRouter>
         <App />
       </BrowserRouter>
-    </ThemeProvider>
-  );
+    </NextThemesProvider>
+  )
 }

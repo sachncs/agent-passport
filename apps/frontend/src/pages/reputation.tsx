@@ -1,325 +1,301 @@
-import { useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
-import { api, ApiError } from '@/lib/api';
-import { useWalletQuery } from '@/hooks/useWalletQuery';
-import { WalletLookup } from '@/components/WalletLookup';
-import type { ReputationResponse } from '@/types/api';
-import {
-  Card, CardContent, CardDescription, CardHeader, CardTitle,
-} from '@/components/ui/card';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Separator } from '@/components/ui/separator';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Dialog, DialogContent, DialogDescription, DialogFooter,
-  DialogHeader, DialogTitle, DialogTrigger,
-} from '@/components/ui/dialog';
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
-import { Star, Plus, Webhook } from 'lucide-react';
-import { toast } from 'sonner';
+import { useState } from "react"
+import { Star, Plus, Webhook } from "lucide-react"
 
-const EVENT_TYPES = [
-  { value: 'payment', label: 'Payment' },
-  { value: 'purchase', label: 'Purchase' },
-  { value: 'dispute', label: 'Dispute' },
-  { value: 'refund', label: 'Refund' },
-  { value: 'endorsement', label: 'Endorsement' },
-  { value: 'service', label: 'Service' },
-] as const;
+import { api, ApiError } from "@/lib/api"
+import { useWalletQuery } from "@/hooks/useWalletQuery"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Progress } from "@/components/ui/progress"
+import { Separator } from "@/components/ui/separator"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import {
+  EmptyState,
+  ErrorBlock,
+  LoadingBlock,
+  PageHeader,
+  RiskBadge,
+} from "@/components/widgets"
 
-export function ReputationPage() {
-  const initial = (() => {
-    if (typeof window === 'undefined') return null;
-    return new URLSearchParams(window.location.search).get('wallet');
-  })();
-  const { wallet, setWallet, query } = useWalletQuery<ReputationResponse>(
-    'reputation',
+import type { ReputationEventType, ReputationResponse } from "@/types/api"
+
+const EVENT_TYPES: { value: ReputationEventType; label: string }[] = [
+  { value: "payment", label: "Payment" },
+  { value: "purchase", label: "Purchase" },
+  { value: "dispute", label: "Dispute" },
+  { value: "refund", label: "Refund" },
+  { value: "endorsement", label: "Endorsement" },
+  { value: "service", label: "Service" },
+]
+
+export default function Reputation() {
+  const { wallet, query } = useWalletQuery<ReputationResponse>(
+    "reputation",
     api.getReputation,
-    initial,
-  );
-  const { data, isLoading, error } = query;
-  const qc = useQueryClient();
+  )
+  const { data, isLoading, error } = query
+
+  if (!wallet) {
+    return (
+      <>
+        <PageHeader
+          title="Reputation"
+          description="On-chain reputation events with anti-gaming defenses (cycle detection, dedup, on-chain verification)."
+        />
+        <EmptyState
+          icon={Star}
+          title="Enter a wallet"
+          description="Reputation aggregates recorded events. Use the search bar to look up a wallet."
+        />
+      </>
+    )
+  }
+
+  if (isLoading) return <LoadingBlock rows={6} />
+  if (error || !data) {
+    return (
+      <>
+        <PageHeader
+          title="Reputation"
+          description="On-chain reputation events with anti-gaming defenses."
+          badge={wallet}
+        />
+        <ErrorBlock
+          message={
+            error instanceof ApiError
+              ? error.message
+              : "Could not load reputation"
+          }
+        />
+      </>
+    )
+  }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Reputation</h1>
-        <p className="text-sm text-muted-foreground">
-          On-chain reputation events for a wallet, plus tools to record
-          new events or subscribe to webhook notifications.
-        </p>
+    <>
+      <PageHeader
+        title="Reputation"
+        description="On-chain reputation events with anti-gaming defenses."
+        badge={wallet}
+      />
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <Card>
+          <CardContent className="pt-6 text-center">
+            <div className="text-5xl font-bold">
+              {data.reputation.toFixed(1)}
+            </div>
+            <div className="mt-1 text-xs uppercase tracking-wide text-muted-foreground">
+              Reputation
+            </div>
+            <Progress
+              value={data.reputation}
+              className="mt-4 h-2"
+            />
+            <div className="mt-4 flex items-center justify-center">
+              <RiskBadge
+                risk={
+                  data.reputation >= 70
+                    ? "low"
+                    : data.reputation >= 45
+                    ? "medium"
+                    : data.reputation >= 20
+                    ? "high"
+                    : "critical"
+                }
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Event breakdown</CardTitle>
+              <RecordEventDialog wallet={wallet} />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-2 text-sm">
+              <Stat label="Total" value={data.breakdown.totalEvents} />
+              <Stat
+                label="Positive"
+                value={data.breakdown.positiveEvents}
+                positive
+              />
+              <Stat
+                label="Negative"
+                value={data.breakdown.negativeEvents}
+                negative
+              />
+            </div>
+            <Separator className="my-3" />
+            <div className="grid grid-cols-2 gap-2 text-sm md:grid-cols-3">
+              <Stat label="Payments" value={data.breakdown.successfulPayments} />
+              <Stat label="Purchases" value={data.breakdown.successfulPurchases} />
+              <Stat label="Disputes" value={data.breakdown.disputes} negative />
+              <Stat label="Refunds" value={data.breakdown.refunds} negative />
+              <Stat
+                label="Endorsements"
+                value={data.breakdown.sponsorEndorsements}
+                positive
+              />
+              <Stat
+                label="Service"
+                value={data.breakdown.serviceInteractions}
+                positive
+              />
+            </div>
+          </CardContent>
+        </Card>
       </div>
-
-      <WalletLookup value={wallet ?? ''} onSubmit={setWallet} size="lg" buttonText="Load" />
-
-      {isLoading && <ReputationSkeleton />}
-
-      {error && (
-        <Alert variant="destructive">
-          <AlertTitle>Could not load reputation</AlertTitle>
-          <AlertDescription>
-            {error instanceof ApiError ? error.message : 'Unknown error'}
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {data && (
-        <>
-          <RecordEventDialog wallet={wallet!} onRecorded={() => qc.invalidateQueries({ queryKey: ['reputation', wallet] })} />
-          <SubscribeDialog wallet={wallet!} />
-          <ReputationCard data={data} />
-        </>
-      )}
-    </div>
-  );
+    </>
+  )
 }
 
-function ReputationSkeleton() {
+function Stat({
+  label,
+  value,
+  positive,
+  negative,
+}: {
+  label: string
+  value: number
+  positive?: boolean
+  negative?: boolean
+}) {
   return (
-    <Card>
-      <CardHeader><Skeleton className="h-7 w-48" /></CardHeader>
-      <CardContent><Skeleton className="h-32 w-full" /></CardContent>
-    </Card>
-  );
-}
-
-function ReputationCard({ data }: { data: ReputationResponse }) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Star className="h-5 w-5 text-primary" />
-          Reputation score
-        </CardTitle>
-        <CardDescription>
-          Score {data.reputation.toFixed(1)} · Total events {data.breakdown.totalEvents}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <section className="grid grid-cols-2 gap-3 md:grid-cols-3">
-          <Metric label="Successful payments">{data.breakdown.successfulPayments}</Metric>
-          <Metric label="Purchases">{data.breakdown.successfulPurchases}</Metric>
-          <Metric label="Disputes">{data.breakdown.disputes}</Metric>
-          <Metric label="Refunds">{data.breakdown.refunds}</Metric>
-          <Metric label="Endorsements">{data.breakdown.sponsorEndorsements}</Metric>
-          <Metric label="Service interactions">{data.breakdown.serviceInteractions}</Metric>
-        </section>
-
-        <Separator />
-
-        <section className="space-y-3">
-          <h3 className="text-sm font-medium text-muted-foreground">Sentiment</h3>
-          <SentimentBar positive={data.breakdown.positiveEvents} negative={data.breakdown.negativeEvents} />
-        </section>
-
-        {data.explanation && data.explanation.length > 0 && (
-          <section className="space-y-2">
-            <h3 className="text-sm font-medium text-muted-foreground">Explanation</h3>
-            <ul className="space-y-1 rounded-md border border-border bg-muted/30 p-4 text-sm">
-              {data.explanation.map((line, i) => (
-                <li key={i} className="flex gap-2">
-                  <span className="text-muted-foreground">•</span>
-                  <span>{line}</span>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-function Metric({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="rounded-md border border-border bg-muted/30 p-3">
-      <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
-      <div className="mt-1 font-mono text-sm">{children}</div>
-    </div>
-  );
-}
-
-function SentimentBar({ positive, negative }: { positive: number; negative: number }) {
-  const total = positive + negative || 1;
-  const pct = (positive / total) * 100;
-  return (
-    <div className="space-y-1">
-      <div className="flex justify-between text-xs text-muted-foreground">
-        <span>{positive} positive</span>
-        <span>{negative} negative</span>
+    <div
+      className={
+        "rounded-md border p-2 " +
+        (positive
+          ? "border-emerald-500/30 bg-emerald-500/5"
+          : negative
+          ? "border-red-500/30 bg-red-500/5"
+          : "border-border bg-muted/30")
+      }
+    >
+      <div className="text-[0.7rem] uppercase tracking-wide text-muted-foreground">
+        {label}
       </div>
-      <div className="flex h-2 overflow-hidden rounded-full bg-secondary">
-        <div className="bg-emerald-500" style={{ width: `${pct}%` }} />
-        <div className="bg-red-500" style={{ width: `${100 - pct}%` }} />
-      </div>
+      <div className="font-mono text-sm">{value}</div>
     </div>
-  );
+  )
 }
 
-function RecordEventDialog({ wallet, onRecorded }: { wallet: string; onRecorded: () => void }) {
-  const [open, setOpen] = useState(false);
-  const [eventType, setEventType] = useState<string>('payment');
-  const [amount, setAmount] = useState('');
-  const [counterparty, setCounterparty] = useState('');
-  const [round, setRound] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+function RecordEventDialog({ wallet }: { wallet: string }) {
+  const [open, setOpen] = useState(false)
+  const [eventType, setEventType] =
+    useState<ReputationEventType>("payment")
+  const [amount, setAmount] = useState("")
+  const [counterparty, setCounterparty] = useState("")
+  const [round, setRound] = useState("")
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [done, setDone] = useState(false)
 
   const submit = async () => {
-    setLoading(true);
-    setError(null);
+    setBusy(true)
+    setError(null)
     try {
       await api.recordReputationEvent(wallet, eventType, {
         amount: amount ? parseFloat(amount) : undefined,
         counterparty: counterparty || undefined,
         round: round ? parseInt(round, 10) : undefined,
-      });
-      toast.success('Event recorded');
-      onRecorded();
-      setOpen(false);
-    } catch (err) {
-      const e = err as Error;      setError(err instanceof ApiError ? e.message : 'Unknown error');
+      })
+      setDone(true)
+      setOpen(false)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to record event")
     } finally {
-      setLoading(false);
+      setBusy(false)
     }
-  };
+  }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); setDone(false); setError(null) }}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          <Plus className="mr-2 h-3.5 w-3.5" />
-          Record event
+        <Button size="sm" variant="outline">
+          <Plus className="h-4 w-4" /> Record event
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Record reputation event</DialogTitle>
           <DialogDescription>
-            Add an event for <code className="wallet-mono text-xs">{wallet.slice(0, 8)}…{wallet.slice(-6)}</code>.
+            Add an event for{" "}
+            <span className="font-mono text-xs">{wallet}</span>.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
+          {done && (
+            <Badge variant="default">Event recorded</Badge>
+          )}
+          {error && <Badge variant="destructive">{error}</Badge>}
           <div className="space-y-1.5">
-            <Label htmlFor="event-type">Event type</Label>
-            <Select value={eventType} onValueChange={setEventType}>
-              <SelectTrigger id="event-type"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {EVENT_TYPES.map(t => (
-                  <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="eventType">Event type</Label>
+            <select
+              id="eventType"
+              value={eventType}
+              onChange={(e) => setEventType(e.target.value as ReputationEventType)}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
+              {EVENT_TYPES.map((e) => (
+                <option key={e.value} value={e.value}>
+                  {e.label}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="amount">Amount (optional)</Label>
-            <Input id="amount" type="number" value={amount} onChange={ev => setAmount(ev.target.value)} placeholder="0" />
+            <Label htmlFor="amount">Amount</Label>
+            <Input
+              id="amount"
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="0"
+            />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="counterparty">Counterparty wallet (optional)</Label>
-            <Input id="counterparty" value={counterparty} onChange={ev => setCounterparty(ev.target.value)} placeholder="58-char Algorand address" className="wallet-mono" />
+            <Label htmlFor="counterparty">Counterparty (optional)</Label>
+            <Input
+              id="counterparty"
+              value={counterparty}
+              onChange={(e) => setCounterparty(e.target.value)}
+              placeholder="58-char Algorand address"
+              className="font-mono text-xs"
+            />
           </div>
-          {eventType === 'dispute' && (
+          {eventType === "dispute" && (
             <div className="space-y-1.5">
               <Label htmlFor="round">Disputed transaction round</Label>
-              <Input id="round" type="number" value={round} onChange={ev => setRound(ev.target.value)} placeholder="e.g. 12345678" />
+              <Input
+                id="round"
+                type="number"
+                value={round}
+                onChange={(e) => setRound(e.target.value)}
+                placeholder="e.g. 12345678"
+              />
             </div>
           )}
-          {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
         </div>
         <DialogFooter>
-          <Button onClick={submit} disabled={loading}>
-            {loading ? 'Recording…' : 'Record'}
+          <Button onClick={submit} disabled={busy}>
+            {busy ? "Recording…" : "Record"}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
-}
-
-function SubscribeDialog({ wallet }: { wallet: string }) {
-  const [open, setOpen] = useState(false);
-  const [url, setUrl] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [secret, setSecret] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const submit = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      // We don't have a typed subscribe wrapper — fetch directly.
-      const res = await fetch(`/reputation/subscribe`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Idempotency-Key': crypto.randomUUID().replace(/-/g, ''),
-        },
-        body: JSON.stringify({ wallet, url }),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new ApiError(err.error || `HTTP ${res.status}`, res.status);
-      }
-      const data = await res.json();
-      setSecret(data.secret);
-      toast.success('Subscriber registered');
-    } catch (err) {
-      const e = err as Error;      setError(err instanceof ApiError ? e.message : 'Unknown error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={(v) => {
-      setOpen(v);
-      if (!v) { setSecret(null); setError(null); setUrl(''); }
-    }}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          <Webhook className="mr-2 h-3.5 w-3.5" />
-          Subscribe webhook
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Subscribe to reputation events</DialogTitle>
-          <DialogDescription>
-            POST events for this wallet to your URL. The server signs
-            deliveries with HMAC-SHA256.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-3">
-          <div className="space-y-1.5">
-            <Label htmlFor="webhook-url">Callback URL</Label>
-            <Input id="webhook-url" type="url" value={url} onChange={ev => setUrl(ev.target.value)} placeholder="https://your.app/hook" />
-            <p className="text-xs text-muted-foreground">
-              HTTPS required. Loopback / private hosts are rejected.
-            </p>
-          </div>
-          {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
-          {secret && (
-            <Alert>
-              <AlertTitle>Subscriber created</AlertTitle>
-              <AlertDescription className="break-all">
-                Save this HMAC secret — it will not be shown again:
-                <code className="mt-2 block rounded bg-muted p-2 text-xs">{secret}</code>
-              </AlertDescription>
-            </Alert>
-          )}
-        </div>
-        <DialogFooter>
-          <Button onClick={submit} disabled={loading}>
-            {loading ? 'Subscribing…' : 'Subscribe'}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
+  )
 }

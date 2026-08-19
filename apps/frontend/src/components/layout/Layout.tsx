@@ -1,109 +1,213 @@
-import { Link, useLocation } from 'react-router-dom';
+import { useEffect, useState } from "react"
+import { Link, NavLink, useLocation } from "react-router-dom"
 import {
-  LayoutDashboard,
-  Shield,
-  Award,
   Activity,
-  Users,
-  Scale,
-  Star,
-  Search,
-  Server,
-  Briefcase,
+  Award,
+  Gauge,
   HandCoins,
+  LayoutDashboard,
   Moon,
+  Search,
+  Shield,
+  Star,
   Sun,
-  Github,
-} from 'lucide-react';
-import { useTheme } from '@/components/theme-provider';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { cn } from '@/lib/utils';
+  Users,
+} from "lucide-react"
 
-const navItems = [
-  { href: '/', label: 'Home', icon: LayoutDashboard },
-  { href: '/score', label: 'Trust Score', icon: Shield },
-  { href: '/passport', label: 'Passport', icon: Award },
-  { href: '/underwrite', label: 'Underwrite', icon: Scale },
-  { href: '/delegation', label: 'Delegation', icon: Users },
-  { href: '/sybil', label: 'Sybil Check', icon: Activity },
-  { href: '/reputation', label: 'Reputation', icon: Star },
-  { href: '/counterparty', label: 'Counterparty', icon: Briefcase },
-  { href: '/endorse', label: 'Endorse / Revoke', icon: HandCoins },
-  { href: '/discovery', label: 'Bazaar', icon: Search },
-  { href: '/monitor', label: 'Monitor', icon: Server },
-];
+import { cn, truncateAddress } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Separator } from "@/components/ui/separator"
+import { isValidWallet } from "@/lib/wallet"
 
-function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
-  const isDark = theme === 'dark' || (theme === 'system' && typeof window !== 'undefined'
-    && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  return (
-    <Button
-      variant="ghost"
-      size="icon"
-      onClick={() => setTheme(isDark ? 'light' : 'dark')}
-      aria-label="Toggle theme"
-    >
-      {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-    </Button>
-  );
+interface NavItem {
+  to: string
+  label: string
+  icon: React.ComponentType<{ className?: string }>
 }
 
+const NAV_ITEMS: NavItem[] = [
+  { to: "/", label: "Overview", icon: LayoutDashboard },
+  { to: "/score", label: "Trust Score", icon: Gauge },
+  { to: "/passport", label: "Passport", icon: Award },
+  { to: "/underwrite", label: "Underwrite", icon: Shield },
+  { to: "/delegation", label: "Delegation", icon: Users },
+  { to: "/sybil", label: "Sybil Check", icon: Activity },
+  { to: "/reputation", label: "Reputation", icon: Star },
+  { to: "/counterparty", label: "Counterparty", icon: HandCoins },
+  { to: "/endorse", label: "Endorse / Revoke", icon: HandCoins },
+  { to: "/discovery", label: "Bazaar", icon: Search },
+  { to: "/monitor", label: "Monitor", icon: Activity },
+]
+
+const THEME_KEY = "agent-passport-theme"
+
 export function Layout({ children }: { children: React.ReactNode }) {
-  const location = useLocation();
+  const [wallet, setWallet] = useState("")
+  const [theme, setTheme] = useState<"dark" | "light">(() => {
+    if (typeof window === "undefined") return "dark"
+    return (localStorage.getItem(THEME_KEY) as "dark" | "light") ?? "dark"
+  })
+
+  useEffect(() => {
+    const root = document.documentElement
+    root.classList.remove("light", "dark")
+    root.classList.add(theme)
+    localStorage.setItem(THEME_KEY, theme)
+  }, [theme])
+
+  const onSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    const trimmed = wallet.trim()
+    if (!isValidWallet(trimmed)) return
+    const path = location.pathname === "/" ? "/score" : location.pathname
+    window.location.href = `${path}?wallet=${trimmed}`
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-md">
-        <div className="mx-auto flex h-14 max-w-7xl items-center gap-4 px-4 sm:px-6">
-          <Link to="/" className="flex items-center gap-2 font-semibold tracking-tight">
+      <div className="flex min-h-screen">
+        <aside className="hidden w-64 shrink-0 border-r border-border bg-card md:flex md:flex-col">
+          <div className="flex h-14 items-center gap-2 border-b border-border px-4">
             <Shield className="h-5 w-5 text-primary" />
-            <span className="hidden sm:inline">Agent Passport</span>
-          </Link>
-          <Separator orientation="vertical" className="h-6" />
-          <nav className="flex flex-1 items-center gap-1 overflow-x-auto">
-            {navItems.map((item) => {
-              const active = location.pathname === item.href
-                || (item.href !== '/' && location.pathname.startsWith(item.href));
-              return (
-                <Link
-                  key={item.href}
-                  to={item.href}
-                  className={cn(
-                    'flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
-                    active
-                      ? 'bg-secondary text-secondary-foreground'
-                      : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-                  )}
-                >
-                  <item.icon className="h-3.5 w-3.5" />
-                  <span className="hidden md:inline">{item.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
-          <div className="flex items-center gap-1">
-            <ThemeToggle />
-            <Button variant="ghost" size="icon" asChild aria-label="GitHub">
-              <a
-                href="https://github.com/sachncs/agent-passport"
-                target="_blank"
-                rel="noreferrer"
-              >
-                <Github className="h-4 w-4" />
-              </a>
-            </Button>
+            <span className="font-semibold tracking-tight">Agent Passport</span>
           </div>
+          <nav className="flex-1 space-y-1 p-3">
+            {NAV_ITEMS.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.to === "/"}
+                className={({ isActive }) =>
+                  cn(
+                    "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                    isActive
+                      ? "bg-secondary text-secondary-foreground"
+                      : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
+                  )
+                }
+              >
+                <item.icon className="h-4 w-4" />
+                {item.label}
+              </NavLink>
+            ))}
+          </nav>
+          <div className="border-t border-border p-3">
+            <Link
+              to="/monitor"
+              className="block rounded-md bg-secondary/40 p-3 text-xs"
+            >
+              <div className="font-medium text-foreground">Service status</div>
+              <HealthPill />
+            </Link>
+          </div>
+        </aside>
+
+        <div className="flex min-h-screen flex-1 flex-col">
+          <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur md:px-6">
+            <form
+              onSubmit={onSubmit}
+              className="flex w-full max-w-2xl items-center gap-2"
+            >
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <Input
+                value={wallet}
+                onChange={(e) => setWallet(e.target.value)}
+                placeholder="Enter Algorand wallet address (58 chars A-Z, 2-7)"
+                className="font-mono text-xs"
+                aria-label="Wallet address"
+              />
+              <Button type="submit" size="sm">
+                Look up
+              </Button>
+            </form>
+            <div className="ml-auto flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                aria-label="Toggle theme"
+              >
+                {theme === "dark" ? (
+                  <Sun className="h-4 w-4" />
+                ) : (
+                  <Moon className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+          </header>
+
+          <main className="flex-1 px-4 py-6 md:px-8 md:py-8">
+            <div className="mx-auto max-w-6xl">{children}</div>
+          </main>
+
+          <footer className="border-t border-border px-4 py-4 text-xs text-muted-foreground md:px-8">
+            <Separator className="mb-3" />
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span>Agent Passport — trust and underwriting for AI agents on Algorand.</span>
+              <span>
+                <Link
+                  to="/openapi.json"
+                  className="underline-offset-2 hover:underline"
+                >
+                  OpenAPI
+                </Link>
+                {" · "}
+                <Link
+                  to="/health"
+                  className="underline-offset-2 hover:underline"
+                >
+                  /health
+                </Link>
+                {" · "}
+                <Link
+                  to="/metrics"
+                  className="underline-offset-2 hover:underline"
+                >
+                  /metrics
+                </Link>
+              </span>
+            </div>
+          </footer>
         </div>
-      </header>
-      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
-        {children}
-      </main>
-      <footer className="border-t border-border py-6">
-        <div className="mx-auto max-w-7xl px-4 text-center text-xs text-muted-foreground sm:px-6">
-          Agent Passport — stateless trust & underwriting for AI agents on Algorand.
-        </div>
-      </footer>
+      </div>
     </div>
-  );
+  )
+}
+
+function HealthPill() {
+  const [status, setStatus] = useState<"ok" | "degraded" | "loading">("loading")
+  useEffect(() => {
+    let cancelled = false
+    const tick = () => {
+      fetch("/health")
+        .then(r => r.json())
+        .then(d => {
+          if (!cancelled) setStatus(d.status === "ok" ? "ok" : "degraded")
+        })
+        .catch(() => {
+          if (!cancelled) setStatus("degraded")
+        })
+    }
+    tick()
+    const id = setInterval(tick, 30_000)
+    return () => {
+      cancelled = true
+      clearInterval(id)
+    }
+  }, [])
+
+  const color =
+    status === "ok"
+      ? "bg-emerald-500"
+      : status === "degraded"
+      ? "bg-red-500"
+      : "bg-amber-500"
+
+  return (
+    <div className="mt-1 flex items-center gap-2 text-muted-foreground">
+      <span className={cn("h-1.5 w-1.5 rounded-full", color)} />
+      <span className="capitalize">{status}</span>
+    </div>
+  )
 }

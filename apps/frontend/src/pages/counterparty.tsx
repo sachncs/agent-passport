@@ -1,125 +1,173 @@
-import { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { api, ApiError } from '@/lib/api';
-import { WalletLookup } from '@/components/WalletLookup';
+import { useState } from "react"
+import { HandCoins, Check, X } from "lucide-react"
+
+import { api, ApiError } from "@/lib/api"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Badge } from "@/components/ui/badge"
+import { Progress } from "@/components/ui/progress"
 import {
-  Card, CardContent, CardDescription, CardHeader, CardTitle,
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Briefcase, CheckCircle2, XCircle } from 'lucide-react';
-import { toast } from 'sonner';
+  EmptyState,
+  ErrorBlock,
+  LoadingBlock,
+  PageHeader,
+} from "@/components/widgets"
+import { isValidWallet } from "@/lib/wallet"
 
-export function CounterpartyPage() {
-  const [buyer, setBuyer] = useState<string | null>(null);
+import type { CounterpartyCheckResponse } from "@/types/api"
 
-  const mutation = useMutation({
-    mutationFn: (b: string) => api.checkCounterparty(b),
-    onSuccess: (data) => {
-      toast.success(data.allow ? 'Counterparty allowed' : 'Counterparty denied');
-    },
-    onError: (e) => {
-      toast.error(e instanceof ApiError ? e.message : 'Counterparty check failed');
-    },
-  });
+export default function Counterparty() {
+  const [buyer, setBuyer] = useState("")
+  const [query, setQuery] = useState<{
+    data: CounterpartyCheckResponse | null
+    isLoading: boolean
+    error: string | null
+  }>({ data: null, isLoading: false, error: null })
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!isValidWallet(buyer)) {
+      setQuery({ data: null, isLoading: false, error: "Invalid Algorand address" })
+      return
+    }
+    setQuery({ data: null, isLoading: true, error: null })
+    try {
+      const data = await api.checkCounterparty(buyer)
+      setQuery({ data, isLoading: false, error: null })
+    } catch (e) {
+      setQuery({
+        data: null,
+        isLoading: false,
+        error:
+          e instanceof ApiError
+            ? e.message
+            : "Could not check counterparty",
+      })
+    }
+  }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Counterparty Check</h1>
-        <p className="text-sm text-muted-foreground">
-          Merchant-side buyer risk: aggregate of on-chain, delegation, and
-          trust signals.
-        </p>
-      </div>
-
-      <WalletLookup
-        value={buyer ?? ''}
-        onSubmit={(w) => {
-          setBuyer(w);
-          mutation.mutate(w);
-        }}
-        size="lg"
-        buttonText="Check"
+    <>
+      <PageHeader
+        title="Counterparty Check"
+        description="Buyer risk check for merchant integrations: 60% on-chain + 40% delegation trust."
       />
 
-      {mutation.isPending && (
-        <Card>
-          <CardContent className="py-8 text-center text-sm text-muted-foreground">
-            Scoring counterparty…
+      <Card>
+        <CardContent className="pt-6">
+          <form onSubmit={submit} className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <div className="flex-1 space-y-1.5">
+              <Label htmlFor="buyer">Buyer wallet</Label>
+              <Input
+                id="buyer"
+                value={buyer}
+                onChange={(e) => setBuyer(e.target.value)}
+                placeholder="Algorand address (58 chars A-Z, 2-7)"
+                className="font-mono text-xs"
+              />
+            </div>
+            <Button type="submit" disabled={query.isLoading}>
+              {query.isLoading ? "Checking…" : "Check"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      {query.error && (
+        <Card className="mt-4 border-destructive/30 bg-destructive/5">
+          <CardContent className="py-4 text-sm text-destructive">
+            {query.error}
           </CardContent>
         </Card>
       )}
 
-      {mutation.error && (
-        <Alert variant="destructive">
-          <AlertTitle>Counterparty check failed</AlertTitle>
-          <AlertDescription>
-            {mutation.error instanceof ApiError ? mutation.error.message : 'Unknown error'}
-          </AlertDescription>
-        </Alert>
+      {query.isLoading && <LoadingBlock rows={4} />}
+
+      {query.data && (
+        <div className="mt-4 space-y-4">
+          <Card
+            className={
+              query.data.allow
+                ? "border-emerald-500/30 bg-emerald-500/5"
+                : "border-destructive/30 bg-destructive/5"
+            }
+          >
+            <CardContent className="flex items-center gap-3 py-4">
+              {query.data.allow ? (
+                <Check className="h-6 w-6 text-emerald-500" />
+              ) : (
+                <X className="h-6 w-6 text-destructive" />
+              )}
+              <div>
+                <div className="text-lg font-semibold">
+                  {query.data.allow ? "Allow" : "Deny"}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Trust {query.data.trustScore.toFixed(1)} · On-chain{" "}
+                  {query.data.onChainScore.toFixed(1)} · Delegation{" "}
+                  {query.data.delegationScore.toFixed(1)}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <h3 className="mb-3 text-sm font-medium">Component scores</h3>
+              <ScoreBar label="On-chain" value={query.data.onChainScore} />
+              <div className="mt-3">
+                <ScoreBar
+                  label="Delegation"
+                  value={query.data.delegationScore}
+                />
+              </div>
+              <div className="mt-3">
+                <ScoreBar label="Trust" value={query.data.trustScore} />
+              </div>
+            </CardContent>
+          </Card>
+
+          {query.data.explanation && query.data.explanation.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Explanation</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-1.5 text-sm">
+                  {query.data.explanation.map((line, i) => (
+                    <li key={i} className="flex gap-2">
+                      <span className="text-muted-foreground">•</span>
+                      <span>{line}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       )}
 
-      {mutation.data && <CounterpartyCard data={mutation.data} />}
-    </div>
-  );
-}
-
-function CounterpartyCard({ data }: { data: import('@/types/api').CounterpartyCheckResponse }) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Briefcase className="h-5 w-5 text-primary" />
-          <span className="wallet-mono">{data.buyer.slice(0, 8)}…{data.buyer.slice(-6)}</span>
-          <Badge variant={data.allow ? 'success' : 'destructive'} className="ml-2">
-            {data.allow
-              ? <><CheckCircle2 className="mr-1 h-3 w-3" /> allow</>
-              : <><XCircle className="mr-1 h-3 w-3" /> deny</>}
-          </Badge>
-        </CardTitle>
-        <CardDescription>
-          Aggregate on-chain {data.onChainScore.toFixed(1)} ·
-          Delegation {data.delegationScore.toFixed(1)} ·
-          Trust {data.trustScore.toFixed(1)}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-3">
-          <ScoreBar label="On-chain score" value={data.onChainScore} />
-          <ScoreBar label="Delegation score" value={data.delegationScore} />
-          <ScoreBar label="Trust score" value={data.trustScore} />
-        </div>
-        {data.explanation && data.explanation.length > 0 && (
-          <ul className="space-y-1 rounded-md border border-border bg-muted/30 p-4 text-sm">
-            {data.explanation.map((line, i) => (
-              <li key={i} className="flex gap-2">
-                <span className="text-muted-foreground">•</span>
-                <span>{line}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </CardContent>
-    </Card>
-  );
+      {!query.data && !query.isLoading && !query.error && (
+        <EmptyState
+          icon={HandCoins}
+          title="Enter a buyer wallet"
+          description="The endpoint returns an aggregate trust score and an allow/deny decision for merchant integrations."
+        />
+      )}
+    </>
+  )
 }
 
 function ScoreBar({ label, value }: { label: string; value: number }) {
   return (
-    <div className="space-y-1">
+    <div className="space-y-1.5">
       <div className="flex items-center justify-between text-sm">
         <span className="text-muted-foreground">{label}</span>
         <span className="font-mono">{value.toFixed(1)}</span>
       </div>
-      <div className="h-2 overflow-hidden rounded-full bg-secondary">
-        <div
-          className={
-            value >= 70 ? 'bg-emerald-500' : value >= 40 ? 'bg-amber-500' : 'bg-red-500'
-          }
-          style={{ width: `${Math.min(100, value)}%`, height: '100%' }}
-        />
-      </div>
+      <Progress value={value} className="h-1.5" />
     </div>
-  );
+  )
 }

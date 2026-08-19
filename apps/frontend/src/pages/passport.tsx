@@ -1,249 +1,246 @@
-import { api, ApiError } from '@/lib/api';
-import { useWalletQuery } from '@/hooks/useWalletQuery';
-import { WalletLookup } from '@/components/WalletLookup';
-import {
-  Card, CardContent, CardDescription, CardHeader, CardTitle,
-} from '@/components/ui/card';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Separator } from '@/components/ui/separator';
-import { Button } from '@/components/ui/button';
-import {
-  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { Copy, Shield, Star, Activity, Scale, FileBadge } from 'lucide-react';
-import { toast } from 'sonner';
-import { walletAddress } from '@/lib/utils';
-import type { PassportResponse, RiskLevel } from '@/types/api';
-import { Link } from 'react-router-dom';
+import { useState } from "react"
+import { CheckCircle2, XCircle, Award, Download, FileText, Shield } from "lucide-react"
 
-function riskColor(risk: RiskLevel): string {
-  switch (risk) {
-    case 'low': return 'text-emerald-500';
-    case 'medium': return 'text-amber-500';
-    case 'high': return 'text-orange-500';
-    case 'critical': return 'text-red-500';
-  }
-}
+import { api, ApiError } from "@/lib/api"
+import { useWalletQuery } from "@/hooks/useWalletQuery"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+  EmptyState,
+  ErrorBlock,
+  LoadingBlock,
+  PageHeader,
+  RiskBadge,
+  WalletLabel,
+} from "@/components/widgets"
+import { cn, formatAlgo, formatUSDC } from "@/lib/utils"
 
-export function PassportPage() {
-  const initial = (() => {
-    if (typeof window === 'undefined') return null;
-    return new URLSearchParams(window.location.search).get('wallet');
-  })();
-  const { wallet, setWallet, query } = useWalletQuery<PassportResponse>(
-    'passport',
+import type { PassportResponse } from "@/types/api"
+
+export default function Passport() {
+  const { wallet, query } = useWalletQuery<PassportResponse>(
+    "passport",
     api.getPassport,
-    initial,
-  );
-  const { data, isLoading, error, refetch } = query;
+  )
+  const { data, isLoading, error } = query
+
+  if (!wallet) {
+    return (
+      <>
+        <PageHeader
+          title="Passport"
+          description="Full document combining trust, delegation, sybil, reputation, credit, and a tamper-evident SHA-256 checksum."
+        />
+        <EmptyState
+          icon={FileText}
+          title="Enter a wallet"
+          description="The passport is the canonical artifact produced for a wallet. Use the search bar above to fetch one."
+        />
+      </>
+    )
+  }
+
+  if (isLoading) return <LoadingBlock rows={6} />
+  if (error || !data) {
+    return (
+      <>
+        <PageHeader
+          title="Passport"
+          description="Full document combining trust, delegation, sybil, reputation, credit, and a tamper-evident SHA-256 checksum."
+          badge={wallet}
+        />
+        <ErrorBlock
+          message={
+            error instanceof ApiError
+              ? error.message
+              : "Could not load passport"
+          }
+        />
+      </>
+    )
+  }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Passport Viewer</h1>
-        <p className="text-sm text-muted-foreground">
-          Composite document combining trust score, reputation, credit
-          limit, sybil risk, on-chain snapshot, and capabilities with a
-          checksum for tamper detection.
-        </p>
+    <>
+      <PageHeader
+        title="Passport"
+        description="The complete trust + reputation + credit document. Includes a tamper-evident SHA-256 checksum."
+        badge={wallet}
+      />
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <BigNumber
+          label="Trust score"
+          value={data.trustScore.toFixed(1)}
+          icon={<Shield className="h-4 w-4" />}
+        />
+        <BigNumber
+          label="Reputation"
+          value={data.reputation.toFixed(1)}
+          icon={<Award className="h-4 w-4" />}
+        />
+        <BigNumber
+          label="Credit limit"
+          value={formatUSDC(data.creditLimit)}
+          icon={<FileText className="h-4 w-4" />}
+        />
+        <BigNumber
+          label="Sybil risk"
+          value={`${(data.sybilRisk * 100).toFixed(0)}%`}
+          icon={<Shield className="h-4 w-4" />}
+        />
       </div>
 
-      <WalletLookup value={wallet ?? ''} onSubmit={setWallet} size="lg" buttonText="Open" />
+      <Card className="mt-4">
+        <CardHeader>
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <CardTitle>Summary</CardTitle>
+              <CardDescription>
+                Generated {new Date(data.generatedAt).toLocaleString()} ·
+                {" "}checksum{" "}
+                <code className="font-mono text-xs">{data.checksum.slice(0, 16)}…</code>
+              </CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              <RiskBadge risk={data.overallRiskLevel} />
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => downloadPassport(data)}
+              >
+                <Download className="h-4 w-4" />
+                JSON
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">{data.summary}</p>
+        </CardContent>
+      </Card>
 
-      {isLoading && <PassportSkeleton />}
-
-      {error && (
-        <Alert variant="destructive">
-          <AlertTitle>Could not load passport</AlertTitle>
-          <AlertDescription>
-            {error instanceof ApiError ? error.message : 'Unknown error'}
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {data && <PassportCard data={data} onRefresh={refetch} />}
-    </div>
-  );
+      <Tabs defaultValue="onchain" className="mt-4">
+        <TabsList>
+          <TabsTrigger value="onchain">On-chain</TabsTrigger>
+          <TabsTrigger value="capabilities">Capabilities</TabsTrigger>
+          <TabsTrigger value="raw">Raw</TabsTrigger>
+        </TabsList>
+        <TabsContent value="onchain">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                <KV label="Balance">
+                  {formatAlgo(data.onChain.balanceAlgo)}
+                </KV>
+                <KV label="Transactions">
+                  {data.onChain.totalTxns.toLocaleString()}
+                </KV>
+                <KV label="Assets">
+                  {data.onChain.assetCount}
+                </KV>
+                <KV label="Apps">
+                  {data.onChain.appCount}
+                </KV>
+                <KV label="Account age">
+                  {data.onChain.accountAgeDays}d
+                </KV>
+                <KV label="First seen">
+                  {data.onChain.firstSeenRound}
+                </KV>
+                <KV label="Last seen">
+                  {data.onChain.lastSeenRound}
+                </KV>
+                <KV label="Wallet">
+                  <WalletLabel wallet={data.wallet} />
+                </KV>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="capabilities">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+                {Object.entries(data.capabilities).map(([k, v]) => (
+                  <div
+                    key={k}
+                    className="flex items-center justify-between rounded-md border border-border bg-muted/30 px-3 py-2"
+                  >
+                    <span className="font-mono text-sm">{k}</span>
+                    {v ? (
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    ) : (
+                      <XCircle className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="raw">
+          <Card>
+            <CardContent className="pt-6">
+              <pre className="overflow-x-auto rounded-md bg-muted/40 p-4 text-xs">
+                {JSON.stringify(data, null, 2)}
+              </pre>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </>
+  )
 }
 
-function PassportSkeleton() {
+function BigNumber({
+  label,
+  value,
+  icon,
+}: {
+  label: string
+  value: string
+  icon: React.ReactNode
+}) {
   return (
     <Card>
-      <CardHeader>
-        <Skeleton className="h-7 w-48" />
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <Skeleton className="h-32 w-full" />
-        <Skeleton className="h-12 w-full" />
-      </CardContent>
-    </Card>
-  );
-}
-
-function PassportCard({ data, onRefresh }: { data: PassportResponse; onRefresh: () => void }) {
-  return (
-    <Card>
-      <CardHeader>
-        <div className="flex flex-wrap items-start justify-between gap-2">
-          <div className="flex flex-col gap-1">
-            <CardTitle className="flex items-center gap-2">
-              <FileBadge className="h-5 w-5 text-primary" />
-              <span className="wallet-mono">{walletAddress(data.wallet, 8, 8)}</span>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="ghost" size="sm" onClick={() => {
-                      navigator.clipboard.writeText(data.wallet);
-                      toast.success('Wallet copied');
-                    }}>
-                      <Copy className="h-3.5 w-3.5" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Copy wallet</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </CardTitle>
-            <CardDescription>
-              Generated {new Date(data.generatedAt).toLocaleString()}
-            </CardDescription>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => onRefresh()}>Refresh</Button>
-            <Button variant="outline" size="sm" asChild>
-              <Link to={`/score?wallet=${data.wallet}`}>Score</Link>
-            </Button>
-          </div>
+      <CardContent className="pt-6">
+        <div className="flex items-center gap-2 text-[0.7rem] font-medium uppercase tracking-wide text-muted-foreground">
+          {icon}
+          {label}
         </div>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <section className="grid grid-cols-2 gap-3 md:grid-cols-5">
-          <PassportMetric
-            icon={Shield}
-            label="Trust"
-            value={`${data.trustScore.toFixed(1)}`}
-            risk={data.overallRiskLevel}
-          />
-          <PassportMetric
-            icon={Star}
-            label="Reputation"
-            value={`${data.reputation.toFixed(1)}`}
-          />
-          <PassportMetric
-            icon={Scale}
-            label="Credit Limit"
-            value={`${data.creditLimit.toFixed(2)} ALGO`}
-          />
-          <PassportMetric
-            icon={Activity}
-            label="Sybil Risk"
-            value={`${(data.sybilRisk * 100).toFixed(0)}%`}
-          />
-          <div className="rounded-lg border border-border bg-muted/30 p-4">
-            <div className="text-xs uppercase tracking-wide text-muted-foreground">
-              Overall
-            </div>
-            <div className={`mt-2 text-lg font-semibold ${riskColor(data.overallRiskLevel)}`}>
-              <Badge variant={data.overallRiskLevel === 'low' ? 'success' : data.overallRiskLevel === 'critical' ? 'destructive' : 'warning'}>
-                {data.overallRiskLevel}
-              </Badge>
-            </div>
-          </div>
-        </section>
-
-        <Separator />
-
-        <Tabs defaultValue="summary" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="summary">Summary</TabsTrigger>
-            <TabsTrigger value="onchain">On-chain</TabsTrigger>
-            <TabsTrigger value="capabilities">Capabilities</TabsTrigger>
-            <TabsTrigger value="checksum">Checksum</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="summary">
-            <Card>
-              <CardContent className="pt-6 text-sm">
-                {data.summary || 'No summary available.'}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="onchain">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-                  <DataPoint label="Balance" value={`${data.onChain.balanceAlgo.toFixed(2)} ALGO`} />
-                  <DataPoint label="Txns" value={data.onChain.totalTxns.toLocaleString()} />
-                  <DataPoint label="Assets" value={data.onChain.assetCount.toString()} />
-                  <DataPoint label="Apps" value={data.onChain.appCount.toString()} />
-                  <DataPoint label="Age" value={`${data.onChain.accountAgeDays}d`} />
-                  <DataPoint label="First" value={data.onChain.firstSeenRound.toString()} />
-                  <DataPoint label="Last" value={data.onChain.lastSeenRound.toString()} />
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="capabilities">
-            <Card>
-              <CardContent className="pt-6">
-                {Object.keys(data.capabilities).length === 0
-                  ? <p className="text-sm text-muted-foreground">No capabilities listed.</p>
-                  : <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
-                      {Object.entries(data.capabilities).map(([k, v]) => (
-                        <div key={k} className="flex items-center justify-between rounded-md border border-border p-2 text-sm">
-                          <span className="font-mono">{k}</span>
-                          <Badge variant={v ? 'success' : 'secondary'}>{v ? 'yes' : 'no'}</Badge>
-                        </div>
-                      ))}
-                    </div>}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="checksum">
-            <Card>
-              <CardContent className="pt-6">
-                <p className="mb-2 text-sm text-muted-foreground">
-                  The checksum is computed over the canonicalized passport
-                  contents; any change to the document will produce a different
-                  hash.
-                </p>
-                <code className="block break-all rounded-md border border-border bg-muted/30 p-3 font-mono text-xs">
-                  {data.checksum}
-                </code>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        <div className="mt-1 text-2xl font-semibold">{value}</div>
       </CardContent>
     </Card>
-  );
+  )
 }
 
-function PassportMetric({
-  icon: Icon, label, value, risk,
-}: { icon: typeof Shield; label: string; value: string; risk?: RiskLevel }) {
+function KV({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-lg border border-border bg-muted/30 p-4">
-      <div className="flex items-center gap-1.5 text-xs uppercase tracking-wide text-muted-foreground">
-        <Icon className="h-3 w-3" /> {label}
+    <div className="rounded-md border border-border bg-muted/30 p-3">
+      <div className="text-[0.7rem] font-medium uppercase tracking-wide text-muted-foreground">
+        {label}
       </div>
-      <div className={`mt-2 text-lg font-semibold ${risk ? riskColor(risk) : ''}`}>
-        {value}
-      </div>
+      <div className="mt-1 text-sm">{children}</div>
     </div>
-  );
+  )
 }
 
-function DataPoint({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-md border border-border bg-background p-3">
-      <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
-      <div className="mt-1 font-mono text-sm">{value}</div>
-    </div>
-  );
+function downloadPassport(p: PassportResponse) {
+  const blob = new Blob([JSON.stringify(p, null, 2)], { type: "application/json" })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement("a")
+  a.href = url
+  a.download = `passport-${p.wallet}.json`
+  a.click()
+  URL.revokeObjectURL(url)
 }

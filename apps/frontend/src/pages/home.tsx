@@ -1,191 +1,123 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Progress } from '@/components/ui/progress';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Link } from 'react-router-dom';
+import { Link } from "react-router-dom"
 import {
-  Shield, Award, Scale, Users, Activity, Star, Search, Server,
-  Briefcase, HandCoins,
-} from 'lucide-react';
+  Activity,
+  Award,
+  Gauge,
+  HandCoins,
+  Search,
+  Shield,
+  Star,
+  Users,
+} from "lucide-react"
 
-export function HomePage() {
-  return (
-    <div className="space-y-8">
-      <section className="space-y-3">
-        <h1 className="text-4xl font-bold tracking-tight">Agent Passport</h1>
-        <p className="max-w-3xl text-muted-foreground">
-          Stateless trust scoring, delegation, credit, sybil, reputation, and
-          underwriting for AI agents on Algorand. Browse a wallet, run
-          scenarios, sign delegations, and explore the Bazaar — every
-          endpoint on this site maps 1:1 to the public API at{' '}
-          <code className="rounded bg-muted px-1.5 py-0.5 text-xs">/openapi.json</code>.
-        </p>
-      </section>
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { PageHeader } from "@/components/widgets"
 
-      <Separator />
-
-      <section className="space-y-4">
-        <h2 className="text-2xl font-semibold tracking-tight">Tools</h2>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <ToolCard
-            to="/score"
-            icon={Shield}
-            title="Trust Score Explorer"
-            description="Composite 0–100 score with five sub-scores (age, activity, volume, velocity, compliance)."
-          />
-          <ToolCard
-            to="/passport"
-            icon={Award}
-            title="Passport Viewer"
-            description="Full passport document with credit limit, sybil risk, capabilities, and checksum."
-          />
-          <ToolCard
-            to="/underwrite"
-            icon={Scale}
-            title="Underwriting Decision"
-            description="Approve / deny + recommended credit limit with 4-factor breakdown + sanctions."
-          />
-          <ToolCard
-            to="/delegation"
-            icon={Users}
-            title="Delegation Trust Graph"
-            description="Sponsor tree with depth attenuation, sponsor quality, and trust-anchor markers."
-          />
-          <ToolCard
-            to="/sybil"
-            icon={Activity}
-            title="Sybil Detection Report"
-            description="Twelve signals (clustering, timing, balance similarity, funding correlation…)."
-          />
-          <ToolCard
-            to="/reputation"
-            icon={Star}
-            title="Reputation Events"
-            description="On-chain event log with score breakdown; record or subscribe to webhooks."
-          />
-          <ToolCard
-            to="/counterparty"
-            icon={Briefcase}
-            title="Counterparty Check"
-            description="Merchant-side buyer risk: aggregate of on-chain + delegation + trust signals."
-          />
-          <ToolCard
-            to="/endorse"
-            icon={HandCoins}
-            title="Endorse / Revoke"
-            description="Submit on-chain delegation or revocation (requires HMAC + Idempotency-Key)."
-          />
-          <ToolCard
-            to="/discovery"
-            icon={Search}
-            title="Bazaar Discovery"
-            description="Search registered agent services."
-          />
-          <ToolCard
-            to="/monitor"
-            icon={Server}
-            title="Service Monitor"
-            description="Health, readiness, version, and Prometheus metrics at a glance."
-          />
-        </div>
-      </section>
-
-      <section className="space-y-4">
-        <h2 className="text-2xl font-semibold tracking-tight">About the model</h2>
-        <Card>
-          <CardHeader>
-            <CardTitle>What you see on every wallet</CardTitle>
-            <CardDescription>
-              The trust score is the weighted sum of 5 sub-scores; the
-              underwriting decision is the weighted sum of 4 factors (trust,
-              delegation, sybil resistance, reputation) plus a
-              credit-capacity base and a system-wide exposure cap.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <ScorePreview />
-            <Alert>
-              <AlertDescription className="text-sm">
-                State-changing endpoints (<code>/delegate</code>, <code>/revoke</code>,
-                <code>/reputation/record</code>) require <strong>HMAC auth</strong>
-                and an <strong>Idempotency-Key</strong>. The browser UI does not
-                send them by default; use the SDK from a server for write
-                operations.
-              </AlertDescription>
-            </Alert>
-          </CardContent>
-        </Card>
-      </section>
-    </div>
-  );
+interface Tool {
+  to: string
+  icon: React.ComponentType<{ className?: string }>
+  title: string
+  description: string
+  status: "live" | "ready"
 }
 
-function ToolCard({
-  to,
-  icon: Icon,
-  title,
-  description,
-}: {
-  to: string;
-  icon: typeof Shield;
-  title: string;
-  description: string;
-}) {
-  return (
-    <Link to={to} className="block transition-transform hover:-translate-y-0.5">
-      <Card className="h-full transition-colors hover:bg-accent/50">
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <div className="rounded-md bg-primary/10 p-2 text-primary">
-              <Icon className="h-4 w-4" />
-            </div>
-            <CardTitle className="text-base">{title}</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">{description}</p>
-        </CardContent>
-      </Card>
-    </Link>
-  );
-}
+const TOOLS: Tool[] = [
+  {
+    to: "/score",
+    icon: Gauge,
+    title: "Trust Score",
+    description:
+      "Composite 0–100 score with five sub-scores (age, activity, volume, velocity, compliance).",
+    status: "live",
+  },
+  {
+    to: "/passport",
+    icon: Award,
+    title: "Passport",
+    description:
+      "Full document combining trust, delegation, sybil, reputation, credit, capabilities, and a SHA-256 checksum.",
+    status: "live",
+  },
+  {
+    to: "/underwrite",
+    icon: Shield,
+    title: "Underwrite",
+    description:
+      "Approve/deny decision with recommended credit limit, four weighted factors, and a $100k system cap.",
+    status: "live",
+  },
+  {
+    to: "/delegation",
+    icon: Users,
+    title: "Delegation Graph",
+    description:
+      "Sponsor graph BFS with depth attenuation, cycle detection, and trust-anchor markers.",
+    status: "live",
+  },
+  {
+    to: "/sybil",
+    icon: Activity,
+    title: "Sybil Check",
+    description:
+      "Twelve signals (clustering, timing, amount, balance, plus 4 graph-traversal signals).",
+    status: "live",
+  },
+  {
+    to: "/reputation",
+    icon: Star,
+    title: "Reputation",
+    description:
+      "Event log with anti-gaming defenses (cycle detection, dedup, on-chain verification).",
+    status: "live",
+  },
+  {
+    to: "/counterparty",
+    icon: HandCoins,
+    title: "Counterparty Check",
+    description:
+      "Buyer risk check for merchant integrations: 60% on-chain + 40% delegation trust.",
+    status: "live",
+  },
+  {
+    to: "/discovery",
+    icon: Search,
+    title: "Bazaar",
+    description:
+      "Search the x402 Bazaar catalog of agent services for trust, credit, or reputation needs.",
+    status: "live",
+  },
+]
 
-function ScorePreview() {
+export default function Home() {
   return (
-    <div className="space-y-3">
-      <div className="flex items-baseline justify-between">
-        <span className="text-sm text-muted-foreground">Score weights</span>
-      </div>
-      <ScoreBar label="Age" value={70} />
-      <ScoreBar label="Activity" value={55} />
-      <ScoreBar label="Volume" value={40} />
-      <ScoreBar label="Velocity" value={80} />
-      <ScoreBar label="Compliance" value={60} />
-      <Separator />
-      <div className="flex items-center justify-between">
-        <Badge variant="secondary">Composite</Badge>
-        <span className="font-mono text-sm">61.0 / 100</span>
-      </div>
-    </div>
-  );
-}
-
-function ScoreBar({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="space-y-1">
-      <div className="flex items-center justify-between text-xs">
-        <span className="text-muted-foreground">{label}</span>
-        <span className="font-mono">{value}</span>
-      </div>
-      <Progress
-        value={value}
-        indicatorClass={
-          value >= 70 ? 'bg-emerald-500'
-            : value >= 40 ? 'bg-amber-500'
-            : 'bg-red-500'
-        }
+    <>
+      <PageHeader
+        title="Agent Passport"
+        description="Stateless trust and underwriting for AI agents on Algorand. Every wallet, every endpoint, every algorithm — one consistent view of who to trust and how much."
       />
-    </div>
-  );
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {TOOLS.map((tool) => (
+          <Link
+            key={tool.to}
+            to={tool.to}
+            className="group block transition-transform hover:-translate-y-0.5"
+          >
+            <Card className="h-full transition-colors group-hover:bg-accent/40">
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <div className="rounded-md bg-primary/10 p-2 text-primary">
+                    <tool.icon className="h-4 w-4" />
+                  </div>
+                  <CardTitle className="text-base">{tool.title}</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <CardDescription>{tool.description}</CardDescription>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
+      </div>
+    </>
+  )
 }
