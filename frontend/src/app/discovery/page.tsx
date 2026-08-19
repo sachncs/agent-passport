@@ -1,5 +1,5 @@
 import { useState } from "react"
-export const dynamic = "force-dynamic"
+
 import { Search } from "lucide-react"
 import { api, ApiError } from "@/lib/api"
 import { Badge } from "@/components/ui/badge"

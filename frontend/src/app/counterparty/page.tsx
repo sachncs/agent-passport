@@ -1,5 +1,5 @@
 import { useState } from "react"
-export const dynamic = "force-dynamic"
+
 import { api, ApiError } from "@/lib/api"
 import { isValidWallet } from "@/lib/wallet"
 import { Button } from "@/components/ui/button"
