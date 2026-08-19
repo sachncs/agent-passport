@@ -1,23 +1,21 @@
 /**
  * Sanctions Screening Provider
  *
- * Interface and default in-memory implementation for v0.2.0's planned
- * sanctions integration (Chainalysis / Elliptic). Until a real provider is
- * wired, the default implementation enforces a built-in deny list of
- * well-known bad-actor wallets (testnet-only addresses; mainnet deployers
- * MUST replace this with a real provider before going live).
+ * Default in-memory implementation. Real deployers replace this with
+ * a Chainalysis / Elliptic adapter via the `SanctionsProvider` interface
+ * (see setSanctionsProvider in a follow-up PR).
  *
  * The provider is called from the underwriting and counterparty-check
- * paths before any approval decision. A match returns `status: 'denied'`
- * with a reason; the caller surfaces this in the response envelope.
+ * paths before any approval decision. A match returns `status: 'denied'`;
+ * the caller surfaces this in the response envelope.
  *
  * Configurable via env:
- *   SANCTIONS_PROVIDER=memory    (default — uses built-in deny list)
- *   SANCTIONS_PROVIDER=allow     (bypass — never deny, just log)
- *   SANCTIONS_PROVIDER=block     (deny all — useful for emergency shutoff)
+ *   SANCTIONS_EXTRA_DENY=addr1,addr2   additional deny-listed addresses
  *
- * Real Chainalysis/Elliptic adapters implement the same interface and
- * are loaded via `setSanctionsProvider()` at boot.
+ * ponytail: dropped AllowAllProvider + BlockAllProvider + the
+ * SANCTIONS_PROVIDER env switch. The Memory provider is the only
+ * consumer (default), and the other two were speculative escape
+ * hatches never wired anywhere.
  */
 
 import { logger } from './logger';
@@ -36,11 +34,9 @@ export interface SanctionsProvider {
   check(wallet: string): Promise<SanctionsResult>;
 }
 
-/** Built-in deny list. Testnet-only — replace with a real provider in prod. */
 const DEFAULT_DENY_LIST: ReadonlySet<string> = new Set<string>([
   // Placeholder addresses — populate via SANCTIONS_EXTRA_DENY env var
-  // (comma-separated) at runtime. Real deployers MUST add a Chainalysis
-  // or Elliptic adapter via setSanctionsProvider().
+  // (comma-separated) at runtime.
 ]);
 
 function loadExtraDenyList(): Set<string> {
@@ -51,12 +47,23 @@ function loadExtraDenyList(): Set<string> {
 
 class MemorySanctionsProvider implements SanctionsProvider {
   public readonly name = 'memory';
-  private readonly denyList: ReadonlySet<string>;
+  private denyList: ReadonlySet<string>;
 
   constructor() {
+    this.denyList = this.buildDenyList();
+  }
+
+  private buildDenyList(): ReadonlySet<string> {
     const extra = loadExtraDenyList();
-    this.denyList = new Set([...DEFAULT_DENY_LIST, ...extra]);
-    if (extra.size > 0) logger.info('Loaded sanctions deny list', { size: extra.size });
+    if (extra.size > 0) {
+      logger.info('Loaded sanctions deny list', { size: extra.size });
+    }
+    return new Set([...DEFAULT_DENY_LIST, ...extra]);
+  }
+
+  /** Test-only: rebuild the deny list from current env. */
+  refresh(): void {
+    this.denyList = this.buildDenyList();
   }
 
   async check(wallet: string): Promise<SanctionsResult> {
@@ -68,37 +75,19 @@ class MemorySanctionsProvider implements SanctionsProvider {
   }
 }
 
-class AllowAllProvider implements SanctionsProvider {
-  public readonly name = 'allow';
-  async check(_wallet: string): Promise<SanctionsResult> {
-    return { status: 'allowed', provider: this.name, checkedAt: new Date().toISOString() };
-  }
-}
-
-class BlockAllProvider implements SanctionsProvider {
-  public readonly name = 'block';
-  async check(_wallet: string): Promise<SanctionsResult> {
-    return { status: 'denied', reason: 'global_block', provider: this.name, checkedAt: new Date().toISOString() };
-  }
-}
-
-let provider: SanctionsProvider = createDefaultProvider();
-
-function createDefaultProvider(): SanctionsProvider {
-  const choice = (process.env.SANCTIONS_PROVIDER ?? 'memory').toLowerCase();
-  if (choice === 'allow') return new AllowAllProvider();
-  if (choice === 'block') return new BlockAllProvider();
-  return new MemorySanctionsProvider();
-}
-
-/** Override the default provider at boot (e.g. for a Chainalysis adapter). */
-export function setSanctionsProvider(p: SanctionsProvider): void {
-  logger.info('Sanctions provider replaced', { from: provider.name, to: p.name });
-  provider = p;
-}
+let provider: SanctionsProvider = new MemorySanctionsProvider();
 
 export function getSanctionsProvider(): SanctionsProvider {
   return provider;
+}
+
+/**
+ * Test-only injection point. Real deployments swap providers via a
+ * future setSanctionsProvider() in the boot path (see docs/security/
+ * sanctions-integration.md).
+ */
+export function setSanctionsProvider(p: SanctionsProvider): void {
+  provider = p;
 }
 
 export async function checkSanctions(wallet: string): Promise<SanctionsResult> {
