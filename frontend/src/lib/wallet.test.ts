@@ -23,7 +23,7 @@ describe("isValidWallet", () => {
   })
 
   it("rejects characters outside A-Z and 2-7", () => {
-    expect(isValidWallet("I".repeat(58)).replace(/I/g, "1")).toBe(false)
+    expect(isValidWallet("1".repeat(58))).toBe(false)
     expect(isValidWallet(VALID.replace(/A$/, "8"))).toBe(false)
     expect(isValidWallet(VALID.replace(/A$/, "0"))).toBe(false)
     expect(isValidWallet(VALID.replace(/A$/, "9"))).toBe(false)
