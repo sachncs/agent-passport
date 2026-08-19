@@ -1,10 +1,11 @@
 import type { Metadata } from "next"
 import { TooltipProvider } from "@/components/ui/tooltip"
 
-import { Sidebar } from "@/components/sidebar"
+import { AppSidebar, SidebarWrapper } from "@/components/sidebar"
 import { TopBar } from "@/components/topbar"
 import { QueryProvider } from "@/components/query-provider"
 import { ThemeProvider } from "@/components/theme-provider"
+import { SidebarInset } from "@/components/ui/sidebar"
 
 import "./globals.css"
 
@@ -31,9 +32,9 @@ export default function RootLayout({
         >
           <QueryProvider>
             <TooltipProvider delay={150}>
-              <div className="flex min-h-screen">
-                <Sidebar />
-                <div className="flex min-h-screen flex-1 flex-col">
+              <SidebarWrapper>
+                <AppSidebar />
+                <SidebarInset>
                   <TopBar />
                   <main className="flex-1 px-4 py-6 md:px-8 md:py-8">
                     <div className="mx-auto max-w-6xl">{children}</div>
@@ -56,8 +57,8 @@ export default function RootLayout({
                       </span>
                     </div>
                   </footer>
-                </div>
-              </div>
+                </SidebarInset>
+              </SidebarWrapper>
             </TooltipProvider>
           </QueryProvider>
         </ThemeProvider>
