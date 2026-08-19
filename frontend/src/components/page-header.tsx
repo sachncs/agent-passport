@@ -1,8 +1,16 @@
 import { AlertCircle } from "lucide-react"
 
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Spinner } from "@/components/ui/spinner"
 
 export function PageHeader({
   title,
@@ -42,15 +50,15 @@ export function EmptyState({
   description: string
 }) {
   return (
-    <Card>
-      <CardContent className="flex flex-col items-center justify-center gap-3 py-16 text-center">
-        <Icon className="h-10 w-10 text-muted-foreground" />
-        <h3 className="text-base font-medium">{title}</h3>
-        <p className="max-w-sm text-sm text-muted-foreground">
-          {description}
-        </p>
-      </CardContent>
-    </Card>
+    <Empty>
+      <EmptyHeader>
+        <EmptyMedia variant="icon">
+          <Icon className="h-4 w-4" />
+        </EmptyMedia>
+        <EmptyTitle>{title}</EmptyTitle>
+        <EmptyDescription>{description}</EmptyDescription>
+      </EmptyHeader>
+    </Empty>
   )
 }
 
@@ -58,6 +66,10 @@ export function LoadingBlock({ rows = 4 }: { rows?: number }) {
   return (
     <Card>
       <CardContent className="space-y-3 py-6">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Spinner />
+          <span>Loading…</span>
+        </div>
         {Array.from({ length: rows }).map((_, i) => (
           <Skeleton key={i} className="h-4 w-full" />
         ))}
@@ -68,12 +80,11 @@ export function LoadingBlock({ rows = 4 }: { rows?: number }) {
 
 export function ErrorBlock({ message }: { message: string }) {
   return (
-    <Card>
-      <CardContent className="py-6 text-sm text-destructive">
-        <strong className="font-semibold">Could not load</strong>
-        <p className="mt-1">{message}</p>
-      </CardContent>
-    </Card>
+    <Alert variant="destructive">
+      <AlertCircle className="h-4 w-4" />
+      <AlertTitle>Could not load</AlertTitle>
+      <AlertDescription>{message}</AlertDescription>
+    </Alert>
   )
 }
 
