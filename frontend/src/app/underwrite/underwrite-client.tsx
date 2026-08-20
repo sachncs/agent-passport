@@ -144,7 +144,7 @@ function Body({ data }: { data: UnderwriteResponse }) {
 export function UnderwriteClient() {
   const searchParams = useSearchParams()
   const wallet = searchParams.get("wallet")
-  const valid = wallet && isValidWallet(wallet)
+  const valid = !!(wallet && isValidWallet(wallet))
 
   const { data, isLoading, error } = useQuery<UnderwriteResponse>({
     queryKey: ["underwrite", wallet],

@@ -224,7 +224,7 @@ function ScoreBody({ data }: { data: TrustScoreResponse }) {
 export function TrustScoreClient() {
   const searchParams = useSearchParams()
   const wallet = searchParams.get("wallet")
-  const valid = wallet && isValidWallet(wallet)
+  const valid = !!(wallet && isValidWallet(wallet))
 
   const { data, isLoading, error } = useQuery<TrustScoreResponse>({
     queryKey: ["score", wallet],

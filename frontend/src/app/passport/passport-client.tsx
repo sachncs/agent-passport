@@ -238,7 +238,7 @@ function PassportBody({ data }: { data: PassportResponse }) {
 export function PassportClient() {
   const searchParams = useSearchParams()
   const wallet = searchParams.get("wallet")
-  const valid = wallet && isValidWallet(wallet)
+  const valid = !!(wallet && isValidWallet(wallet))
 
   const { data, isLoading, error } = useQuery<PassportResponse>({
     queryKey: ["passport", wallet],

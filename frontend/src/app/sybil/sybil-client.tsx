@@ -181,7 +181,7 @@ function Body({ data }: { data: SybilCheckResponse }) {
 export function SybilClient() {
   const searchParams = useSearchParams()
   const wallet = searchParams.get("wallet")
-  const valid = wallet && isValidWallet(wallet)
+  const valid = !!(wallet && isValidWallet(wallet))
 
   const { data, isLoading, error } = useQuery<SybilCheckResponse>({
     queryKey: ["sybil", wallet],
