@@ -2,24 +2,25 @@
 
 import { useSearchParams } from "next/navigation"
 import { useQuery } from "@tanstack/react-query"
-import { Download, Award, ShieldCheck, ShieldAlert } from "lucide-react"
+import { Download, ShieldAlert, ShieldCheck } from "lucide-react"
 
-import { Card, CardContent } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { api } from "@/lib/api"
+import { isValidWallet } from "@/lib/wallet"
+import { CommandSurface } from "@/components/command-surface"
+import { KpiCard } from "@/components/kpi-card"
+import { ReportHeader } from "@/components/report/report-header"
+import { AuditStrip } from "@/components/report/audit-strip"
+import { EvidenceDrawer } from "@/components/report/evidence-drawer"
+
+import {
+  Card,
+  CardContent,
+} from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
-import { ShieldAlert as ShieldAlertIcon } from "lucide-react"
-
-import { WalletHeroInput } from "@/components/wallet-hero-input"
-import { PassportSection } from "@/components/passport-section"
-import { RiskBadge } from "@/components/risk-badge"
-import { Stat } from "@/components/stat"
-
-import { api, ApiError } from "@/lib/api"
-import { isValidWallet } from "@/lib/wallet"
 
 import type { PassportResponse } from "@/lib/api-types"
 
@@ -28,24 +29,8 @@ export function PassportClient() {
   const wallet = searchParams.get("wallet")
 
   if (!wallet) {
-    return (
-      <div className="mx-auto flex max-w-2xl flex-col items-center gap-6 py-12 text-center">
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
-          <Award className="h-6 w-6" />
-        </div>
-        <h1 className="font-heading text-3xl font-semibold tracking-tight md:text-4xl">
-          The official passport document.
-        </h1>
-        <p className="max-w-md text-sm text-muted-foreground">
-          A tamper-evident JSON record combining trust, reputation,
-          credit, sybil signals, delegation, capabilities, and a SHA-256
-          checksum.
-        </p>
-        <WalletHeroInput wallet={null} target="/passport" />
-      </div>
-    )
+    return <PassportEntry target="/passport" />
   }
-
   if (!isValidWallet(wallet)) {
     return (
       <Card>
@@ -58,6 +43,22 @@ export function PassportClient() {
   }
 
   return <PassportBody wallet={wallet} />
+}
+
+function PassportEntry({ target }: { target: string }) {
+  return (
+    <div className="mx-auto flex max-w-xl flex-col items-center gap-6 py-8 text-center">
+      <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">
+        The official passport document.
+      </h1>
+      <p className="max-w-md text-sm text-muted-fg">
+        A tamper-evident JSON record combining trust, reputation,
+        credit, sybil signals, delegation, capabilities, and a
+        SHA-256 checksum.
+      </p>
+      <CommandSurface target={target} cta="Open Passport" />
+    </div>
+  )
 }
 
 function PassportBody({ wallet }: { wallet: string }) {
@@ -84,10 +85,10 @@ function PassportBody({ wallet }: { wallet: string }) {
   if (isLoading) {
     return (
       <Card>
-        <CardContent className="space-y-3 py-6">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <CardContent className="space-y-4 py-8">
+          <div className="flex items-center gap-2 text-xs text-muted-fg">
             <Spinner />
-            <span>Loading…</span>
+            <span>Verifying on-chain…</span>
           </div>
           <Skeleton className="h-4 w-full" />
           <Skeleton className="h-4 w-3/4" />
@@ -99,11 +100,9 @@ function PassportBody({ wallet }: { wallet: string }) {
   if (error) {
     return (
       <Alert variant="destructive">
-        <ShieldAlertIcon className="h-4 w-4" />
+        <ShieldAlert className="h-4 w-4" />
         <AlertTitle>Could not load passport</AlertTitle>
-        <AlertDescription>
-          {error instanceof ApiError ? error.message : error.message}
-        </AlertDescription>
+        <AlertDescription>{error.message}</AlertDescription>
       </Alert>
     )
   }
@@ -112,137 +111,173 @@ function PassportBody({ wallet }: { wallet: string }) {
 
   return (
     <div className="space-y-6">
-      <PassportSection
-        icon={Award}
-        title="Passport"
-        subtitle={`The complete trust + reputation + credit document. Includes a tamper-evident SHA-256 checksum.`}
-        tone="primary"
-        badge={
-          <RiskBadge risk={data.overallRiskLevel} size="lg" />
-        }
-      >
-        <div className="flex flex-wrap items-baseline gap-4">
-          <div className="font-mono text-sm text-muted-foreground">
-            {data.wallet.slice(0, 10)}…{data.wallet.slice(-6)}
-          </div>
-          <Button size="sm" variant="outline" onClick={downloadJson}>
-            <Download className="h-4 w-4" /> JSON
-          </Button>
-        </div>
-        <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
-          <Stat label="Trust score" tone="muted">
-            <div className="font-heading text-2xl font-semibold tabular-nums">
-              {data.trustScore.toFixed(1)}
-            </div>
-            <Progress value={data.trustScore} className="mt-2 h-1.5" />
-          </Stat>
-          <Stat label="Reputation" tone="muted">
-            <div className="font-heading text-2xl font-semibold tabular-nums">
-              {data.reputation.toFixed(1)}
-            </div>
-            <Progress value={data.reputation} className="mt-2 h-1.5" />
-          </Stat>
-          <Stat label="Credit limit" tone="muted">
-            <div className="font-heading text-2xl font-semibold tabular-nums">
-              ${data.creditLimit.toFixed(2)}
-            </div>
-          </Stat>
-          <Stat label="Sybil risk" tone="muted">
-            <div className="font-heading text-2xl font-semibold tabular-nums">
-              {(data.sybilRisk * 100).toFixed(0)}%
-            </div>
-            <Progress
-              value={data.sybilRisk * 100}
-              className="mt-2 h-1.5"
-            />
-          </Stat>
-        </div>
-      </PassportSection>
+      <ReportHeader
+        wallet={wallet}
+        risk={data.overallRiskLevel}
+        generatedAt={data.generatedAt}
+        checksum={data.checksum}
+        onDownloadJson={downloadJson}
+      />
 
-      <PassportSection
-        icon={Award}
-        title="Summary"
-        subtitle="One-line human read of the document."
-        tone="primary"
-      >
-        <p className="text-sm">{data.summary}</p>
-        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-          <span>
-            generated {new Date(data.generatedAt).toLocaleString()}
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <KpiCard
+          label="Trust score"
+          value={data.trustScore.toFixed(1)}
+          progress={data.trustScore}
+        />
+        <KpiCard
+          label="Reputation"
+          value={data.reputation.toFixed(1)}
+          progress={data.reputation}
+        />
+        <KpiCard
+          label="Credit limit"
+          value={`$${data.creditLimit.toFixed(2)}`}
+        />
+        <KpiCard
+          label="Sybil risk"
+          value={`${(data.sybilRisk * 100).toFixed(0)}%`}
+          progress={data.sybilRisk * 100}
+        />
+      </div>
+
+      <Card>
+        <CardContent className="space-y-3 py-5">
+          <span className="text-[0.65rem] font-medium uppercase tracking-[0.16em] text-muted-fg">
+            Summary
           </span>
-          <span>·</span>
-          <code className="font-mono text-[0.65rem]">
-            {data.checksum.slice(0, 16)}…
-          </code>
-        </div>
-      </PassportSection>
+          <p className="text-base text-foreground">{data.summary}</p>
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-fg">
+            <span>
+              Generated {new Date(data.generatedAt).toLocaleString()}
+            </span>
+            <span aria-hidden>·</span>
+            <code className="font-mono text-[0.7rem]">
+              sha256 {data.checksum}
+            </code>
+          </div>
+        </CardContent>
+      </Card>
 
-      <PassportSection
-        icon={Award}
-        title="Details"
-        subtitle="On-chain facts, capabilities, and the raw JSON."
-        tone="primary"
-      >
-        <Tabs defaultValue="onchain">
-          <TabsList>
-            <TabsTrigger value="onchain">On-chain</TabsTrigger>
-            <TabsTrigger value="capabilities">Capabilities</TabsTrigger>
-            <TabsTrigger value="raw">Raw</TabsTrigger>
-          </TabsList>
-          <TabsContent value="onchain">
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-              <Stat label="Balance" tone="muted">
-                {data.onChain.balanceAlgo.toFixed(2)} ALGO
-              </Stat>
-              <Stat label="Transactions" tone="muted">
-                {data.onChain.totalTxns.toLocaleString()}
-              </Stat>
-              <Stat label="Assets" tone="muted">
-                {data.onChain.assetCount}
-              </Stat>
-              <Stat label="Apps" tone="muted">
-                {data.onChain.appCount}
-              </Stat>
-              <Stat label="Account age" tone="muted">
-                {data.onChain.accountAgeDays}d
-              </Stat>
-              <Stat label="First seen" tone="muted">
-                {data.onChain.firstSeenRound}
-              </Stat>
-              <Stat label="Last seen" tone="muted">
-                {data.onChain.lastSeenRound}
-              </Stat>
-              <Stat label="Wallet" tone="muted">
-                <span className="font-mono text-xs">
-                  {data.wallet.slice(0, 8)}…{data.wallet.slice(-6)}
-                </span>
-              </Stat>
-            </div>
-          </TabsContent>
-          <TabsContent value="capabilities">
-            <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-              {Object.entries(data.capabilities).map(([k, v]) => (
-                <div
-                  key={k}
-                  className="flex items-center justify-between rounded-md border border-border bg-muted/30 px-3 py-2"
-                >
-                  <span className="font-mono text-sm">{k}</span>
-                  {v ? (
-                    <ShieldCheck className="h-4 w-4 text-emerald-500" />
-                  ) : (
-                    <ShieldAlert className="h-4 w-4 text-muted-foreground" />
-                  )}
-                </div>
-              ))}
-            </div>
-          </TabsContent>
-          <TabsContent value="raw">
-            <pre className="overflow-x-auto rounded-md bg-muted/40 p-4 text-xs">
-              {JSON.stringify(data, null, 2)}
-            </pre>
-          </TabsContent>
-        </Tabs>
-      </PassportSection>
+      <EvidenceDrawer
+        defaultOpen={["on-chain"]}
+        items={[
+          {
+            id: "on-chain",
+            title: "On-chain facts",
+            count: `${Object.keys(data.onChain).length} fields`,
+            children: (
+              <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+                <KpiCard
+                  label="Balance"
+                  value={`${data.onChain.balanceAlgo.toFixed(2)} ALGO`}
+                />
+                <KpiCard
+                  label="Transactions"
+                  value={data.onChain.totalTxns.toLocaleString()}
+                />
+                <KpiCard
+                  label="Assets"
+                  value={data.onChain.assetCount}
+                />
+                <KpiCard
+                  label="Apps"
+                  value={data.onChain.appCount}
+                />
+                <KpiCard
+                  label="Account age"
+                  value={`${data.onChain.accountAgeDays}d`}
+                />
+                <KpiCard
+                  label="First seen"
+                  value={data.onChain.firstSeenRound}
+                />
+                <KpiCard
+                  label="Last seen"
+                  value={data.onChain.lastSeenRound}
+                />
+                <KpiCard
+                  label="Wallet"
+                  value={`${wallet.slice(0, 8)}…${wallet.slice(-6)}`}
+                />
+              </div>
+            ),
+          },
+          {
+            id: "capabilities",
+            title: "Capabilities",
+            count: `${Object.keys(data.capabilities).length} checks`,
+            children: (
+              <ul className="grid grid-cols-1 gap-1.5 md:grid-cols-2">
+                {Object.entries(data.capabilities).map(([k, v]) => (
+                  <li
+                    key={k}
+                    className="flex items-center justify-between rounded-md border border-border/60 bg-background/40 px-3 py-1.5 text-xs"
+                  >
+                    <span className="font-mono">{k}</span>
+                    {v ? (
+                      <span className="inline-flex items-center gap-1.5 text-verified-fg">
+                        <ShieldCheck aria-hidden className="h-3 w-3" />
+                        Verified
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 text-muted-fg">
+                        <ShieldAlert aria-hidden className="h-3 w-3" />
+                        Not verified
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            ),
+          },
+          {
+            id: "raw",
+            title: "Raw JSON",
+            count: `${Object.keys(data).length} top-level fields`,
+            children: (
+              <Tabs defaultValue="pretty">
+                <TabsList>
+                  <TabsTrigger value="pretty">Pretty</TabsTrigger>
+                  <TabsTrigger value="raw">Raw</TabsTrigger>
+                  <TabsTrigger value="download">Download</TabsTrigger>
+                </TabsList>
+                <TabsContent value="pretty">
+                  <pre className="overflow-x-auto rounded-md border border-border/60 bg-background/40 p-4 text-xs">
+                    {JSON.stringify(data, null, 2)}
+                  </pre>
+                </TabsContent>
+                <TabsContent value="raw">
+                  <pre className="overflow-x-auto rounded-md border border-border/60 bg-background/40 p-4 text-xs">
+                    {JSON.stringify(data)}
+                  </pre>
+                </TabsContent>
+                <TabsContent value="download">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={downloadJson}
+                  >
+                    <Download className="h-4 w-4" />
+                    Download passport-{wallet.slice(0, 8)}.json
+                  </Button>
+                </TabsContent>
+              </Tabs>
+            ),
+          },
+        ]}
+      />
+
+      <AuditStrip>
+        <span className="inline-flex items-center gap-1.5">
+          <span className="uppercase tracking-[0.14em]">
+            sha256
+          </span>
+          <code className="font-mono text-foreground">
+            {data.checksum}
+          </code>
+        </span>
+      </AuditStrip>
     </div>
   )
 }
