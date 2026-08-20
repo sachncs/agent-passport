@@ -15,9 +15,19 @@ All notable changes to **Agent Passport** are documented in this file.
 > full Next.js 16 file convention set (loading.tsx, error.tsx,
 > global-error.tsx, proxy.ts), a full shadcn/ui v4 component
 > suite, comprehensive Vitest + Testing Library + MSW frontend
-> tests (51 tests, 10 files), a proxy to the backend via
+> tests (62 tests, 13 files), a proxy to the backend via
 > Next.js rewrites, and a human-readable `LOG_FORMAT=pretty`
-> mode for the backend.
+> mode for the backend. The same release ships a cleanup pass
+> that removes every backward shim from the redesign
+> (`WalletHeroInput`, `page-header.tsx`, `RiskBadge`,
+> `PassportSection`, `PassportSections`, `Stat`), 31 unused
+> UI primitives, the dead `use-mobile` hook, the `cmdk` and
+> `input-otp` npm packages, the unused `@vitest/ui` dev dep, and
+> the `test:ui` script — and fixes three small bugs surfaced in
+> the cleanup (real network in `AuditStrip` + `SiteFooter`,
+> recharts `width(-1)` warnings via a `ClientOnly` mount guard,
+> three graceful-degradation backend warnings demoted to
+> `debug`).
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -213,6 +223,108 @@ recipe end-to-end.
 
 Build output: 14 lazy-loaded chunks, main shell ~99 KB gzipped,
 biggest (`/sybil` with recharts) ~103 KB gzipped.
+
+### Repository hygiene — cleanup, dead-code purge, network fix
+
+Cuts dead code, backward shims, and 31 unused UI primitives left over
+from the redesign. Three small bugs surface and get fixed in the same
+pass.
+
+#### Backward shims and legacy components dropped
+
+- **`WalletHeroInput`** was a thin wrapper over `CommandSurface` with
+  exactly one remaining caller (`/dashboard` empty state). Inlined
+  the `CommandSurface` call with the original "Load Report" CTA and
+  deleted the wrapper.
+- **`page-header.tsx`** exported `PageHeader`, `EmptyState`,
+  `LoadingBlock`, `ErrorBlock`, `WalletRequiredAlert`. All five had
+  zero callers after the redesign; replaced the one
+  `WalletRequiredAlert` use site in `/dashboard/passport-view.tsx`
+  with the same `CommandSurface` empty-state pattern the other six
+  wallet-keyed pages already used.
+- **`PassportSection`** (legacy tone-stripe section card),
+  **`PassportSections`** (the 6-section dashboard stack with
+  `SummarySection`, `TrustScoreSection`, `SybilSection`,
+  `ReputationSection`, `DelegationSection`, `UnderwritingSection`),
+  **`Stat`** (legacy label-value card; verdict-card.tsx has its own
+  private `Stat`), and **`RiskBadge`** (re-export shim
+  `export { RiskPill as RiskBadge }`) — all deleted. The new
+  `PassportView` fetches each endpoint directly and composes the
+  verdict-first layout inline.
+
+#### Unused UI primitives dropped (31 files)
+
+The redesign left the UI primitive set at 12 files with external
+callers: `accordion`, `alert`, `badge`, `button`, `card`, `input`,
+`label`, `skeleton`, `sonner`, `spinner`, `tabs`, `tooltip`. Deleted
+the other 31: `alert-dialog`, `avatar`, `chart`, `checkbox`,
+`collapsible`, `combobox`, `command`, `context-menu`, `dialog`,
+`drawer`, `dropdown-menu`, `empty`, `field`, `hover-card`,
+`input-group`, `input-otp`, `menubar`, `navigation-menu`,
+`pagination`, `popover`, `progress`, `radio-group`, `scroll-area`,
+`select`, `separator`, `sheet`, `switch`, `table`, `textarea`,
+`toggle-group`, `toggle`.
+
+#### Hooks, deps, and config
+
+- **`use-mobile.ts` (`useIsMobile`)** had zero importers; deleted
+  along with the now-empty `src/hooks/` directory.
+- **`cmdk`** and **`input-otp`** were only imported by the deleted
+  `ui/command.tsx` and `ui/input-otp.tsx`; removed from
+  `package.json` and `pnpm-lock.yaml`.
+- **`@vitest/ui`** dev dependency + `test:ui` script — nothing in the
+  repo or CI runs `pnpm test:ui`; the peer-dep warning
+  (`vitest@4.1.10` vs `@vitest/ui@4.1.11`) went away with the removal.
+- **`components.json`** rewritten so future `shadcn add` calls don't
+  re-introduce dead primitives; the dead `hooks` alias dropped
+  since `src/hooks/` no longer exists.
+
+#### Network display fixed
+
+`AuditStrip` defaulted `network` to `"Algorand Mainnet"` and
+`SiteFooter` hardcoded `"Mainnet"` in the tagline. Both surfaces
+now read from the same `["health"]` TanStack Query key that
+`StatusPill` uses — the real network (TestNet, Mainnet, custom)
+shows up everywhere. New `useNetwork` hook in
+`src/components/use-network.ts` exports `useHealth` and `useNetwork`
+sharing the query key (TanStack dedupes the in-flight request across
+consumers). `api.health()` now returns the `HealthResponse` type
+(with `network` field) instead of an inline minimal type.
+
+#### Recharts `width(-1)/height(-1)` warnings fixed
+
+Both `TrustScoreCard` and `ReputationSummary` wrapped their charts
+in `ResponsiveContainer`, which measures its parent with `useEffect`
++ `ResizeObserver` and reports `width=-1 / height=-1` before the
+first measurement settles (and re-fires on every layout pass).
+Charts are decorative — the score numbers and bar totals render as
+plain DOM anyway — so SSR + first paint gain nothing from the chart
+being in the tree. New `ClientOnly` wrapper in
+`src/components/client-only.tsx` returns the fallback during SSR +
+first paint, then renders children after `useEffect` mounts. Both
+charts wrapped; the score overlay / totals remain visible
+regardless.
+
+#### Backend warnings demoted
+
+Three `logger.warn` calls in the Algorand indexer paginator log
+graceful-degradation paths, not faults. They belong at `debug`:
+
+- `src/sybil.ts:432` — `"Sybil transaction fetch hit page/byte cap"`
+- `src/trust-score.ts:367` — `"Transaction history hit page limit"`
+- `src/delegation.ts:158` — `"fetchDelegationsFromIndexer failed"`
+
+The system hits `MAX_TX_PAGES = 10` and `MAX_TX_BYTES = 5 MB` on
+busy wallets and falls back gracefully. All other `logger.warn`
+calls (`webhook dispatch failed`, `exposure cap reached`, recursive
+score failures, etc.) stay at `warn` — those signal real problems
+an operator should still see.
+
+#### Test coverage
+
+62/62 frontend tests pass (was 51/51 before the redesign + new
+design-system tests; 8 page-header tests retired with the file).
+Backend: 1576/1576 unit tests still pass.
 
 ### Removed dependencies (broken upstream package)
 
@@ -492,7 +604,7 @@ that was repeating across 6 pages.
 
 ### Audit
 
-- **1569/1569 tests passing** across 58 unit test files.
+- **1576/1576 tests passing** across 44 unit test files.
   Pure-math unit tests for `reputation.ts`, `passport.ts`,
   `sybil.ts`, `credit.ts`, `delegation.ts`, `underwriting.ts`,
   `trust-score.ts`, `counterparty.ts` — coverage of all

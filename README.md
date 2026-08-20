@@ -51,6 +51,13 @@ truth for architecture, algorithms, operations, and contributing.
   and x402 payment callbacks. See
   [../sdk/README.md](../sdk/README.md)
   and [../sdk/python/README.md](../sdk/python/README.md).
+- **Premium dark-first SaaS console** — Next.js 16 + shadcn/ui v4 with
+  a two-tier accent system (emerald for trust/verified, cyan for
+  operational/data), verdict-first `/dashboard` report, custom
+  geometric brand mark, persisted `next-themes` theme, live
+  operational status pill in the header, dedicated developer-surface
+  treatment for `/endorse`, `/counterparty`, `/monitor`, and
+  `/discovery`.
 - **Security hardened** — Helmet headers, 600 req/min/IP rate limit, CORS,
   100 KB body limit, 30 s request timeout, per-request UUID,
   `Idempotency-Key` middleware, on-chain payment verification. See
@@ -298,7 +305,7 @@ agent-passport/
 │   ├── trust-graph.ts      # Trust graph analytics, exposure, what-ifs
 │   ├── counterparty.ts     # Merchant counterparty check
 │   ├── registry.ts         # On-chain delegate + revoke
-│   ├── __tests__/          # 58 unit test files (1 569 tests passing)
+│   ├── __tests__/          # 44 unit test files (1 576 tests passing)
 │   └── lib/                # 13 helper modules (cache, idempotency, x402, …)
 ├── sdk/                    # TypeScript + Python SDKs
 │   ├── src/                # TypeScript SDK
@@ -310,7 +317,12 @@ agent-passport/
 │   ├── registry.teal       # Delegation registry
 │   └── reputation.teal     # Reputation events
 ├── scripts/                # Operational CLIs
-├── frontend/                   # Next.js 16 + shadcn/ui v4 + Tailwind v4 frontend (App Router)
+├── frontend/               # Next.js 16 + shadcn/ui v4 + Tailwind v4 frontend (App Router)
+│   ├── src/components/     # Brand, cards, command surface, wallet pill, code block,
+│   │                         status pill, use-network, client-only, etc.
+│   ├── src/components/brand/        # Logo (mark / wordmark / full)
+│   ├── src/components/report/       # Verdict / header / evidence drawer / chart primitives
+│   └── src/components/ui/           # 12 used shadcn primitives only
 ├── docs/                   # Flattened docs (README + 5 topical .md + api/)
 │   ├── README.md          # Index
 │   ├── architecture.md    # System design, middleware, modules, scaling
@@ -334,7 +346,7 @@ agent-passport/
 npm run dev              # Start with hot reload
 npm run build            # Build TypeScript
 npm run typecheck        # Type checking
-npm test                 # All unit tests (1 569 passing)
+npm test                 # All unit tests (1 576 passing)
 npm run test:integration # Live testnet integration suite
 npm run lint             # ESLint
 ```
@@ -367,9 +379,8 @@ cd frontend
 pnpm install
 pnpm dev        # http://localhost:3001
 pnpm build      # production build
-pnpm test       # 51 unit + component tests via Vitest
+pnpm test       # 62 unit + component tests via Vitest
 pnpm test:watch
-pnpm test:ui
 pnpm test:coverage
 pnpm lint
 pnpm typecheck
@@ -379,7 +390,10 @@ Adding a page follows the `page.tsx` (server) + `*-client.tsx`
 (client) split, with the client using `useSearchParams()` and React
 Query against the API client in `src/lib/api.ts`. UI primitives are
 installed via the shadcn CLI (`pnpm dlx shadcn@latest add <name>`)
-and live in `src/components/ui/`.
+and live in `src/components/ui/` — only the 12 that actually have
+callers are scaffolded (`accordion`, `alert`, `badge`, `button`,
+`card`, `input`, `label`, `skeleton`, `sonner`, `spinner`, `tabs`,
+`tooltip`).
 
 ### Load tests
 
@@ -419,7 +433,7 @@ chore: bump @x402/core to 2.18.0
 ## Testing
 
 ```bash
-npm test                       # 58 test files (1 569 tests)
+npm test                       # 44 test files (1 576 tests)
 npm run test:integration       # Live Algorand testnet integration
 npm run test:coverage          # Unit tests with coverage
 ```
