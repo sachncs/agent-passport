@@ -364,7 +364,7 @@ async function fetchTransactionHistory(
     }
 
     if (pages >= MAX_TRANSACTION_PAGES && hasMore) {
-      logger.warn('Transaction history hit page limit', { wallet, pages, totalTxns: allTxns.length });
+      logger.debug('Transaction history hit page limit', { wallet, pages, totalTxns: allTxns.length });
     }
 
     let first = Infinity;

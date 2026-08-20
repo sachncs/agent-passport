@@ -155,7 +155,7 @@ async function fetchDelegationsFromIndexer(
         d.delegatee && d.delegatee !== wallet && isValidWallet(d.delegatee),
       );
   } catch (e) {
-    logger.warn('fetchDelegationsFromIndexer failed', { wallet, error: String(e) });
+    logger.debug('fetchDelegationsFromIndexer failed', { wallet, error: String(e) });
     return [];
   }
 }

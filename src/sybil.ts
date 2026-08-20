@@ -429,7 +429,7 @@ async function fetchTransactions(wallet: string, _fresh = false): Promise<{
     }
 
     if (hitPageCap) {
-      logger.warn('Sybil transaction fetch hit page/byte cap', {
+      logger.debug('Sybil transaction fetch hit page/byte cap', {
         wallet,
         pages: pageCount,
         bytes: byteCount,
