@@ -8,6 +8,7 @@ import {
   Gauge,
   HandCoins,
   LayoutDashboard,
+  ScrollText,
   Search,
   Shield,
   Star,
@@ -33,6 +34,7 @@ const NAV_ITEMS: {
   label: string
   icon: React.ComponentType<{ className?: string }>
 }[] = [
+  { href: "/dashboard", label: "Dashboard", icon: ScrollText },
   { href: "/", label: "Overview", icon: LayoutDashboard },
   { href: "/score", label: "Trust Score", icon: Gauge },
   { href: "/passport", label: "Passport", icon: Award },
