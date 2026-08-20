@@ -6,6 +6,7 @@ import { ShieldAlert } from "lucide-react"
 
 import { api } from "@/lib/api"
 import { isValidWallet } from "@/lib/wallet"
+import { CommandSurface } from "@/components/command-surface"
 import { SubScoreCard } from "@/components/sub-score-card"
 import { VerdictCard } from "@/components/report/verdict-card"
 import { TrustScoreCard } from "@/components/report/trust-score-card"
@@ -15,7 +16,6 @@ import { DelegationPath } from "@/components/report/delegation-path"
 import { AuditStrip } from "@/components/report/audit-strip"
 import { EvidenceDrawer } from "@/components/report/evidence-drawer"
 import { ReportHeader } from "@/components/report/report-header"
-import { WalletRequiredAlert } from "@/components/page-header"
 import {
   Card,
   CardContent,
@@ -37,7 +37,21 @@ export function PassportView() {
   const searchParams = useSearchParams()
   const wallet = searchParams.get("wallet")
 
-  if (!wallet) return <WalletRequiredAlert />
+  if (!wallet) {
+    return (
+      <div className="mx-auto flex max-w-xl flex-col items-center gap-6 py-8 text-center">
+        <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">
+          The official passport document.
+        </h1>
+        <p className="max-w-md text-sm text-muted-fg">
+          A tamper-evident JSON record combining trust, reputation,
+          credit, sybil signals, delegation, capabilities, and a
+          SHA-256 checksum.
+        </p>
+        <CommandSurface target="/dashboard" cta="Load Report" />
+      </div>
+    )
+  }
   if (!isValidWallet(wallet)) {
     return (
       <Card>
