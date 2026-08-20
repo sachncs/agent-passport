@@ -124,50 +124,26 @@ function writeOutput(line: string, level: LogLevel, pretty: string): void {
 export const logger = {
   debug(message: string, meta?: Record<string, unknown>) {
     if (shouldLog('debug')) {
-      const entry = {
-        level: 'debug', message, timestamp: new Date().toISOString(), ...meta,
-      }
-      writeOutput(
-        formatEntry(entry),
-        'debug',
-        formatPretty(entry),
-      )
+      const entry = { level: 'debug' as LogLevel, message, timestamp: new Date().toISOString(), ...meta }
+      writeOutput(formatEntry(entry), 'debug', formatPretty(entry))
     }
   },
   info(message: string, meta?: Record<string, unknown>) {
     if (shouldLog('info')) {
-      const entry = {
-        level: 'info', message, timestamp: new Date().toISOString(), ...meta,
-      }
-      writeOutput(
-        formatEntry(entry),
-        'info',
-        formatPretty(entry),
-      )
+      const entry = { level: 'info' as LogLevel, message, timestamp: new Date().toISOString(), ...meta }
+      writeOutput(formatEntry(entry), 'info', formatPretty(entry))
     }
   },
   warn(message: string, meta?: Record<string, unknown>) {
     if (shouldLog('warn')) {
-      const entry = {
-        level: 'warn', message, timestamp: new Date().toISOString(), ...meta,
-      }
-      writeOutput(
-        formatEntry(entry),
-        'warn',
-        formatPretty(entry),
-      )
+      const entry = { level: 'warn' as LogLevel, message, timestamp: new Date().toISOString(), ...meta }
+      writeOutput(formatEntry(entry), 'warn', formatPretty(entry))
     }
   },
   error(message: string, meta?: Record<string, unknown>) {
     if (shouldLog('error')) {
-      const entry = {
-        level: 'error', message, timestamp: new Date().toISOString(), ...meta,
-      }
-      writeOutput(
-        formatEntry(entry),
-        'error',
-        formatPretty(entry),
-      )
+      const entry = { level: 'error' as LogLevel, message, timestamp: new Date().toISOString(), ...meta }
+      writeOutput(formatEntry(entry), 'error', formatPretty(entry))
     }
   },
 }
