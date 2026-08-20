@@ -1,22 +1,21 @@
 "use client"
 
 import { useState } from "react"
-import { HandCoins } from "lucide-react"
+import { ShieldAlert } from "lucide-react"
 
 import { isValidWallet } from "@/lib/wallet"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-
-import { PassportSection } from "@/components/passport-section"
+import { CodeBlock } from "@/components/code-block"
 
 export default function EndorsePage() {
   const [sponsor, setSponsor] = useState("")
   const [agent, setAgent] = useState("")
   const [amount, setAmount] = useState("1000")
   const [output, setOutput] = useState("")
+
   const generate = (e: React.FormEvent) => {
     e.preventDefault()
     if (!isValidWallet(sponsor) || !isValidWallet(agent)) {
@@ -33,45 +32,60 @@ export default function EndorsePage() {
       return
     }
     setOutput(
-      `# POST /delegate — signed example\n` +
-      `# Requires HMAC + Idempotency-Key (see docs/security.md)\n` +
       `curl -X POST http://localhost:3000/delegate \\\n` +
-      `  -H 'Content-Type: application/json' \\\n` +
-      `  -H 'X-Auth-Timestamp: $(date +%s%3N)' \\\n` +
-      `  -H 'X-Auth-Nonce: $(uuidgen | tr -d -)' \\\n` +
-      `  -H 'X-Auth-KeyId: operator-1' \\\n` +
-      `  -H 'X-Auth-Signature: <hmac-sha256-hex>' \\\n` +
-      `  -H 'Idempotency-Key: web-$(uuidgen)' \\\n` +
-      `  -d '${JSON.stringify({ sponsor, agent, amount: amt })}'\n`,
+        `  -H 'Content-Type: application/json' \\\n` +
+        `  -H 'X-Auth-Timestamp: $(date +%s%3N)' \\\n` +
+        `  -H 'X-Auth-Nonce: $(uuidgen | tr -d -)' \\\n` +
+        `  -H 'X-Auth-KeyId: operator-1' \\\n` +
+        `  -H 'X-Auth-Signature: <hmac-sha256-hex>' \\\n` +
+        `  -H 'Idempotency-Key: web-$(uuidgen)' \\\n` +
+        `  -d '${JSON.stringify({ sponsor, agent, amount: amt })}'\n`,
     )
   }
+
   return (
     <div className="space-y-6">
-      <PassportSection
-        icon={HandCoins}
-        title="Endorse / Revoke"
-        subtitle="Submit an on-chain delegation, or revoke one. Requires HMAC + Idempotency-Key on the server."
-        tone="primary"
-      >
-        <Alert>
-          <AlertTitle>Auth required</AlertTitle>
-          <AlertDescription>
-            State-changing endpoints (POST /delegate, POST /revoke, POST
-            /reputation/record) require <code>HMAC_SECRET</code> + signed
-            request headers. The form below previews the wire format; the
-            server will reject unsigned requests with 401.
-          </AlertDescription>
-        </Alert>
-      </PassportSection>
+      <header className="space-y-2">
+        <span className="text-[0.65rem] font-medium uppercase tracking-[0.16em] text-info-fg">
+          Developer surface
+        </span>
+        <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
+          Endorse / Revoke
+        </h1>
+        <p className="max-w-2xl text-sm text-muted-fg">
+          Submit an on-chain delegation, or revoke one. Requires HMAC +
+          Idempotency-Key on the server.
+        </p>
+      </header>
+
+      <Card className="border-info/30 bg-info-bg">
+        <CardContent className="flex items-start gap-3 py-4">
+          <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-info-fg" />
+          <div className="space-y-1 text-sm">
+            <p className="font-medium text-foreground">Auth required</p>
+            <p className="text-muted-fg">
+              State-changing endpoints (
+              <code className="font-mono">POST /delegate</code>,{" "}
+              <code className="font-mono">POST /revoke</code>,{" "}
+              <code className="font-mono">POST /reputation/record</code>)
+              require <code className="font-mono">HMAC_SECRET</code> +
+              signed request headers. The forms below preview the wire
+              format; the server will reject unsigned requests with 401.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <Card data-size="sm">
-          <CardContent className="space-y-4 pt-5">
+        <Card>
+          <CardContent className="space-y-4 py-5">
             <div className="flex items-center gap-2">
-              <span className="rounded-md bg-primary/10 px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-primary">
+              <span className="rounded-md border border-info/30 bg-info-bg px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-info-fg">
                 POST
               </span>
-              <span className="font-mono text-sm">/delegate</span>
+              <code className="font-mono text-sm text-foreground">
+                /delegate
+              </code>
             </div>
             <form onSubmit={generate} className="space-y-3">
               <div className="space-y-1.5">
@@ -106,22 +120,24 @@ export default function EndorsePage() {
               <Button type="submit">Preview signed request</Button>
             </form>
             {output && (
-              <pre className="overflow-x-auto rounded-md bg-muted/40 p-3 text-xs">
-                {output}
-              </pre>
+              <CodeBlock language="bash" code={output} />
             )}
           </CardContent>
         </Card>
-        <Card data-size="sm">
-          <CardContent className="space-y-3 pt-5">
+
+        <Card>
+          <CardContent className="space-y-3 py-5">
             <div className="flex items-center gap-2">
-              <span className="rounded-md bg-primary/10 px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-primary">
+              <span className="rounded-md border border-info/30 bg-info-bg px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-info-fg">
                 POST
               </span>
-              <span className="font-mono text-sm">/revoke</span>
+              <code className="font-mono text-sm text-foreground">
+                /revoke
+              </code>
             </div>
-            <pre className="overflow-x-auto rounded-md bg-muted/40 p-3 text-xs">
-              {`# Revoke the delegation from the sponsor to the agent.
+            <CodeBlock
+              language="bash"
+              code={`# Revoke the delegation from the sponsor to the agent.
 # Same auth as /delegate (HMAC + Idempotency-Key).
 curl -X POST http://localhost:3000/revoke \\
   -H 'Content-Type: application/json' \\
@@ -131,7 +147,7 @@ curl -X POST http://localhost:3000/revoke \\
   -H 'X-Auth-Signature: <hmac-sha256-hex>' \\
   -H 'Idempotency-Key: web-$(uuidgen)' \\
   -d '{"sponsor":"$SPONSOR","agent":"$AGENT"}'`}
-            </pre>
+            />
           </CardContent>
         </Card>
       </div>

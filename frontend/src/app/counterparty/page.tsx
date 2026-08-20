@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { HandCoins, ShieldCheck, ShieldAlert } from "lucide-react"
+import { ShieldCheck, ShieldAlert } from "lucide-react"
 
 import { api, ApiError } from "@/lib/api"
 import { isValidWallet } from "@/lib/wallet"
@@ -9,9 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-
-import { PassportSection } from "@/components/passport-section"
-import { Stat } from "@/components/stat"
+import { CodeBlock } from "@/components/code-block"
 
 import type { CounterpartyCheckResponse } from "@/lib/api-types"
 
@@ -21,6 +19,7 @@ export default function CounterpartyPage() {
     useState<CounterpartyCheckResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
@@ -42,33 +41,53 @@ export default function CounterpartyPage() {
       setLoading(false)
     }
   }
+
   return (
     <div className="space-y-6">
-      <PassportSection
-        icon={HandCoins}
-        title="Counterparty Check"
-        subtitle="Buyer risk check for merchant integrations: 60% on-chain + 40% delegation trust."
-        tone="primary"
-      >
-        <form
-          onSubmit={submit}
-          className="flex flex-col gap-3 sm:flex-row sm:items-end"
-        >
-          <div className="flex-1 space-y-1.5">
-            <Label htmlFor="buyer">Buyer wallet</Label>
-            <Input
-              id="buyer"
-              value={buyer}
-              onChange={(e) => setBuyer(e.target.value)}
-              placeholder="Algorand address (58 chars A-Z, 2-7)"
-              className="font-mono text-xs"
-            />
-          </div>
-          <Button type="submit" disabled={loading}>
-            {loading ? "Checking…" : "Check"}
-          </Button>
-        </form>
-      </PassportSection>
+      <header className="space-y-2">
+        <span className="text-[0.65rem] font-medium uppercase tracking-[0.16em] text-info-fg">
+          Developer surface
+        </span>
+        <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
+          Counterparty Check
+        </h1>
+        <p className="max-w-2xl text-sm text-muted-fg">
+          Buyer risk check for merchant integrations: 60% on-chain + 40%
+          delegation trust.
+        </p>
+      </header>
+
+      <Card>
+        <CardContent className="space-y-4 py-5">
+          <form
+            onSubmit={submit}
+            className="flex flex-col gap-3 sm:flex-row sm:items-end"
+          >
+            <div className="flex-1 space-y-1.5">
+              <Label htmlFor="buyer">Buyer wallet</Label>
+              <Input
+                id="buyer"
+                value={buyer}
+                onChange={(e) => setBuyer(e.target.value)}
+                placeholder="Algorand address (58 chars A-Z, 2-7)"
+                className="font-mono text-xs"
+              />
+            </div>
+            <Button type="submit" disabled={loading}>
+              {loading ? "Checking…" : "Check"}
+            </Button>
+          </form>
+          <CodeBlock
+            language="http"
+            code={`POST /counterparty-check
+Content-Type: application/json
+
+{
+  "buyer": "${buyer || "<wallet>"}"
+}`}
+          />
+        </CardContent>
+      </Card>
 
       {error && (
         <Card className="border-destructive/30 bg-destructive/5">
@@ -81,69 +100,54 @@ export default function CounterpartyPage() {
 
       {submitted && (
         <div className="space-y-4">
-          <Card
-            className={
+          <div
+            className={`rounded-xl border bg-surface-2/60 p-5 shadow-[var(--shadow-sm)] ring-1 ring-foreground/5 ${
               submitted.allow
-                ? "border-emerald-500/40 bg-emerald-500/5"
-                : "border-red-500/40 bg-red-500/5"
-            }
+                ? "border-verified/30"
+                : "border-risk-critical/30"
+            }`}
           >
-            <CardContent className="flex flex-wrap items-center gap-4 py-5">
+            <div className="flex flex-wrap items-center gap-3">
               <div className="flex items-center gap-2">
                 {submitted.allow ? (
-                  <ShieldCheck className="h-5 w-5 text-emerald-500" />
+                  <ShieldCheck className="h-5 w-5 text-verified-fg" />
                 ) : (
-                  <ShieldAlert className="h-5 w-5 text-red-500" />
+                  <ShieldAlert className="h-5 w-5 text-risk-critical" />
                 )}
-                <div className="font-heading text-2xl font-semibold tracking-tight">
+                <span
+                  className={`font-heading text-3xl font-semibold tracking-tight ${
+                    submitted.allow ? "text-verified-fg" : "text-risk-critical"
+                  }`}
+                >
                   {submitted.allow ? "Allow" : "Deny"}
-                </div>
-              </div>
-<div className="text-xs text-muted-foreground">
-              Trust {submitted.trustScore.toFixed(1)} · On-chain{" "}
-              {submitted.onChainScore.toFixed(1)} · Delegation{" "}
-              {submitted.delegationScore.toFixed(1)}
-            </div>
-            </CardContent>
-          </Card>
-
-          <PassportSection
-            icon={HandCoins}
-            title="Breakdown"
-            tone="primary"
-          >
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-              <Stat label="Trust" tone="muted">
-                {submitted.trustScore.toFixed(1)}
-              </Stat>
-              <Stat label="On-chain" tone="muted">
-                {submitted.onChainScore.toFixed(1)}
-              </Stat>
-              <Stat label="Delegation" tone="muted">
-                {submitted.delegationScore.toFixed(1)}
-              </Stat>
-              <Stat label="Wallet" tone="muted">
-                <span className="font-mono text-xs">
-                  {submitted.buyer
-                    ? `${submitted.buyer.slice(0, 8)}…${submitted.buyer.slice(-6)}`
-                    : "—"}
                 </span>
-              </Stat>
+              </div>
+              <span className="text-xs text-muted-fg">
+                Trust {submitted.trustScore.toFixed(1)} · On-chain{" "}
+                {submitted.onChainScore.toFixed(1)} · Delegation{" "}
+                {submitted.delegationScore.toFixed(1)}
+              </span>
             </div>
-          </PassportSection>
+          </div>
 
           {submitted.explanation && submitted.explanation.length > 0 && (
-            <PassportSection
-              icon={HandCoins}
-              title="Explanation"
-              tone="primary"
-            >
-              <ul className="space-y-1.5 text-sm text-muted-foreground">
-                {submitted.explanation.map((line, i) => (
-                  <li key={i}>• {line}</li>
-                ))}
-              </ul>
-            </PassportSection>
+            <Card>
+              <CardContent className="space-y-3 py-5">
+                <span className="text-[0.65rem] font-medium uppercase tracking-[0.16em] text-muted-fg">
+                  Explanation
+                </span>
+                <ul className="space-y-1.5 text-sm">
+                  {submitted.explanation.map((line, i) => (
+                    <li
+                      key={i}
+                      className="rounded-md border border-border/60 bg-background/40 px-3 py-2"
+                    >
+                      {line}
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
           )}
         </div>
       )}

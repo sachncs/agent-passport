@@ -10,8 +10,6 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
-import { EmptyState } from "@/components/page-header"
-import { PassportSection } from "@/components/passport-section"
 import { Spinner } from "@/components/ui/spinner"
 
 import type { BazaarSearchResponse } from "@/lib/api-types"
@@ -22,6 +20,7 @@ export default function DiscoveryPage() {
     useState<BazaarSearchResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -35,30 +34,44 @@ export default function DiscoveryPage() {
       setLoading(false)
     }
   }
+
   return (
     <div className="space-y-6">
-      <PassportSection
-        icon={Search}
-        title="Bazaar"
-        subtitle="Search the x402 Bazaar catalog of agent services for trust, credit, or reputation needs."
-        tone="primary"
-      >
-        <form onSubmit={submit} className="flex flex-col gap-2 sm:flex-row sm:items-end">
-          <div className="flex-1 space-y-1.5">
-            <Label htmlFor="q">Search</Label>
-            <Input
-              id="q"
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="e.g. trust, passport, x402, algorand"
-            />
-          </div>
-          <Button type="submit" disabled={loading}>
-            <Search className="h-4 w-4" />{" "}
-            {loading ? "Searching…" : "Search"}
-          </Button>
-        </form>
-      </PassportSection>
+      <header className="space-y-2">
+        <span className="text-[0.65rem] font-medium uppercase tracking-[0.16em] text-info-fg">
+          Developer surface
+        </span>
+        <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
+          Bazaar
+        </h1>
+        <p className="max-w-2xl text-sm text-muted-fg">
+          Search the x402 Bazaar catalog of agent services for trust,
+          credit, or reputation needs.
+        </p>
+      </header>
+
+      <Card>
+        <CardContent className="space-y-4 py-5">
+          <form
+            onSubmit={submit}
+            className="flex flex-col gap-2 sm:flex-row sm:items-end"
+          >
+            <div className="flex-1 space-y-1.5">
+              <Label htmlFor="q">Search</Label>
+              <Input
+                id="q"
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="e.g. trust, passport, x402, algorand"
+              />
+            </div>
+            <Button type="submit" disabled={loading}>
+              <Search className="h-4 w-4" />{" "}
+              {loading ? "Searching…" : "Search"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
 
       {error && (
         <Card className="border-destructive/30 bg-destructive/5">
@@ -70,35 +83,37 @@ export default function DiscoveryPage() {
 
       {loading && (
         <Card>
-          <CardContent className="flex items-center gap-2 py-6 text-xs text-muted-foreground">
+          <CardContent className="flex items-center gap-2 py-6 text-xs text-muted-fg">
             <Spinner />
-            <span>Searching…</span>
+            <span>Searching catalog…</span>
           </CardContent>
         </Card>
       )}
 
       {submitted && submitted.total === 0 && (
-        <EmptyState
-          icon={Search}
-          title="No services found"
-          description={`Nothing in the catalog matches "${q}".`}
-        />
+        <Card>
+          <CardContent className="py-6 text-sm text-muted-fg">
+            Nothing in the catalog matches &ldquo;{q}&rdquo;.
+          </CardContent>
+        </Card>
       )}
 
       {submitted && submitted.results.length > 0 && (
         <div className="space-y-3">
-          <div className="text-[0.65rem] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-            {submitted.total} result{submitted.total === 1 ? "" : "s"} for &ldquo;{submitted.query}&rdquo;
+          <div className="text-[0.65rem] font-medium uppercase tracking-[0.16em] text-muted-fg">
+            {submitted.total} result
+            {submitted.total === 1 ? "" : "s"} for &ldquo;
+            {submitted.query}&rdquo;
           </div>
           {submitted.results.map((entry) => (
-            <Card key={entry.id} data-size="sm">
-              <CardContent className="space-y-3 pt-5">
+            <Card key={entry.id}>
+              <CardContent className="space-y-3 py-5">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <h3 className="font-heading text-base font-semibold">
+                    <h3 className="font-heading text-base font-semibold text-foreground">
                       {entry.name}
                     </h3>
-                    <p className="mt-1 text-xs text-muted-foreground">
+                    <p className="mt-1 text-xs text-muted-fg">
                       {entry.description}
                     </p>
                   </div>
@@ -123,7 +138,7 @@ export default function DiscoveryPage() {
                       <Badge
                         key={k}
                         variant="secondary"
-                        className="text-[0.65rem]"
+                        className="font-mono text-[0.65rem]"
                       >
                         {k}: {v}
                       </Badge>
