@@ -7,42 +7,224 @@ import { ShieldAlert } from "lucide-react"
 import { api, ApiError } from "@/lib/api"
 import { isValidWallet } from "@/lib/wallet"
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Spinner } from "@/components/ui/spinner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-import {
-  ErrorBlock,
-  LoadingBlock,
-  PageHeader,
-  WalletRequiredAlert,
-} from "@/components/page-header"
+import { WalletHeroInput } from "@/components/wallet-hero-input"
+import { PassportSection } from "@/components/passport-section"
+import { RiskBadge } from "@/components/risk-badge"
 
-import type { SybilCheckResponse, RiskLevel } from "@/lib/api-types"
+import type { SybilCheckResponse } from "@/lib/api-types"
 
-function RiskBadge({ risk }: { risk: RiskLevel }) {
-  const labels = { low: "Low", medium: "Medium", high: "High", critical: "Critical" } as const
-  const map = {
-    low: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30",
-    medium: "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30",
-    high: "bg-orange-500/15 text-orange-700 dark:text-orange-300 border-orange-500/30",
-    critical: "bg-red-500/15 text-red-700 dark:text-red-300 border-red-500/30",
-  } as const
+export function SybilClient() {
+  const searchParams = useSearchParams()
+  const wallet = searchParams.get("wallet")
+
+  if (!wallet) {
+    return (
+      <div className="mx-auto flex max-w-2xl flex-col items-center gap-6 py-12 text-center">
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500">
+          <ShieldAlert className="h-6 w-6" />
+        </div>
+        <h1 className="font-heading text-3xl font-semibold tracking-tight md:text-4xl">
+          Twelve signals, one verdict.
+        </h1>
+        <p className="max-w-md text-sm text-muted-foreground">
+          Clustering, timing, amount, balance, plus four graph-traversal
+          signals — scored into a single sybil risk percentage.
+        </p>
+        <WalletHeroInput wallet={null} target="/sybil" />
+      </div>
+    )
+  }
+
+  if (!isValidWallet(wallet)) {
+    return (
+      <Card>
+        <CardContent className="py-6 text-sm text-destructive">
+          That wallet address isn&apos;t a valid 58-character base32
+          Algorand address.
+        </CardContent>
+      </Card>
+    )
+  }
+
+  return <SybilBody wallet={wallet} />
+}
+
+function SybilBody({ wallet }: { wallet: string }) {
+  const { data, isLoading, error } = useQuery<SybilCheckResponse>({
+    queryKey: ["sybil", wallet],
+    queryFn: () => api.checkSybil(wallet),
+    enabled: isValidWallet(wallet),
+    staleTime: 30_000,
+  })
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="space-y-3 py-6">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Spinner />
+            <span>Loading…</span>
+          </div>
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-3/4" />
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <ShieldAlert className="h-4 w-4" />
+        <AlertTitle>Could not load sybil analysis</AlertTitle>
+        <AlertDescription>
+          {error instanceof ApiError ? error.message : error.message}
+        </AlertDescription>
+      </Alert>
+    )
+  }
+
+  if (!data) return null
+
   return (
-    <span
-      className={
-        "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium " +
-        map[risk]
-      }
-    >
-      {labels[risk]}
-    </span>
+    <div className="space-y-6">
+      <PassportSection
+        icon={ShieldAlert}
+        title="Sybil Risk"
+        subtitle="Twelve signals: clustering, timing, amount, balance, plus four graph-traversal signals."
+        tone="amber"
+        badge={<RiskBadge risk={data.riskLevel} size="lg" />}
+      >
+        <div className="flex items-baseline gap-4">
+          <div className="font-heading text-6xl font-semibold tracking-tight tabular-nums">
+            {(data.sybilRisk * 100).toFixed(0)}%
+          </div>
+          <div className="text-sm text-muted-foreground">
+            confidence {(data.confidence * 100).toFixed(0)}% · cluster{" "}
+            {data.clusterSize}
+          </div>
+        </div>
+        <Progress
+          value={data.sybilRisk * 100}
+          className="mt-4 h-2"
+        />
+        {data.sybilRisk >= 0.45 && (
+          <Alert className="mt-4">
+            <ShieldAlert className="h-4 w-4" />
+            <AlertTitle>Elevated sybil risk</AlertTitle>
+            <AlertDescription>
+              The wallet is part of a cluster with coordinated activity.
+              Endorsements from this wallet should be treated with
+              caution.
+            </AlertDescription>
+          </Alert>
+        )}
+      </PassportSection>
+
+      <PassportSection
+        icon={ShieldAlert}
+        title="Signals"
+        subtitle="Wallet-history and graph-traversal signals in detail."
+        tone="primary"
+      >
+        <Tabs defaultValue="wallet-history">
+          <TabsList>
+            <TabsTrigger value="wallet-history">Wallet-history</TabsTrigger>
+            <TabsTrigger value="graph">Graph</TabsTrigger>
+            <TabsTrigger value="explanation">Explanation</TabsTrigger>
+          </TabsList>
+          <TabsContent value="wallet-history">
+            <div className="grid grid-cols-1 gap-x-6 gap-y-3 md:grid-cols-2">
+              <SignalBar
+                label="Creation clustering"
+                value={data.signals.creationClustering}
+              />
+              <SignalBar
+                label="Interaction density"
+                value={data.signals.interactionDensity}
+              />
+              <SignalBar
+                label="Balance similarity"
+                value={data.signals.balanceSimilarity}
+              />
+              <SignalBar
+                label="Circular activity"
+                value={data.signals.circularActivity}
+              />
+              <SignalBar
+                label="Timing regularity"
+                value={data.signals.timingRegularity}
+              />
+              <SignalBar
+                label="Amount fingerprint"
+                value={data.signals.amountFingerprint}
+              />
+              <SignalBar
+                label="Funding correlation"
+                value={data.signals.fundingCorrelation}
+              />
+            </div>
+          </TabsContent>
+          <TabsContent value="graph">
+            <div className="grid grid-cols-1 gap-x-6 gap-y-3 md:grid-cols-2">
+              <SignalBar
+                label="Neighborhood clustering"
+                value={data.signals.neighborhoodClustering}
+              />
+              <SignalBar label="Hub score" value={data.signals.hubScore} />
+              <SignalBar
+                label="Intermediate density"
+                value={data.signals.intermediateDensity}
+              />
+              <SignalBar
+                label="Component ratio"
+                value={data.signals.componentRatio}
+              />
+              <SignalBar
+                label="Temporal correlation"
+                value={data.signals.temporalCorrelation}
+              />
+            </div>
+          </TabsContent>
+          <TabsContent value="explanation">
+            <ul className="space-y-1.5 text-sm text-muted-foreground">
+              {data.explanation.map((line, i) => (
+                <li key={i}>• {line}</li>
+              ))}
+            </ul>
+          </TabsContent>
+        </Tabs>
+      </PassportSection>
+
+      {data.flaggedWallets.length > 0 && (
+        <PassportSection
+          icon={ShieldAlert}
+          title={`Flagged wallets (${data.flaggedWallets.length})`}
+          tone="primary"
+        >
+          <ul className="space-y-1 text-sm">
+            {data.flaggedWallets.map((w, i) => (
+              <li key={i}>
+                <code className="rounded-md bg-muted/30 px-2 py-0.5 font-mono text-xs">
+                  {w}
+                </code>
+              </li>
+            ))}
+          </ul>
+        </PassportSection>
+      )}
+    </div>
   )
 }
 
-function Bar({ label, value }: { label: string; value: number }) {
+function SignalBar({ label, value }: { label: string; value: number }) {
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between text-sm">
@@ -51,170 +233,5 @@ function Bar({ label, value }: { label: string; value: number }) {
       </div>
       <Progress value={value * 100} className="h-1.5" />
     </div>
-  )
-}
-
-function Body({ data }: { data: SybilCheckResponse }) {
-  const radarData = [
-    { name: "Creation", value: data.signals.creationClustering },
-    { name: "Interaction", value: data.signals.interactionDensity },
-    { name: "Balance", value: data.signals.balanceSimilarity },
-    { name: "Circular", value: data.signals.circularActivity },
-    { name: "Timing", value: data.signals.timingRegularity },
-    { name: "Amount", value: data.signals.amountFingerprint },
-    { name: "Funding", value: data.signals.fundingCorrelation },
-  ]
-  return (
-    <div className="space-y-4">
-      {data.sybilRisk >= 0.45 && (
-        <Alert>
-          <ShieldAlert className="h-4 w-4" />
-          <AlertTitle>Elevated sybil risk</AlertTitle>
-          <AlertDescription>
-            The wallet is part of a cluster with coordinated activity.
-            Endorsements from this wallet should be treated with caution.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <Card>
-          <CardContent className="pt-6 text-center">
-            <div className="text-5xl font-bold">
-              {(data.sybilRisk * 100).toFixed(0)}%
-            </div>
-            <div className="mt-1 text-xs uppercase tracking-wide text-muted-foreground">
-              Sybil risk
-            </div>
-            <Progress value={data.sybilRisk * 100} className="mt-4 h-2" />
-            <div className="mt-4 flex items-center justify-center">
-              <RiskBadge risk={data.riskLevel} />
-            </div>
-            <div className="mt-2 text-xs text-muted-foreground">
-              Confidence {(data.confidence * 100).toFixed(0)}% · Cluster size{" "}
-              {data.clusterSize}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="md:col-span-2">
-          <CardContent className="pt-6">
-            <pre className="text-xs">
-              {JSON.stringify(radarData, null, 2)}
-            </pre>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Tabs defaultValue="wallet-history">
-        <TabsList>
-          <TabsTrigger value="wallet-history">Wallet-history</TabsTrigger>
-          <TabsTrigger value="graph">Graph</TabsTrigger>
-          <TabsTrigger value="explanation">Explanation</TabsTrigger>
-        </TabsList>
-        <TabsContent value="wallet-history">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="grid grid-cols-1 gap-x-6 gap-y-3 md:grid-cols-2">
-                <Bar label="Creation clustering" value={data.signals.creationClustering} />
-                <Bar label="Interaction density" value={data.signals.interactionDensity} />
-                <Bar label="Balance similarity" value={data.signals.balanceSimilarity} />
-                <Bar label="Circular activity" value={data.signals.circularActivity} />
-                <Bar label="Timing regularity" value={data.signals.timingRegularity} />
-                <Bar label="Amount fingerprint" value={data.signals.amountFingerprint} />
-                <Bar label="Funding correlation" value={data.signals.fundingCorrelation} />
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="graph">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="grid grid-cols-1 gap-x-6 gap-y-3 md:grid-cols-2">
-                <Bar label="Neighborhood clustering" value={data.signals.neighborhoodClustering} />
-                <Bar label="Hub score" value={data.signals.hubScore} />
-                <Bar label="Intermediate density" value={data.signals.intermediateDensity} />
-                <Bar label="Component ratio" value={data.signals.componentRatio} />
-                <Bar label="Temporal correlation" value={data.signals.temporalCorrelation} />
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="explanation">
-          <Card>
-            <CardContent className="pt-6 text-sm">
-              <ul className="space-y-1.5">
-                {data.explanation.map((line, i) => (
-                  <li key={i} className="flex gap-2">
-                    <span className="text-muted-foreground">•</span>
-                    <span>{line}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      {data.flaggedWallets.length > 0 && (
-        <Card>
-          <CardContent className="pt-6">
-            <h3 className="mb-3 text-sm font-medium">
-              Flagged wallets ({data.flaggedWallets.length})
-            </h3>
-            <ul className="space-y-1 text-sm">
-              {data.flaggedWallets.map((w, i) => (
-                <li key={i}>
-                  <code className="rounded-md bg-muted/30 px-2 py-0.5 font-mono text-xs">
-                    {w}
-                  </code>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      )}
-    </div>
-  )
-}
-
-export function SybilClient() {
-  const searchParams = useSearchParams()
-  const wallet = searchParams.get("wallet")
-  const valid = !!(wallet && isValidWallet(wallet))
-
-  const { data, isLoading, error } = useQuery<SybilCheckResponse>({
-    queryKey: ["sybil", wallet],
-    queryFn: () => {
-      if (!valid) throw new Error("wallet is not valid")
-      return api.checkSybil(wallet)
-    },
-    enabled: valid,
-    staleTime: 30_000,
-  })
-
-  return (
-    <>
-      <PageHeader
-        title="Sybil Check"
-        description="Twelve signals (clustering, timing, amount, balance, plus 4 graph-traversal signals)."
-        badge={wallet ?? undefined}
-      />
-      {!wallet && <WalletRequiredAlert />}
-      {wallet && !valid && (
-        <Card>
-          <CardContent className="py-6 text-sm text-destructive">
-            Invalid wallet address.
-          </CardContent>
-        </Card>
-      )}
-      {valid && isLoading && <LoadingBlock rows={6} />}
-      {valid && error && (
-        <ErrorBlock
-          message={error instanceof ApiError ? error.message : "Could not load sybil analysis"}
-        />
-      )}
-      {data && <Body data={data} />}
-    </>
   )
 }

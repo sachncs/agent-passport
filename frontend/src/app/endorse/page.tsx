@@ -1,14 +1,17 @@
 "use client"
 
 import { useState } from "react"
+import { HandCoins } from "lucide-react"
 
 import { isValidWallet } from "@/lib/wallet"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { PageHeader } from "@/components/page-header"
+
+import { PassportSection } from "@/components/passport-section"
+
 export default function EndorsePage() {
   const [sponsor, setSponsor] = useState("")
   const [agent, setAgent] = useState("")
@@ -43,26 +46,33 @@ export default function EndorsePage() {
     )
   }
   return (
-    <>
-      <PageHeader
+    <div className="space-y-6">
+      <PassportSection
+        icon={HandCoins}
         title="Endorse / Revoke"
-        description="Submit an on-chain delegation, or revoke one. Requires HMAC + Idempotency-Key on the server."
-      />
-      <Alert className="mb-4">
-        <AlertTitle>Auth required</AlertTitle>
-        <AlertDescription>
-          State-changing endpoints (POST /delegate, POST /revoke, POST
-          /reputation/record) require <code>HMAC_SECRET</code> + signed
-          request headers. The form below previews the wire format; the
-          server will reject unsigned requests with 401.
-        </AlertDescription>
-      </Alert>
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>POST /delegate</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        subtitle="Submit an on-chain delegation, or revoke one. Requires HMAC + Idempotency-Key on the server."
+        tone="primary"
+      >
+        <Alert>
+          <AlertTitle>Auth required</AlertTitle>
+          <AlertDescription>
+            State-changing endpoints (POST /delegate, POST /revoke, POST
+            /reputation/record) require <code>HMAC_SECRET</code> + signed
+            request headers. The form below previews the wire format; the
+            server will reject unsigned requests with 401.
+          </AlertDescription>
+        </Alert>
+      </PassportSection>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <Card data-size="sm">
+          <CardContent className="space-y-4 pt-5">
+            <div className="flex items-center gap-2">
+              <span className="rounded-md bg-primary/10 px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-primary">
+                POST
+              </span>
+              <span className="font-mono text-sm">/delegate</span>
+            </div>
             <form onSubmit={generate} className="space-y-3">
               <div className="space-y-1.5">
                 <Label htmlFor="sponsor">Sponsor wallet</Label>
@@ -102,11 +112,14 @@ export default function EndorsePage() {
             )}
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>POST /revoke</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <Card data-size="sm">
+          <CardContent className="space-y-3 pt-5">
+            <div className="flex items-center gap-2">
+              <span className="rounded-md bg-primary/10 px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-primary">
+                POST
+              </span>
+              <span className="font-mono text-sm">/revoke</span>
+            </div>
             <pre className="overflow-x-auto rounded-md bg-muted/40 p-3 text-xs">
               {`# Revoke the delegation from the sponsor to the agent.
 # Same auth as /delegate (HMAC + Idempotency-Key).
@@ -122,6 +135,6 @@ curl -X POST http://localhost:3000/revoke \\
           </CardContent>
         </Card>
       </div>
-    </>
+    </div>
   )
 }

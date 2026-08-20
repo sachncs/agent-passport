@@ -6,14 +6,20 @@ import { Search } from "lucide-react"
 import { api, ApiError } from "@/lib/api"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { EmptyState, LoadingBlock, PageHeader } from "@/components/page-header"
+
+import { EmptyState } from "@/components/page-header"
+import { PassportSection } from "@/components/passport-section"
+import { Spinner } from "@/components/ui/spinner"
+
 import type { BazaarSearchResponse } from "@/lib/api-types"
+
 export default function DiscoveryPage() {
   const [q, setQ] = useState("")
-  const [submitted, setSubmitted] = useState<BazaarSearchResponse | null>(null)
+  const [submitted, setSubmitted] =
+    useState<BazaarSearchResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const submit = async (e: React.FormEvent) => {
@@ -30,37 +36,47 @@ export default function DiscoveryPage() {
     }
   }
   return (
-    <>
-      <PageHeader
+    <div className="space-y-6">
+      <PassportSection
+        icon={Search}
         title="Bazaar"
-        description="Search the x402 Bazaar catalog of agent services for trust, credit, or reputation needs."
-      />
-      <Card>
-        <CardContent className="pt-6">
-          <form onSubmit={submit} className="flex items-end gap-2">
-            <div className="flex-1 space-y-1.5">
-              <Label htmlFor="q">Search</Label>
-              <Input
-                id="q"
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="e.g. trust, passport, x402, algorand"
-              />
-            </div>
-            <Button type="submit" disabled={loading}>
-              <Search className="h-4 w-4" /> {loading ? "Searching…" : "Search"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+        subtitle="Search the x402 Bazaar catalog of agent services for trust, credit, or reputation needs."
+        tone="primary"
+      >
+        <form onSubmit={submit} className="flex flex-col gap-2 sm:flex-row sm:items-end">
+          <div className="flex-1 space-y-1.5">
+            <Label htmlFor="q">Search</Label>
+            <Input
+              id="q"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="e.g. trust, passport, x402, algorand"
+            />
+          </div>
+          <Button type="submit" disabled={loading}>
+            <Search className="h-4 w-4" />{" "}
+            {loading ? "Searching…" : "Search"}
+          </Button>
+        </form>
+      </PassportSection>
+
       {error && (
-        <Card className="mt-4 border-destructive/30 bg-destructive/5">
+        <Card className="border-destructive/30 bg-destructive/5">
           <CardContent className="py-4 text-sm text-destructive">
             {error}
           </CardContent>
         </Card>
       )}
-      {loading && <LoadingBlock rows={3} />}
+
+      {loading && (
+        <Card>
+          <CardContent className="flex items-center gap-2 py-6 text-xs text-muted-foreground">
+            <Spinner />
+            <span>Searching…</span>
+          </CardContent>
+        </Card>
+      )}
+
       {submitted && submitted.total === 0 && (
         <EmptyState
           icon={Search}
@@ -68,24 +84,34 @@ export default function DiscoveryPage() {
           description={`Nothing in the catalog matches "${q}".`}
         />
       )}
+
       {submitted && submitted.results.length > 0 && (
-        <div className="mt-4 space-y-3">
+        <div className="space-y-3">
+          <div className="text-[0.65rem] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+            {submitted.total} result{submitted.total === 1 ? "" : "s"} for &ldquo;{submitted.query}&rdquo;
+          </div>
           {submitted.results.map((entry) => (
-            <Card key={entry.id}>
-              <CardHeader>
+            <Card key={entry.id} data-size="sm">
+              <CardContent className="space-y-3 pt-5">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <CardTitle className="text-base">{entry.name}</CardTitle>
-                    <CardDescription>{entry.description}</CardDescription>
+                    <h3 className="font-heading text-base font-semibold">
+                      {entry.name}
+                    </h3>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {entry.description}
+                    </p>
                   </div>
                   <Badge variant="secondary">{entry.category}</Badge>
                 </div>
-              </CardHeader>
-              <CardContent>
                 {entry.tags.length > 0 && (
-                  <div className="mb-3 flex flex-wrap gap-1.5">
+                  <div className="flex flex-wrap gap-1.5">
                     {entry.tags.map((t) => (
-                      <Badge key={t} variant="outline" className="text-[0.65rem]">
+                      <Badge
+                        key={t}
+                        variant="outline"
+                        className="text-[0.65rem]"
+                      >
                         {t}
                       </Badge>
                     ))}
@@ -94,7 +120,11 @@ export default function DiscoveryPage() {
                 {Object.keys(entry.pricing).length > 0 && (
                   <div className="flex flex-wrap gap-1.5">
                     {Object.entries(entry.pricing).map(([k, v]) => (
-                      <Badge key={k} variant="secondary" className="text-[0.65rem]">
+                      <Badge
+                        key={k}
+                        variant="secondary"
+                        className="text-[0.65rem]"
+                      >
                         {k}: {v}
                       </Badge>
                     ))}
@@ -105,6 +135,6 @@ export default function DiscoveryPage() {
           ))}
         </div>
       )}
-    </>
+    </div>
   )
 }

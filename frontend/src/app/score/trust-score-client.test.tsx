@@ -7,7 +7,10 @@ import { setupServer } from "msw/node"
 vi.mock("next/navigation", () => ({
   usePathname: () => "/score",
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
-  useSearchParams: () => new URLSearchParams("?wallet=GD64YIY3TWGDMCNPP553DZPPR6LDUSFQOIJVFDPPXWEG3FVOJCCDBBHU5A"),
+  useSearchParams: () =>
+    new URLSearchParams(
+      "?wallet=GD64YIY3TWGDMCNPP553DZPPR6LDUSFQOIJVFDPPXWEG3FVOJCCDBBHU5A",
+    ),
 }))
 
 import { TrustScoreClient } from "@/app/score/trust-score-client"
@@ -30,15 +33,33 @@ function withQueryClient(ui: React.ReactNode) {
 }
 
 describe("TrustScoreClient", () => {
-  it("renders the page header and wallet badge", () => {
+  it("renders the section heading and wallet suffix", async () => {
+    server.use(
+      http.get("http://localhost/score", () =>
+        HttpResponse.json({
+          wallet: WALLET,
+          trustScore: 87.4,
+          riskLevel: "low",
+          approved: true,
+          recommendedLimit: 1500,
+          breakdown: {
+            ageScore: 90,
+            activityScore: 80,
+            volumeScore: 85,
+            velocityScore: 70,
+            complianceScore: 95,
+          },
+        }),
+      ),
+    )
     withQueryClient(<TrustScoreClient />)
     expect(
-      screen.getByRole("heading", { name: /trust score/i }),
+      await screen.findByRole("heading", { name: /trust score/i, level: 2 }),
     ).toBeInTheDocument()
-    expect(screen.getByText(WALLET)).toBeInTheDocument()
+    expect(await screen.findByText("GD64YIY3…BBHU5A")).toBeInTheDocument()
   })
 
-  it("shows a loading skeleton while the request is pending", () => {
+  it("shows a loading indicator while the request is pending", () => {
     server.use(
       http.get("http://localhost/score", async () => {
         await new Promise((r) => setTimeout(r, 1000))
@@ -73,7 +94,7 @@ describe("TrustScoreClient", () => {
     expect(await screen.findByText("87.4")).toBeInTheDocument()
     expect(screen.getByText("Low")).toBeInTheDocument()
     expect(screen.getByText("1500.00 ALGO")).toBeInTheDocument()
-    expect(screen.getByText("Long history")).toBeInTheDocument()
+    expect(screen.getByText(/Long history/)).toBeInTheDocument()
   })
 
   it("renders an error block when the API returns a 5xx", async () => {

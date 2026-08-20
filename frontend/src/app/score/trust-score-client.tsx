@@ -1,268 +1,191 @@
 "use client"
 
-import { api, ApiError } from "@/lib/api"
-import { useSearchParams } from "next/navigation"
 import { useQuery } from "@tanstack/react-query"
+import { useSearchParams } from "next/navigation"
+import { Gauge, ShieldAlert } from "lucide-react"
 
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
-import { Separator } from "@/components/ui/separator"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Spinner } from "@/components/ui/spinner"
 
-import {
-  ErrorBlock,
-  LoadingBlock,
-  PageHeader,
-  WalletRequiredAlert,
-} from "@/components/page-header"
+import { WalletHeroInput } from "@/components/wallet-hero-input"
+import { PassportSection } from "@/components/passport-section"
+import { RiskBadge } from "@/components/risk-badge"
+import { Stat } from "@/components/stat"
+
+import { api, ApiError } from "@/lib/api"
 import { isValidWallet } from "@/lib/wallet"
 
-import type { TrustScoreResponse, RiskLevel } from "@/lib/api-types"
+import type { TrustScoreResponse } from "@/lib/api-types"
 
-function RiskBadge({ risk }: { risk: RiskLevel }) {
-  const map: Record<RiskLevel, string> = {
-    low: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30",
-    medium: "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30",
-    high: "bg-orange-500/15 text-orange-700 dark:text-orange-300 border-orange-500/30",
-    critical: "bg-red-500/15 text-red-700 dark:text-red-300 border-red-500/30",
+export function TrustScoreClient() {
+  const searchParams = useSearchParams()
+  const wallet = searchParams.get("wallet")
+
+  if (!wallet) {
+    return (
+      <div className="mx-auto flex max-w-2xl flex-col items-center gap-6 py-12 text-center">
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
+          <Gauge className="h-6 w-6" />
+        </div>
+        <h1 className="font-heading text-3xl font-semibold tracking-tight md:text-4xl">
+          Trust score, in one glance.
+        </h1>
+        <p className="max-w-md text-sm text-muted-foreground">
+          A composite 0–100 from five weighted sub-scores — age,
+          activity, volume, velocity, and compliance.
+        </p>
+        <WalletHeroInput wallet={null} target="/score" />
+      </div>
+    )
   }
-  const label = risk.charAt(0).toUpperCase() + risk.slice(1)
-  return (
-    <span
-      className={
-        "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium " +
-        map[risk]
-      }
-    >
-      {label}
-    </span>
-  )
+
+  if (!isValidWallet(wallet)) {
+    return (
+      <Card>
+        <CardContent className="py-6 text-sm text-destructive">
+          That wallet address isn&apos;t a valid 58-character base32
+          Algorand address.
+        </CardContent>
+      </Card>
+    )
+  }
+
+  return <ScoreBody wallet={wallet} />
 }
 
-function ScoreBar({ value, max = 100, className }: { value: number; max?: number; className?: string }) {
-  const pct = Math.max(0, Math.min(100, (value / max) * 100))
-  const color =
-    pct >= 70 ? "bg-emerald-500" : pct >= 40 ? "bg-amber-500" : "bg-red-500"
+function ScoreBody({ wallet }: { wallet: string }) {
+  const { data, isLoading, error } = useQuery<TrustScoreResponse>({
+    queryKey: ["score", wallet],
+    queryFn: () => api.getScore(wallet),
+    enabled: isValidWallet(wallet),
+    staleTime: 30_000,
+  })
+
+  if (isLoading) return <LoadingBlock />
+  if (error) return <ErrorBlock error={error as Error} />
+  if (!data) return null
+
   return (
-    <div className={"space-y-1.5 " + (className ?? "")}>
-      <div className="relative">
-        <Progress value={pct} className="h-1.5" />
-        <div
-          className={
-            "absolute inset-y-0 left-0 h-1.5 rounded-full " + color
-          }
-          style={{ width: `${pct}%` }}
-        />
-      </div>
+    <div className="space-y-6">
+      <PassportSection
+        icon={Gauge}
+        title="Trust Score"
+        subtitle="Composite 0–100 from age, activity, volume, velocity, and compliance."
+        tone="emerald"
+        badge={<RiskBadge risk={data.riskLevel} size="lg" />}
+      >
+        <div className="flex items-baseline gap-4">
+          <div className="font-heading text-6xl font-semibold tracking-tight tabular-nums">
+            {data.trustScore.toFixed(1)}
+          </div>
+          <div className="text-sm text-muted-foreground">
+            of 100 · {data.wallet.slice(0, 8)}…{data.wallet.slice(-6)}
+          </div>
+        </div>
+      </PassportSection>
+
+      {data.breakdown && (
+        <PassportSection
+          icon={Gauge}
+          title="Sub-scores"
+          subtitle="Five weighted inputs to the composite."
+          tone="primary"
+        >
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+            <SubScore label="Age" value={data.breakdown.ageScore} />
+            <SubScore label="Activity" value={data.breakdown.activityScore} />
+            <SubScore label="Volume" value={data.breakdown.volumeScore} />
+            <SubScore label="Velocity" value={data.breakdown.velocityScore} />
+            <SubScore
+              label="Compliance"
+              value={data.breakdown.complianceScore}
+            />
+          </div>
+        </PassportSection>
+      )}
+
+      <PassportSection
+        icon={Gauge}
+        title="Result"
+        subtitle="Composite decision inputs."
+        tone="primary"
+      >
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+          <Stat label="Approved" tone="muted">
+            <span
+              className={
+                data.approved
+                  ? "font-semibold text-emerald-600 dark:text-emerald-400"
+                  : "font-semibold text-destructive"
+              }
+            >
+              {data.approved ? "Yes" : "No"}
+            </span>
+          </Stat>
+          <Stat label="Recommended limit" tone="muted">
+            {data.recommendedLimit.toFixed(2)} ALGO
+          </Stat>
+          <Stat label="Wallet" tone="muted">
+            <span className="font-mono text-xs">
+              {data.wallet.slice(0, 8)}…{data.wallet.slice(-6)}
+            </span>
+          </Stat>
+        </div>
+      </PassportSection>
+
+      {data.explanation && data.explanation.length > 0 && (
+        <PassportSection icon={Gauge} title="Explanation" tone="primary">
+          <ul className="space-y-1.5 text-sm text-muted-foreground">
+            {data.explanation.map((line, i) => (
+              <li key={i}>• {line}</li>
+            ))}
+          </ul>
+        </PassportSection>
+      )}
     </div>
   )
 }
 
-function Stat({
-  label,
-  children,
-}: {
-  label: string
-  children: React.ReactNode
-}) {
+function SubScore({ label, value }: { label: string; value: number }) {
+  const pct = Math.max(0, Math.min(100, value))
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between text-sm">
+        <span className="text-muted-foreground">{label}</span>
+        <span className="font-mono">{value.toFixed(1)}</span>
+      </div>
+      <Progress value={pct} className="h-1.5" />
+    </div>
+  )
+}
+
+function LoadingBlock() {
   return (
     <Card>
-      <CardContent className="pt-6">
-        <div className="text-[0.7rem] font-medium uppercase tracking-wide text-muted-foreground">
-          {label}
+      <CardContent className="space-y-3 py-6">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Spinner />
+          <span>Loading…</span>
         </div>
-        <div className="mt-1 text-sm">{children}</div>
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-4 w-2/3" />
       </CardContent>
     </Card>
   )
 }
 
-function ScoreBody({ data }: { data: TrustScoreResponse }) {
+function ErrorBlock({ error }: { error: Error }) {
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-        <Card>
-          <CardContent className="pt-6 text-center">
-            <div className="text-5xl font-bold tracking-tight">
-              {data.trustScore.toFixed(1)}
-            </div>
-            <div className="mt-1 text-xs uppercase tracking-wide text-muted-foreground">
-              Trust Score
-            </div>
-            <ScoreBar value={data.trustScore} className="mt-4" />
-            <div className="mt-4 flex items-center justify-center">
-              <RiskBadge risk={data.riskLevel} />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Stat label="Approved">{data.approved ? "Yes" : "No"}</Stat>
-        <Stat label="Recommended limit">
-          {data.recommendedLimit.toFixed(2)} ALGO
-        </Stat>
-        <Stat label="Wallet">
-          <span className="font-mono text-xs">
-            {data.wallet.slice(0, 8)}…{data.wallet.slice(-6)}
-          </span>
-        </Stat>
-      </div>
-
-      {data.breakdown && (
-        <Card>
-          <CardContent className="pt-6">
-            <h3 className="mb-4 text-sm font-medium">Sub-scores</h3>
-            <div className="grid grid-cols-1 gap-x-6 gap-y-3 md:grid-cols-5">
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Age</span>
-                  <span className="font-mono">
-                    {data.breakdown.ageScore.toFixed(1)}
-                  </span>
-                </div>
-                <ScoreBar value={data.breakdown.ageScore} />
-              </div>
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Activity</span>
-                  <span className="font-mono">
-                    {data.breakdown.activityScore.toFixed(1)}
-                  </span>
-                </div>
-                <ScoreBar value={data.breakdown.activityScore} />
-              </div>
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Volume</span>
-                  <span className="font-mono">
-                    {data.breakdown.volumeScore.toFixed(1)}
-                  </span>
-                </div>
-                <ScoreBar value={data.breakdown.volumeScore} />
-              </div>
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Velocity</span>
-                  <span className="font-mono">
-                    {data.breakdown.velocityScore.toFixed(1)}
-                  </span>
-                </div>
-                <ScoreBar value={data.breakdown.velocityScore} />
-              </div>
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Compliance</span>
-                  <span className="font-mono">
-                    {data.breakdown.complianceScore.toFixed(1)}
-                  </span>
-                </div>
-                <ScoreBar value={data.breakdown.complianceScore} />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {data.onChain && (
-        <Card>
-          <CardContent className="pt-6">
-            <h3 className="mb-3 text-sm font-medium">On-chain</h3>
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-              <div className="rounded-md border border-border bg-muted/30 p-3">
-                <div className="text-[0.7rem] uppercase tracking-wide text-muted-foreground">
-                  Balance
-                </div>
-                <div className="mt-1 text-sm">
-                  {data.onChain.balanceAlgo.toFixed(2)} ALGO
-                </div>
-              </div>
-              <div className="rounded-md border border-border bg-muted/30 p-3">
-                <div className="text-[0.7rem] uppercase tracking-wide text-muted-foreground">
-                  Transactions
-                </div>
-                <div className="mt-1 text-sm">
-                  {data.onChain.totalTxns.toLocaleString()}
-                </div>
-              </div>
-              <div className="rounded-md border border-border bg-muted/30 p-3">
-                <div className="text-[0.7rem] uppercase tracking-wide text-muted-foreground">
-                  Assets
-                </div>
-                <div className="mt-1 text-sm">{data.onChain.assetCount}</div>
-              </div>
-              <div className="rounded-md border border-border bg-muted/30 p-3">
-                <div className="text-[0.7rem] uppercase tracking-wide text-muted-foreground">
-                  Apps
-                </div>
-                <div className="mt-1 text-sm">{data.onChain.appCount}</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {data.explanation && data.explanation.length > 0 && (
-        <Card>
-          <CardContent className="pt-6 text-sm">
-            <h3 className="mb-3 text-sm font-medium">Explanation</h3>
-            <Separator className="mb-3" />
-            <ul className="space-y-1.5">
-              {data.explanation.map((line, i) => (
-                <li key={i} className="flex gap-2">
-                  <span className="text-muted-foreground">•</span>
-                  <span>{line}</span>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      )}
-    </div>
-  )
-}
-
-export function TrustScoreClient() {
-  const searchParams = useSearchParams()
-  const wallet = searchParams.get("wallet")
-  const valid = !!(wallet && isValidWallet(wallet))
-
-  const { data, isLoading, error } = useQuery<TrustScoreResponse>({
-    queryKey: ["score", wallet],
-    queryFn: () => {
-      if (!valid) throw new Error("wallet is not valid")
-      return api.getScore(wallet)
-    },
-    enabled: valid,
-    staleTime: 30_000,
-  })
-
-  return (
-    <>
-      <PageHeader
-        title="Trust Score"
-        description="Composite 0–100 score with five weighted sub-scores. Cached for 60 s."
-        badge={wallet ?? undefined}
-      />
-      {!wallet && <WalletRequiredAlert />}
-      {wallet && !valid && (
-        <Card>
-          <CardContent className="py-6 text-sm text-destructive">
-            That wallet address isn&apos;t a valid 58-character base32
-            Algorand address.
-          </CardContent>
-        </Card>
-      )}
-      {valid && isLoading && <LoadingBlock rows={6} />}
-      {valid && error && (
-        <ErrorBlock
-          message={
-            error instanceof ApiError
-              ? error.message
-              : "Could not load trust score"
-          }
-        />
-      )}
-      {data && <ScoreBody data={data} />}
-    </>
+    <Alert variant="destructive">
+      <ShieldAlert className="h-4 w-4" />
+      <AlertTitle>Could not load trust score</AlertTitle>
+      <AlertDescription>
+        {error instanceof ApiError ? error.message : error.message}
+      </AlertDescription>
+    </Alert>
   )
 }

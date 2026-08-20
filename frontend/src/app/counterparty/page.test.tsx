@@ -54,7 +54,7 @@ describe("CounterpartyPage", () => {
     await user.click(screen.getByRole("button", { name: /^check$/i }))
     expect(await screen.findByText(/^allow$/i)).toBeInTheDocument()
     expect(screen.getByText(/Trust 92\.1/)).toBeInTheDocument()
-    expect(screen.getByText("Good history")).toBeInTheDocument()
+    expect(screen.getByText(/Good history/)).toBeInTheDocument()
   })
 
   it("shows the Deny card with the API error message on a 4xx", async () => {
