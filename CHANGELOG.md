@@ -15,7 +15,7 @@ All notable changes to **Agent Passport** are documented in this file.
 > full Next.js 16 file convention set (loading.tsx, error.tsx,
 > global-error.tsx, proxy.ts), a full shadcn/ui v4 component
 > suite, comprehensive Vitest + Testing Library + MSW frontend
-> tests (58 tests, 12 files), a proxy to the backend via
+> tests (51 tests, 10 files), a proxy to the backend via
 > Next.js rewrites, and a human-readable `LOG_FORMAT=pretty`
 > mode for the backend.
 
@@ -71,29 +71,23 @@ recipe. Supersedes the previous "REDESIGN" section below.
     `localStorage` with `attribute="class"` and `enableSystem`.
   - `layout.tsx` adds `suppressHydrationWarning` on `<html>` and
     drops the hardcoded `dark` class.
-  - `TopBar` calls `setTheme()` from `useTheme()` and renders
+  - `SiteHeader` calls `setTheme()` from `useTheme()` and renders
     via a `mounted` flag to avoid SSR/CSR icon mismatch.
 
 #### shadcn/ui full suite
 
 - **Installed the full shadcn/ui v4 component set** (base-nova
   style, `@base-ui/react` primitives) via `pnpm dlx shadcn@latest add`:
-  accordion, alert-dialog, avatar, breadcrumb, chart, checkbox,
+  accordion, alert-dialog, avatar, chart, checkbox,
   collapsible, combobox, command, context-menu, drawer, dropdown-menu,
   empty, field, hover-card, input-group, input-otp, menubar,
   navigation-menu, pagination, popover, radio-group, scroll-area,
-  sheet, sidebar, sonner, spinner, table, toggle, toggle-group.
+  sheet, sonner, spinner, table, toggle, toggle-group.
   Pulls in `cmdk`, `input-otp`, `recharts`, `sonner` as runtime
-  deps.
-- **Replaced the hand-rolled `Sidebar`** with the official shadcn
-  `Sidebar` component: collapsible icon-only mode, responsive
-  mobile drawer, cookie-persisted open/closed state, and `b`
-  keyboard shortcut to toggle. New `useIsMobile` hook.
+  deps. (Previously installed `sidebar` and `breadcrumb` were
+  removed in the nav refactor.)
 - **Mounted Sonner `<Toaster />`** in the root layout (top-right)
   for API feedback. Pages can now call `toast.success / error()`.
-- **Created `AppBreadcrumb`** at `src/components/breadcrumb.tsx`
-  using shadcn `Breadcrumb`. Renders a route-aware nav indicator
-  from the current `usePathname()`. Mounted at the top of `TopBar`.
 - **Rewrote `src/components/page-header.tsx`** helpers to use
   shadcn `Empty`, `Spinner`, and `Alert` (`ErrorBlock` is now a
   destructive `Alert`; `EmptyState` uses the shadcn `Empty`
@@ -101,20 +95,31 @@ recipe. Supersedes the previous "REDESIGN" section below.
 
 #### shadcn v4 API migration
 
-- **Replaced `asChild` pattern with `render` prop.** The shadcn v4
-  base-nova components use base-ui's `useRender` hook with a
-  `render` prop instead of the Radix-style `asChild` boolean.
-  Migrated `BreadcrumbLink`, `SidebarMenuButton`, and `Button` in
-  the `not-found` page.
 - **Made form pages client components.** `counterparty`,
   `discovery`, `endorse`, and `monitor` `page.tsx` files were
   using `useState`/`useEffect` without a `"use client"` directive —
   they were being treated as server components, which broke the
   build under full SSR. Added the directive.
-- **Wrapped `TopBar` in `<Suspense>`** in the root layout because
-  it uses `useSearchParams()` for wallet-search init; the prerender
-  of `/_not-found` needs a Suspense boundary around any component
-  that calls `useSearchParams`, per the Next.js 16 csr-bailout rule.
+
+#### Navigation refactor
+
+- **Replaced sidebar layout with a compact site header.** Removed
+  `AppSidebar`, `TopBar`, `AppBreadcrumb`, and the shadcn/ui
+  `Sidebar` wrapper (~1 400 lines deleted). The root layout now
+  renders a sticky `SiteHeader` (brand + tagline + theme toggle)
+  with a clean single-column content area.
+- **Removed residual shadcn/ui components** that were no longer
+  imported: `ui/sidebar.tsx` and `ui/breadcrumb.tsx`.
+- **Added shared UI components** to eliminate per-page duplication:
+  `WalletHeroInput` (wallet address input with validation + URL
+  sync), `RiskBadge` (color-coded risk level pill), `Stat`
+  (label-value card), `PassportSection` (collapsible card with
+  header/body), `PassportSections` (composed sections for the
+  dashboard passport view).
+- **Refactored all 12 page components** to use the shared
+  components instead of inline `RiskBadge`, `ScoreBar`, `Stat`,
+  `LoadingBlock`, and `ErrorBlock` definitions. Net: ~35 fewer
+  lines of duplicated UI code per page.
 
 #### Test infrastructure
 
@@ -124,7 +129,7 @@ recipe. Supersedes the previous "REDESIGN" section below.
   (jest-dom matchers + matchMedia polyfill + `crypto.randomUUID`
   shim + `NEXT_PUBLIC_API_BASE_URL` default for MSW), and scripts
   `test`, `test:watch`, `test:ui`, `test:coverage`, `typecheck`.
-- **Wrote 58 tests across 12 files**:
+- **Wrote 51 tests across 10 files**:
   - `src/lib/utils.test.ts` (5) — `cn()` helper
   - `src/lib/wallet.test.ts` (8) — `isValidWallet` (length,
     case, character set, type guards, regex shape)
@@ -134,17 +139,12 @@ recipe. Supersedes the previous "REDESIGN" section below.
   - `src/components/page-header.test.tsx` (8) — `PageHeader`,
     `EmptyState`, `LoadingBlock`, `ErrorBlock`,
     `WalletRequiredAlert`
-  - `src/components/breadcrumb.test.tsx` (5) — `AppBreadcrumb`
-    path resolution for /, known segments, multi-segment paths,
-    unknown-segment fallback
-  - `src/components/topbar.test.tsx` (4) — render + theme toggle
-  - `src/components/sidebar.test.tsx` (6) — brand, all 11 nav
-    items, active state, nested-path matching, `/` exclusive
-    highlight, footer link
   - `src/components/home-page.test.tsx` (3) — brand, tool
     grid, route links
   - `src/app/score/trust-score-client.test.tsx` (4) —
     `WalletRequiredAlert`, loading, success, error
+  - `src/app/dashboard/dashboard-client.test.tsx` — dashboard
+    rendering, wallet validation, section visibility
   - `src/app/counterparty/page.test.tsx` (4) — render,
     validation, allow, deny/error
   - `src/app/not-found.test.tsx` (2) — heading + back link
@@ -175,6 +175,8 @@ recipe. Supersedes the previous "REDESIGN" section below.
 > above.** The shadcn/ui v4 base-nova style uses `@base-ui/react`
 > with a `useRender` `render` prop instead of Radix + `asChild` +
 > `forwardRef`. The previous primitives have been replaced.
+> The sidebar-based layout was subsequently removed in favour of
+> a compact site header.
 
 The previous UI was a hand-rolled mix of utilities and ad-hoc Radix
 wrappers. Replaced with the official [shadcn/ui](https://ui.shadcn.com/docs/components)

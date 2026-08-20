@@ -24,7 +24,7 @@ frontend/
 ├── vitest.config.ts
 ├── src/
 │   ├── app/                # App Router routes + file conventions
-│   │   ├── layout.tsx      # Root layout: theme, query, sidebar, topbar
+│   │   ├── layout.tsx      # Root layout: theme, query, site-header
 │   │   ├── loading.tsx     # Global Suspense fallback
 │   │   ├── error.tsx       # Route error boundary
 │   │   ├── global-error.tsx# Root layout crash boundary
@@ -43,9 +43,12 @@ frontend/
 │   ├── components/         # App-level React components
 │   │   ├── ui/             # shadcn/ui primitives
 │   │   ├── home-page.tsx
-│   │   ├── sidebar.tsx     # AppSidebar + SidebarWrapper
-│   │   ├── topbar.tsx
-│   │   ├── breadcrumb.tsx  # AppBreadcrumb
+│   │   ├── site-header.tsx     # Brand + theme toggle
+│   │   ├── wallet-hero-input.tsx # Wallet address input with validation
+│   │   ├── risk-badge.tsx   # Color-coded risk level pill
+│   │   ├── stat.tsx         # Label-value card
+│   │   ├── passport-section.tsx # Collapsible card section
+│   │   ├── passport-sections.tsx # Composed dashboard sections
 │   │   ├── page-header.tsx # PageHeader, EmptyState, LoadingBlock, ErrorBlock, WalletRequiredAlert
 │   │   ├── query-provider.tsx
 │   │   └── theme-provider.tsx
@@ -69,7 +72,7 @@ pnpm build
 pnpm start
 pnpm lint
 pnpm typecheck
-pnpm test          # 58 tests across 12 files
+pnpm test          # 51 tests across 10 files
 pnpm test:watch
 pnpm test:ui
 pnpm test:coverage
@@ -143,8 +146,8 @@ the rewrites (or accept the double-hop).
 3. `src/app/<route>/my-client.test.tsx` — Vitest + Testing Library
    covering the four states (loading, error, success, empty).
 
-4. Register the nav item in `src/components/sidebar.tsx` and
-   add a label to `LABELS` in `src/components/breadcrumb.tsx`.
+4. Add a nav link in `src/components/site-header.tsx` if the page
+   should appear in the header.
 
 ## Adding a component
 

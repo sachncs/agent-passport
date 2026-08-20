@@ -367,7 +367,7 @@ cd frontend
 pnpm install
 pnpm dev        # http://localhost:3001
 pnpm build      # production build
-pnpm test       # 58 unit + component tests via Vitest
+pnpm test       # 51 unit + component tests via Vitest
 pnpm test:watch
 pnpm test:ui
 pnpm test:coverage
