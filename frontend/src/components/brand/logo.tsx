@@ -83,6 +83,7 @@ function Mark({
       strokeWidth={stroke}
       strokeLinecap="round"
       strokeLinejoin="round"
+      role="img"
       className={cn("shrink-0 text-foreground", className)}
       {...props}
     >
