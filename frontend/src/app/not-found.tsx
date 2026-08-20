@@ -14,7 +14,7 @@ export default function NotFound() {
             <h1 className="text-xl font-semibold">Page not found</h1>
             <p className="max-w-sm text-sm text-muted-foreground">
               The route you tried to open doesn&apos;t exist on this service.
-              Check the sidebar for the list of available tools.
+              Check the header for the list of available tools.
             </p>
           </div>
           <Button render={<Link href="/">Back to overview</Link>} />
