@@ -3,7 +3,7 @@
 import { useSearchParams } from "next/navigation"
 import { Award } from "lucide-react"
 
-import { WalletHeroInput } from "@/components/wallet-hero-input"
+import { CommandSurface } from "@/components/command-surface"
 import { PassportView } from "./passport-view"
 
 export function DashboardClient() {
@@ -26,7 +26,7 @@ export function DashboardClient() {
             reputation, delegation, and underwriting in a single document.
           </p>
           <div className="mt-8">
-            <WalletHeroInput wallet={null} target="/dashboard" />
+            <CommandSurface wallet={null} target="/dashboard" cta="Load Report" />
           </div>
         </section>
         <section className="mx-auto flex max-w-md flex-col items-center gap-3 rounded-xl border border-border/60 bg-muted/20 p-6 text-center">
