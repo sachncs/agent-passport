@@ -1,66 +1,48 @@
 "use client"
 
 import Link from "next/link"
-import { Activity, Award, Gauge, HandCoins, Search, Shield, Star, Users } from "lucide-react"
+import {
+  Award,
+  Gauge,
+  Search,
+  Shield,
+} from "lucide-react"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
+import { WalletHeroInput } from "@/components/wallet-hero-input"
 
-interface Tool {
+interface Feature {
   href: string
   icon: React.ComponentType<{ className?: string }>
   title: string
   description: string
+  tag: string
 }
 
-const TOOLS: Tool[] = [
+const FEATURES: Feature[] = [
+  {
+    href: "/dashboard",
+    icon: Award,
+    title: "Passport Report",
+    description:
+      "One scrollable document with trust, sybil, reputation, delegation, and underwriting for any wallet.",
+    tag: "Recommended",
+  },
   {
     href: "/score",
     icon: Gauge,
     title: "Trust Score",
     description:
       "Composite 0–100 score with five sub-scores (age, activity, volume, velocity, compliance).",
-  },
-  {
-    href: "/passport",
-    icon: Award,
-    title: "Passport",
-    description:
-      "Full document combining trust, delegation, sybil, reputation, credit, capabilities, and a SHA-256 checksum.",
+    tag: "Detailed view",
   },
   {
     href: "/underwrite",
     icon: Shield,
     title: "Underwrite",
     description:
-      "Approve/deny + recommended credit limit, computed from a 4-factor composite and a $100k system-wide cap.",
-  },
-  {
-    href: "/delegation",
-    icon: Users,
-    title: "Delegation Graph",
-    description:
-      "Sponsor graph BFS with depth attenuation, cycle detection, and trust-anchor markers.",
-  },
-  {
-    href: "/sybil",
-    icon: Activity,
-    title: "Sybil Check",
-    description:
-      "Twelve signals (clustering, timing, amount, balance, plus 4 graph-traversal signals).",
-  },
-  {
-    href: "/reputation",
-    icon: Star,
-    title: "Reputation",
-    description:
-      "Event log with anti-gaming defenses (cycle detection, dedup, on-chain verification).",
-  },
-  {
-    href: "/counterparty",
-    icon: HandCoins,
-    title: "Counterparty Check",
-    description:
-      "Buyer risk check for merchant integrations: 60% on-chain + 40% delegation trust.",
+      "Approve or deny plus a recommended credit limit, from a four-factor composite under a system cap.",
+    tag: "For merchants",
   },
   {
     href: "/discovery",
@@ -68,45 +50,74 @@ const TOOLS: Tool[] = [
     title: "Bazaar",
     description:
       "Search the x402 Bazaar catalog of agent services for trust, credit, or reputation needs.",
+    tag: "Discovery",
   },
 ]
 
 export default function HomePage() {
   return (
-    <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
-          Agent Passport
+    <div className="space-y-16">
+      <section className="text-center">
+        <div className="mx-auto mb-5 inline-flex items-center gap-2 rounded-full border border-border/60 bg-muted/30 px-3 py-1 text-[0.7rem] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+          Stateless · cached · on-chain verified
+        </div>
+        <h1 className="font-heading text-4xl font-semibold tracking-tight md:text-5xl">
+          Trust and underwriting
+          <br className="hidden sm:block" /> for AI agents on Algorand.
         </h1>
-        <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-          Stateless trust and underwriting for AI agents on Algorand. Every
-          wallet, every endpoint, every algorithm — one consistent view of
-          who to trust and how much.
+        <p className="mx-auto mt-4 max-w-2xl text-sm text-muted-foreground md:text-base">
+          Paste any Algorand wallet and get the full report — composite trust
+          score, sybil signals, reputation log, delegation graph, and an
+          underwriting decision — in a single, scannable document.
         </p>
-      </div>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {TOOLS.map((tool) => (
-          <Link
-            key={tool.href}
-            href={tool.href}
-            className="block transition-transform hover:-translate-y-0.5"
-          >
-            <Card className="h-full transition-colors hover:bg-accent/40">
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <div className="rounded-md bg-primary/10 p-2 text-primary">
-                    <tool.icon className="h-4 w-4" />
+        <div className="mt-8">
+          <WalletHeroInput wallet={null} />
+        </div>
+      </section>
+
+      <section>
+        <div className="mb-6 flex items-end justify-between gap-3">
+          <div>
+            <div className="text-[0.65rem] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+              Tools
+            </div>
+            <h2 className="font-heading text-xl font-semibold tracking-tight">
+              Open a report, or jump straight to a focused view.
+            </h2>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {FEATURES.map((feature) => (
+            <Link
+              key={feature.href}
+              href={feature.href}
+              className="group block transition-transform hover:-translate-y-0.5"
+            >
+              <Card className="relative h-full overflow-hidden transition-colors group-hover:bg-accent/30">
+                <CardContent className="flex h-full flex-col gap-4 pt-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                      <feature.icon className="h-5 w-5" />
+                    </div>
+                    <span className="rounded-full border border-border/60 bg-background px-2 py-0.5 text-[0.65rem] font-medium uppercase tracking-wider text-muted-foreground">
+                      {feature.tag}
+                    </span>
                   </div>
-                  <CardTitle className="text-base">{tool.title}</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <CardDescription>{tool.description}</CardDescription>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
-      </div>
+                  <div className="space-y-1.5">
+                    <h3 className="font-heading text-base font-semibold tracking-tight">
+                      {feature.title}
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                      {feature.description}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      </section>
     </div>
   )
 }
