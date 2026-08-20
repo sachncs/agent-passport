@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { Moon, Shield, Sun } from "lucide-react"
+import { Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 
+import { Logo } from "@/components/brand/logo"
 import { Button } from "@/components/ui/button"
+import { StatusPill } from "@/components/status-pill"
 
 export function SiteHeader() {
   const { resolvedTheme, setTheme } = useTheme()
@@ -22,17 +24,13 @@ export function SiteHeader() {
       <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 md:px-8">
         <Link
           href="/"
-          className="flex items-center gap-2 font-heading text-sm font-semibold tracking-tight"
+          className="flex items-center gap-2 font-semibold tracking-tight text-foreground transition-opacity hover:opacity-80"
+          aria-label="Agent Passport — home"
         >
-          <span className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
-            <Shield className="h-3.5 w-3.5" />
-          </span>
-          <span>Agent Passport</span>
+          <Logo size={24} variant="wordmark" />
         </Link>
-        <span className="ml-2 hidden text-xs text-muted-foreground sm:inline">
-          Trust &amp; underwriting for AI agents on Algorand
-        </span>
-        <div className="ml-auto flex items-center gap-1">
+        <div className="ml-auto flex items-center gap-2">
+          <StatusPill />
           <Button
             variant="ghost"
             size="icon"
