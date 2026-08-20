@@ -8,6 +8,7 @@ import {
 } from "recharts"
 
 import { cn } from "@/lib/utils"
+import { ClientOnly } from "@/components/client-only"
 
 interface TrustScoreCardProps {
   score: number
@@ -33,27 +34,31 @@ export function TrustScoreCard({
       )}
     >
       <div className="relative h-32 w-32 shrink-0">
-        <ResponsiveContainer width="100%" height="100%">
-          <RadialBarChart
-            data={data}
-            startAngle={90}
-            endAngle={-270}
-            innerRadius="78%"
-            outerRadius="100%"
-            barSize={8}
-          >
-            <PolarAngleAxis
-              type="number"
-              domain={[0, max]}
-              tick={false}
-            />
-            <RadialBar
-              background={{ fill: "var(--surface-3)" }}
-              dataKey="value"
-              cornerRadius={8}
-            />
-          </RadialBarChart>
-        </ResponsiveContainer>
+        <ClientOnly
+          fallback={<div className="h-32 w-32 rounded-full bg-surface-3" />}
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <RadialBarChart
+              data={data}
+              startAngle={90}
+              endAngle={-270}
+              innerRadius="78%"
+              outerRadius="100%"
+              barSize={8}
+            >
+              <PolarAngleAxis
+                type="number"
+                domain={[0, max]}
+                tick={false}
+              />
+              <RadialBar
+                background={{ fill: "var(--surface-3)" }}
+                dataKey="value"
+                cornerRadius={8}
+              />
+            </RadialBarChart>
+          </ResponsiveContainer>
+        </ClientOnly>
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
           <span className="font-heading text-3xl font-semibold tabular-nums text-foreground">
             {score.toFixed(1)}

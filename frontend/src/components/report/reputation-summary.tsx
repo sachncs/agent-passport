@@ -3,6 +3,7 @@
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts"
 
 import { cn } from "@/lib/utils"
+import { ClientOnly } from "@/components/client-only"
 
 interface ReputationSummaryProps {
   positive: number
@@ -53,17 +54,19 @@ export function ReputationSummary({
         />
       </div>
       <div className="mt-3 h-16">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart
-            data={data}
-            layout="vertical"
-            margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
-          >
-            <XAxis type="number" hide />
-            <YAxis type="category" dataKey="name" hide />
-            <Bar dataKey="value" radius={[2, 2, 2, 2]} />
-          </BarChart>
-        </ResponsiveContainer>
+        <ClientOnly fallback={<div className="h-16" />}>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={data}
+              layout="vertical"
+              margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+            >
+              <XAxis type="number" hide />
+              <YAxis type="category" dataKey="name" hide />
+              <Bar dataKey="value" radius={[2, 2, 2, 2]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </ClientOnly>
       </div>
       <div className="mt-2 flex items-center justify-between font-mono text-xs tabular-nums">
         <span className="inline-flex items-center gap-1.5 text-verified-fg">
