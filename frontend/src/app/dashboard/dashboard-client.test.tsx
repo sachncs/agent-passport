@@ -43,7 +43,9 @@ describe("DashboardClient", () => {
     mockNav("/dashboard", new URLSearchParams())
     withQueryClient(<DashboardClient />)
     expect(
-      screen.getByRole("heading", { name: /one wallet, every service/i }),
+      screen.getByRole("heading", {
+        name: /one wallet, every service/i,
+      }),
     ).toBeInTheDocument()
     expect(
       screen.getByLabelText(/algorand wallet address/i),
@@ -65,7 +67,7 @@ describe("DashboardClient", () => {
     expect(button).toBeEnabled()
   })
 
-  it("renders the cover + all section headings when a valid wallet is in the URL", async () => {
+  it("renders the verdict card + evidence drawer when a valid wallet is in the URL", async () => {
     mockNav("/dashboard", new URLSearchParams(`?wallet=${WALLET}`))
     server.use(
       http.get("http://localhost/score", () =>
@@ -160,11 +162,19 @@ describe("DashboardClient", () => {
         HttpResponse.json({
           wallet: WALLET,
           approved: true,
-          recommendedLimit: 457.2,
+          recommendedLimit: 457,
           riskLevel: "low",
           confidence: 0.8,
           compositeScore: 76.2,
-          factors: [],
+          factors: [
+            {
+              name: "Trust",
+              score: 76.2,
+              weight: 0.4,
+              contribution: 30.5,
+              status: "positive",
+            },
+          ],
           explanation: [],
         }),
       ),
@@ -195,16 +205,27 @@ describe("DashboardClient", () => {
       ),
     )
     withQueryClient(<DashboardClient />)
+
     expect(
-      await screen.findByRole("heading", { name: /passport report/i }),
+      await screen.findByRole("region", { name: /underwriting verdict/i }),
     ).toBeInTheDocument()
-    expect(screen.getByText("Summary")).toBeInTheDocument()
-    expect(screen.getByText("Trust Score")).toBeInTheDocument()
-    expect(screen.getByText("Sybil Risk")).toBeInTheDocument()
-    expect(screen.getByText("Reputation")).toBeInTheDocument()
-    expect(screen.getByText("Delegation")).toBeInTheDocument()
-    expect(screen.getByText("Underwriting")).toBeInTheDocument()
-    expect(await screen.findByText("76.2")).toBeInTheDocument()
+    expect(screen.getByText(/approve/i)).toBeInTheDocument()
+    expect(await screen.findByText(/457/)).toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: /trust sub-scores/i }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: /delegation path/i }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: /twelve sybil signals/i }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: /reputation log/i }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: /underwriting factors/i }),
+    ).toBeInTheDocument()
   })
 
   it("shows an invalid-address error for malformed wallets", () => {

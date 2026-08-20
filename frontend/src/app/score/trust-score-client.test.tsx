@@ -33,7 +33,7 @@ function withQueryClient(ui: React.ReactNode) {
 }
 
 describe("TrustScoreClient", () => {
-  it("renders the section heading and wallet suffix", async () => {
+  it("renders the trust score value and wallet pill", async () => {
     server.use(
       http.get("http://localhost/score", () =>
         HttpResponse.json({
@@ -53,13 +53,11 @@ describe("TrustScoreClient", () => {
       ),
     )
     withQueryClient(<TrustScoreClient />)
-    expect(
-      await screen.findByRole("heading", { name: /trust score/i, level: 2 }),
-    ).toBeInTheDocument()
-    expect(await screen.findByText("GD64YIY3…BBHU5A")).toBeInTheDocument()
+    expect(await screen.findByText("87.4")).toBeInTheDocument()
+    expect(await screen.findByText(WALLET)).toBeInTheDocument()
   })
 
-  it("shows a loading indicator while the request is pending", () => {
+  it("shows a branded loading indicator while the request is pending", () => {
     server.use(
       http.get("http://localhost/score", async () => {
         await new Promise((r) => setTimeout(r, 1000))
@@ -67,10 +65,10 @@ describe("TrustScoreClient", () => {
       }),
     )
     withQueryClient(<TrustScoreClient />)
-    expect(screen.getByText(/loading/i)).toBeInTheDocument()
+    expect(screen.getByText(/verifying on-chain/i)).toBeInTheDocument()
   })
 
-  it("renders the score, breakdown, and risk badge on success", async () => {
+  it("renders the score, sub-scores, and risk pill on success", async () => {
     server.use(
       http.get("http://localhost/score", () =>
         HttpResponse.json({
@@ -93,11 +91,14 @@ describe("TrustScoreClient", () => {
     withQueryClient(<TrustScoreClient />)
     expect(await screen.findByText("87.4")).toBeInTheDocument()
     expect(screen.getByText("Low")).toBeInTheDocument()
-    expect(screen.getByText("1500.00 ALGO")).toBeInTheDocument()
-    expect(screen.getByText(/Long history/)).toBeInTheDocument()
+    expect(screen.getByText("1500 ALGO")).toBeInTheDocument()
+    expect(screen.getByText("90.0")).toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: /why this score/i }),
+    ).toBeInTheDocument()
   })
 
-  it("renders an error block when the API returns a 5xx", async () => {
+  it("renders an error alert when the API returns a 5xx", async () => {
     server.use(
       http.get("http://localhost/score", () =>
         HttpResponse.json(
