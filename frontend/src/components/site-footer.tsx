@@ -1,4 +1,8 @@
+"use client"
+
 import Link from "next/link"
+
+import { useNetwork } from "@/components/use-network"
 
 const UTILITY_LINKS = [
   { href: "/openapi.json", label: "OpenAPI" },
@@ -8,6 +12,8 @@ const UTILITY_LINKS = [
 ] as const
 
 export function SiteFooter() {
+  const network = useNetwork()
+
   return (
     <footer className="border-t border-border/60 px-4 py-6 text-xs text-muted-fg md:px-8">
       <div className="mx-auto flex max-w-5xl flex-col gap-2">
@@ -16,7 +22,7 @@ export function SiteFooter() {
             Agent Passport — trust &amp; underwriting for AI agents on Algorand.
           </span>
           <span className="text-muted-fg">
-            v0.1 · Mainnet · Stateless · 60 s cache
+            v0.1 · {network ?? "—"} · Stateless · 60 s cache
           </span>
         </div>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1">

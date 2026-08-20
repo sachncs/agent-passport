@@ -1,10 +1,9 @@
 "use client"
 
-import { useQuery } from "@tanstack/react-query"
 import { Activity, AlertTriangle, XCircle } from "lucide-react"
 
-import { api } from "@/lib/api"
 import { cn } from "@/lib/utils"
+import { useHealth } from "@/components/use-network"
 
 type HealthState =
   | { kind: "loading" }
@@ -29,13 +28,7 @@ function humanize(status: string): string {
 }
 
 export function StatusPill() {
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["health"],
-    queryFn: () => api.health(),
-    refetchInterval: 30_000,
-    staleTime: 15_000,
-    retry: 1,
-  })
+  const { data, isLoading, error } = useHealth()
 
   let state: HealthState
   if (error) state = { kind: "down", label: "Unreachable" }

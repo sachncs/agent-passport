@@ -1,7 +1,9 @@
+"use client"
+
 import { cn } from "@/lib/utils"
+import { useNetwork } from "@/components/use-network"
 
 interface AuditStripProps {
-  network?: string
   modelVersion?: string
   cacheTtl?: string
   className?: string
@@ -9,12 +11,13 @@ interface AuditStripProps {
 }
 
 export function AuditStrip({
-  network = "Algorand Mainnet",
   modelVersion = "v0.1",
   cacheTtl = "60 s",
   className,
   children,
 }: AuditStripProps) {
+  const network = useNetwork()
+
   return (
     <div
       role="note"
@@ -24,7 +27,7 @@ export function AuditStrip({
         className,
       )}
     >
-      <Item label="Network" value={network} />
+      <Item label="Network" value={network ?? "—"} />
       <Item label="Model" value={modelVersion} />
       <Item label="Cache" value={cacheTtl} />
       {children}

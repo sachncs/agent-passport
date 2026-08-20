@@ -1,8 +1,18 @@
 import { describe, expect, it } from "vitest"
 import { render, screen } from "@testing-library/react"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
 import { VerdictCard } from "@/components/report/verdict-card"
 import { AuditStrip } from "@/components/report/audit-strip"
+
+function withQuery(ui: React.ReactNode) {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false, staleTime: 0 } },
+  })
+  return render(
+    <QueryClientProvider client={client}>{ui}</QueryClientProvider>,
+  )
+}
 
 describe("VerdictCard", () => {
   it("renders Approve verdict with emerald styling", () => {
@@ -41,15 +51,15 @@ describe("VerdictCard", () => {
 })
 
 describe("AuditStrip", () => {
-  it("renders the default network / model / cache items", () => {
-    render(<AuditStrip />)
-    expect(screen.getByText("Algorand Mainnet")).toBeInTheDocument()
+  it("renders the default model / cache items and a network placeholder", () => {
+    withQuery(<AuditStrip />)
     expect(screen.getByText("v0.1")).toBeInTheDocument()
     expect(screen.getByText("60 s")).toBeInTheDocument()
+    expect(screen.getAllByText("—").length).toBeGreaterThanOrEqual(1)
   })
 
   it("renders additional children", () => {
-    render(
+    withQuery(
       <AuditStrip>
         <span>sha256 abc123</span>
       </AuditStrip>,

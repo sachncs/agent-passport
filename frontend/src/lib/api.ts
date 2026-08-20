@@ -15,6 +15,7 @@ import type {
   CounterpartyCheckResponse,
   CreditEstimateResponse,
   DelegationResponse,
+  HealthResponse,
   PassportResponse,
   ReputationResponse,
   SybilCheckResponse,
@@ -118,7 +119,7 @@ function requireWallet(wallet: string | undefined | null, method: string): strin
 }
 
 export const api = {
-  health: () => request<{ status: string; service: string; version: string }>("/health"),
+  health: () => request<HealthResponse>("/health"),
   version: () => request<VersionResponse>("/version"),
 
   getScore: (wallet: string) => {
