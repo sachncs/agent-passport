@@ -48,6 +48,7 @@ interface RiskPillProps {
   showIcon?: boolean
   className?: string
 }
+export type { RiskPillProps }
 
 export function RiskPill({
   risk,
