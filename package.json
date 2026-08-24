@@ -73,7 +73,7 @@
     "sdk"
   ],
   "dependencies": {
-    "algosdk": "^3.2.0",
+    "algosdk": "^3.7.0",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "helmet": "^8.3.0",
