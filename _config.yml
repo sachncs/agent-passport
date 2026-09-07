@@ -1,0 +1,8 @@
+title: "agent-passport"
+description: " Stateless trust & risk API for AI agents. 0–100 trust score, sybil detection, credit underwriting, on-chain reputation. Pay-per-query via x402"
+theme: minima
+logo: /assets/logo.svg
+show_downloads: false
+permalink: /:title/
+plugins:
+  - jekyll-feed
