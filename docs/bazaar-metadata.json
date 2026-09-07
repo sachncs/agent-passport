@@ -1,0 +1,30 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Trust Scoring Service - Bazaar Registration",
+    "description": "Stateless trust scoring API for Algorand wallets. Fetches on-chain data from testnet and computes composite trust scores.",
+    "version": "0.1.0",
+    "contact": {
+      "name": "Agent Passport"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local development"
+    }
+  ],
+  "x-bazaar": {
+    "id": "trust-scoring-service",
+    "type": "service",
+    "category": "trust",
+    "tags": ["trust", "scoring", "algorand", "agent", "wallet"],
+    "discovery": {
+      "health": "/health"
+    },
+    "protocols": [],
+    "capabilities": [
+      "trust-scoring"
+    ]
+  }
+}

@@ -1,0 +1,94 @@
+function safeParseInt(value: string | undefined, fallback: number): number {
+  if (value === undefined) return fallback;
+  const parsed = parseInt(value, 10);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function validateConfig() {
+  const errors: string[] = [];
+
+  if (process.env.X402_ENABLED === 'true' && !process.env.X402_PAYMENT_RECIPIENT) {
+    errors.push('X402_PAYMENT_RECIPIENT is required when X402_ENABLED=true');
+  }
+
+  if (process.env.LOG_LEVEL) {
+    const normalized = process.env.LOG_LEVEL.toLowerCase();
+    if (!['debug', 'info', 'warn', 'error'].includes(normalized)) {
+      errors.push(`Invalid LOG_LEVEL: ${process.env.LOG_LEVEL}. Must be debug|info|warn|error`);
+    }
+  }
+
+  if (process.env.LOG_FORMAT) {
+    const normalized = process.env.LOG_FORMAT.toLowerCase();
+    if (!['json', 'pretty'].includes(normalized)) {
+      errors.push(`Invalid LOG_FORMAT: ${process.env.LOG_FORMAT}. Must be json|pretty`);
+    }
+  }
+
+  // HMAC_SECRET must be ≥ 32 chars if provided (256 bits).
+  if (process.env.HMAC_SECRET !== undefined && process.env.HMAC_SECRET !== '') {
+    if (process.env.HMAC_SECRET.length < 32) {
+      errors.push('HMAC_SECRET must be at least 32 characters (256 bits). Generate with: openssl rand -hex 32');
+    }
+  }
+
+  if (process.env.REQUEST_TIMEOUT_MS !== undefined) {
+    const ms = parseInt(process.env.REQUEST_TIMEOUT_MS, 10);
+    if (!Number.isFinite(ms) || ms <= 0) {
+      errors.push('REQUEST_TIMEOUT_MS must be a positive integer');
+    }
+  }
+
+  // Validate URL schemes to prevent SSRF / typo crashes.
+  for (const [name, url] of [
+    ['ALGOD_URL', process.env.ALGOD_URL],
+    ['INDEXER_URL', process.env.INDEXER_URL],
+    ['X402_FACILITATOR_URL', process.env.X402_FACILITATOR_URL],
+  ] as const) {
+    if (url && !/^https?:\/\/[\w.-]+(:\d+)?\/?$/.test(url)) {
+      errors.push(`${name} is not a valid http(s) URL: ${url}`);
+    }
+  }
+
+  if (errors.length > 0) {
+    throw new Error(`Configuration validation failed:\n  - ${errors.join('\n  - ')}`);
+  }
+}
+
+export const config = {
+  port: safeParseInt(process.env.PORT, 3000),
+
+  algodUrl: process.env.ALGOD_URL || 'https://testnet-api.algonode.cloud:443',
+  algodToken: process.env.ALGOD_TOKEN || '',
+  indexerUrl: process.env.INDEXER_URL || 'https://testnet-idx.algonode.cloud:443',
+  indexerToken: process.env.INDEXER_TOKEN || '',
+
+  algoNetwork: process.env.ALGO_NETWORK || 'testnet',
+  registryAppId: safeParseInt(process.env.REGISTRY_APP_ID, 0),
+  reputationAppId: safeParseInt(process.env.REPUTATION_APP_ID, 0),
+
+  x402Enabled: process.env.X402_ENABLED === 'true',
+  x402FacilitatorUrl: process.env.X402_FACILITATOR_URL || 'https://x402.org/facilitator',
+  x402PaymentRecipient: process.env.X402_PAYMENT_RECIPIENT || '',
+  x402Network: (process.env.X402_NETWORK || 'eip155:84532') as `${string}:${string}`,
+
+  corsAllowedOrigins: process.env.CORS_ALLOWED_ORIGINS || '*',
+
+  hmacSecret: process.env.HMAC_SECRET || '',
+  hmacSkewMs: safeParseInt(process.env.HMAC_TIMESTAMP_SKEW_MS, 60_000),
+
+  requestTimeoutMs: safeParseInt(process.env.REQUEST_TIMEOUT_MS, 10_000),
+
+  gitCommit: process.env.GIT_COMMIT || 'unknown',
+
+  logLevel: ((process.env.LOG_LEVEL || 'info').toLowerCase()) as 'debug' | 'info' | 'warn' | 'error',
+  logFormat: (() => {
+    const explicit = process.env.LOG_FORMAT?.toLowerCase();
+    if (explicit === 'json' || explicit === 'pretty') return explicit;
+    return process.stdout.isTTY ? 'pretty' : 'json';
+  })() as 'json' | 'pretty',
+  logFile: process.env.LOG_FILE,
+  logErrorFile: process.env.LOG_ERROR_FILE,
+} as const;
+
+validateConfig();

@@ -1,0 +1,54 @@
+{
+  "name": "@agent-passport/sdk",
+  "version": "0.2.0",
+  "description": "TypeScript SDK for Agent Passport — trust scoring, delegation, credit, sybil, reputation, and underwriting for AI agents on Algorand",
+  "license": "MIT",
+  "author": {
+    "name": "Sachin",
+    "email": "sachncs@gmail.com"
+  },
+  "homepage": "https://github.com/sachncs/agent-passport/tree/master/sdk#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sachncs/agent-passport.git",
+    "directory": "sdk"
+  },
+  "bugs": {
+    "url": "https://github.com/sachncs/agent-passport/issues"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "prepublishOnly": "npm run build && npm test"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "keywords": [
+    "algorand",
+    "agent",
+    "trust",
+    "trust-scoring",
+    "x402",
+    "micropayments",
+    "credit",
+    "delegation",
+    "sybil",
+    "reputation",
+    "underwriting",
+    "fraud",
+    "risk",
+    "sdk"
+  ]
+}

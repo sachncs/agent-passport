@@ -1,0 +1,110 @@
+{
+  "name": "agent-passport",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Stateless trust scoring, delegation, credit, sybil, reputation, and underwriting for AI agents on Algorand",
+  "license": "MIT",
+  "author": {
+    "name": "Sachin",
+    "email": "sachncs@gmail.com"
+  },
+  "homepage": "https://github.com/sachncs/agent-passport#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sachncs/agent-passport.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sachncs/agent-passport/issues"
+  },
+  "keywords": [
+    "algorand",
+    "agent",
+    "trust",
+    "trust-scoring",
+    "x402",
+    "micropayments",
+    "credit",
+    "delegation",
+    "sybil",
+    "reputation",
+    "underwriting",
+    "fraud",
+    "risk",
+    "bazaar"
+  ],
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src",
+    "contracts",
+    "scripts",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts",
+    "lint": "eslint src/ frontend/src",
+    "typecheck": "tsc --noEmit && pnpm --filter @agent-passport/frontend exec tsc --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "score": "tsx scripts/score.ts",
+    "delegate": "tsx scripts/delegate.ts",
+    "deploy-registry": "tsx scripts/deploy-registry.ts",
+    "check-counterparty": "tsx scripts/check-counterparty.ts",
+    "estimate-credit": "tsx scripts/estimate-credit.ts",
+    "check-sybil": "tsx scripts/check-sybil.ts",
+    "deploy-reputation": "tsx scripts/deploy-reputation.ts",
+    "record-reputation": "tsx scripts/record-reputation.ts",
+    "check-reputation": "tsx scripts/check-reputation.ts",
+    "dashboard": "echo 'Dashboard at http://localhost:3000/dashboard.html'",
+    "benchmark": "vitest run src/__tests__/benchmark.test.ts --reporter=verbose",
+    "codegen:web-types": "pnpm --filter @agent-passport/frontend run codegen",
+    "web:dev": "pnpm --filter @agent-passport/frontend run dev",
+    "web:build": "pnpm --filter @agent-passport/frontend run build"
+  },
+  "workspaces": [
+    "frontend",
+    "sdk"
+  ],
+  "dependencies": {
+    "algosdk": "^3.2.0",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "helmet": "^8.3.0",
+    "prom-client": "^15.1.3",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/express": "^5.0.0",
+    "@types/node": "^26.1.2",
+    "@types/supertest": "^7.2.0",
+    "@vitest/coverage-v8": "^4.1.10",
+    "eslint": "^10.8.0",
+    "supertest": "^7.2.2",
+    "tsx": "^4.23.10",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.66.0",
+    "vitest": "^4.1.10"
+  },
+  "overrides": {
+    "ws": "8.21.0",
+    "glob": "^13.0.6",
+    "test-exclude": "^8.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  },
+  "packageManager": "pnpm@9.15.0"
+}
