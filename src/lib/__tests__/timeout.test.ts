@@ -23,4 +23,23 @@ describe('withTimeout', () => {
     expect(clearTimeoutSpy).toHaveBeenCalled();
     clearTimeoutSpy.mockRestore();
   });
+
+  it('records a metric on timeout (so operators can alert on leaks)', async () => {
+    const { algosdkTimeoutLeaksTotal } = await import('../metrics');
+    const before = await algosdkTimeoutLeaksTotal.get();
+    const slow = new Promise<string>((resolve) => setTimeout(() => resolve('late'), 200));
+    await expect(withTimeout(slow, 30, 'algod-status')).rejects.toThrow('Timeout after 30ms: algod-status');
+    const after = await algosdkTimeoutLeaksTotal.get();
+    const inc = after.values.find(v => v.labels.operation === 'algod-status');
+    expect(inc?.value).toBe((before.values.find(v => v.labels.operation === 'algod-status')?.value ?? 0) + 1);
+  });
+
+  it('does not record a metric on success', async () => {
+    const { algosdkTimeoutLeaksTotal } = await import('../metrics');
+    const before = await algosdkTimeoutLeaksTotal.get();
+    await withTimeout(Promise.resolve('ok'), 1000, 'algod-accountInfo');
+    const after = await algosdkTimeoutLeaksTotal.get();
+    const inc = after.values.find(v => v.labels.operation === 'algod-accountInfo');
+    expect(inc?.value ?? 0).toBe(before.values.find(v => v.labels.operation === 'algod-accountInfo')?.value ?? 0);
+  });
 });

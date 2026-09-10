@@ -82,7 +82,20 @@ export const x402VerificationDurationSeconds = new client.Histogram({
   name: `${PREFIX}x402_verification_duration_seconds`,
   help: 'x402 verification duration in seconds',
   labelNames: ['path'] as const,
-  buckets: [0.005, 0.01, 0.05, 0.1, 0.5, 1, 2.5],
+  buckets: [0.005, 0.01, 0.05, 0.1, 0.25, 0.5, 1, 2.5],
+  registers: [baseRegistry],
+});
+
+// ── Algorand timeout leak metrics ────────────────────────────────
+// `withTimeout` cannot cancel in-flight algosdk calls (no AbortSignal
+// hook). When the timeout fires, the inner promise keeps running and
+// resolves to an unused result. Surface that leak so operators can
+// alert on it (see alerts/alert-rules.yml).
+
+export const algosdkTimeoutLeaksTotal = new client.Counter({
+  name: `${PREFIX}algosdk_timeout_leaks_total`,
+  help: 'withTimeout races that fired the timeout but left the underlying algosdk call in flight',
+  labelNames: ['operation'] as const,
   registers: [baseRegistry],
 });
 
@@ -266,6 +279,10 @@ export function recordDiscoverySearch(
 
 export function recordX402SettlementFailure(reason: string): void {
   x402SettlementFailuresTotal.inc({ reason });
+}
+
+export function recordAlgosdkTimeoutLeak(operation: string): void {
+  algosdkTimeoutLeaksTotal.inc({ operation });
 }
 
 // ── Middleware ──────────────────────────────────────────────────
