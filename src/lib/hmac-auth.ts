@@ -158,9 +158,19 @@ export function signHmacRequest(
   };
 }
 
-/** Routes that bypass HMAC auth: public reads, health, metrics, OpenAPI. */
+/**
+ * Routes that bypass HMAC auth: public reads, health, metrics, OpenAPI.
+ *
+ * Note: `/reputation/subscribe`, `/reputation/subscribe/:id`, and
+ * `/reputation/subscribers` were previously in this list. They are
+ * now wired through `hmacAuth` per-handler in `src/app.ts` (when
+ * HMAC auth is enabled) so that registering, listing, and removing
+ * webhook subscribers requires a signed request. Public reads of
+ * the reputation event log (`GET /reputation`) stay on the second
+ * bypass line.
+ */
 export const HMAC_BYPASS_PATHS = [
-  /^\/(health|health\/deep|ready|metrics|openapi\.json|version|dashboard|reputation\/subscribe|reputation\/unsubscribe|reputation\/subscribers)$/,
+  /^\/(health|health\/deep|ready|metrics|openapi\.json|version|dashboard)$/,
   /^\/(score|delegation|counterparty-check|credit-estimate|sybil-check|reputation|underwrite|trust-graph|passport|verify|discovery\/search)$/,
 ];
 

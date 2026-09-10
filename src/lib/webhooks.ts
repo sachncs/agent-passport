@@ -125,10 +125,42 @@ export function removeSubscriber(id: string): boolean {
   return deleted;
 }
 
-export function listSubscribers(wallet?: string): WebhookSubscriber[] {
+/**
+ * Public projection of a subscriber — never includes the signing
+ * secret. Use this anywhere the record is returned over HTTP or
+ * logged. The internal `WebhookSubscriber` shape keeps the secret
+ * because the fire-and-forget delivery path needs it to sign the body.
+ */
+export interface PublicWebhookSubscriber {
+  id: string;
+  wallet: string;
+  url: string;
+  createdAt: string;
+}
+
+function toPublicView(sub: WebhookSubscriber): PublicWebhookSubscriber {
+  return {
+    id: sub.id,
+    wallet: sub.wallet,
+    url: sub.url,
+    createdAt: sub.createdAt,
+  };
+}
+
+export function listSubscribers(wallet?: string): PublicWebhookSubscriber[] {
   loadFromDisk();
   const all = Array.from(subscribers.values());
-  return wallet ? all.filter(s => s.wallet === wallet) : all;
+  const filtered = wallet ? all.filter(s => s.wallet === wallet) : all;
+  return filtered.map(toPublicView);
+}
+
+/**
+ * Internal: returns the full subscriber records (including signing
+ * secret) for the delivery path. Never expose this on an HTTP route.
+ */
+function listSubscribersWithSecrets(wallet: string): WebhookSubscriber[] {
+  loadFromDisk();
+  return Array.from(subscribers.values()).filter(s => s.wallet === wallet);
 }
 
 function sign(secret: string, body: string): string {
@@ -141,7 +173,7 @@ export async function fireWebhook(
   payload: unknown,
 ): Promise<void> {
   loadFromDisk();
-  const subs = listSubscribers(wallet);
+  const subs = listSubscribersWithSecrets(wallet);
   if (subs.length === 0) return;
 
   const body = JSON.stringify(payload);
