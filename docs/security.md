@@ -13,7 +13,9 @@ The service **assumes**:
 - The x402 facilitator is honest. The service verifies payment
   proofs via the facilitator and does not directly query the
   Algorand chain to confirm settlement (settlement verification
-  is async and best-effort).
+  is async and best-effort). Supported x402 networks are
+  `algorand-testnet` (default) and `algorand-mainnet`; any other
+  `X402_NETWORK` value fails fast at startup.
 - The operator wallet is the only key with permission to submit
   transactions to `registry.teal` and `reputation.teal`. The
   contracts' `update_admin` method rotates this permission.
