@@ -41,6 +41,11 @@ interface DelegationResult {
   sponsor: string;
   agent: string;
   amount: number;
+  /** Block in which the tx was included, or 0 if still pending. */
+  confirmedRound: number;
+  /** `'confirmed'` when confirmedRound > 0, `'pending'` otherwise. */
+  status: 'confirmed' | 'pending';
+  /** Legacy alias for confirmedRound. Will be removed in a future release. */
   round: number;
   timestamp: number;
 }
@@ -49,6 +54,9 @@ interface RevocationResult {
   txId: string;
   sponsor: string;
   agent: string;
+  confirmedRound: number;
+  status: 'confirmed' | 'pending';
+  /** Legacy alias for confirmedRound. Will be removed in a future release. */
   round: number;
   timestamp: number;
 }
@@ -89,20 +97,27 @@ export async function delegate(
   ];
   const accounts = [agent];
 
-  const txId = await submitApplicationCall(REGISTRY_APP_ID, appArgs, accounts);
-  if (!txId) {
+  const result = await submitApplicationCall(REGISTRY_APP_ID, appArgs, accounts);
+  if (!result) {
     throw new Error('Failed to submit delegation transaction');
   }
 
   recordContractEvent('endorsement');
-  logger.info('Delegation submitted on-chain', { sponsor, agent, amount, txId });
+  logger.info('Delegation submitted on-chain', {
+    sponsor, agent, amount,
+    txId: result.txId,
+    confirmedRound: result.confirmedRound,
+    status: result.status,
+  });
 
   return {
-    txId,
+    txId: result.txId,
     sponsor,
     agent,
     amount: Math.floor(amount),
-    round: 0,
+    confirmedRound: result.confirmedRound,
+    status: result.status,
+    round: result.confirmedRound,
     timestamp: Math.floor(Date.now() / 1000),
   };
 }
@@ -121,19 +136,26 @@ export async function revoke(
   ];
   const accounts = [agent];
 
-  const txId = await submitApplicationCall(REGISTRY_APP_ID, appArgs, accounts);
-  if (!txId) {
+  const result = await submitApplicationCall(REGISTRY_APP_ID, appArgs, accounts);
+  if (!result) {
     throw new Error('Failed to submit revocation transaction');
   }
 
   recordContractEvent('revocation');
-  logger.info('Revocation submitted on-chain', { sponsor, agent, txId });
+  logger.info('Revocation submitted on-chain', {
+    sponsor, agent,
+    txId: result.txId,
+    confirmedRound: result.confirmedRound,
+    status: result.status,
+  });
 
   return {
-    txId,
+    txId: result.txId,
     sponsor,
     agent,
-    round: 0,
+    confirmedRound: result.confirmedRound,
+    status: result.status,
+    round: result.confirmedRound,
     timestamp: Math.floor(Date.now() / 1000),
   };
 }

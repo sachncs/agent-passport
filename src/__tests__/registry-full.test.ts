@@ -156,7 +156,11 @@ describe('delegate()', () => {
 
   describe('success', () => {
     it('returns delegation result with txId', async () => {
-      mockSubmitApplicationCall.mockResolvedValue('TXID123');
+      mockSubmitApplicationCall.mockResolvedValue({
+        txId: 'TXID123',
+        confirmedRound: 12345,
+        status: 'confirmed',
+      });
 
       const result = await delegate(VALID_SPONSOR, VALID_AGENT, 100);
 
@@ -164,12 +168,32 @@ describe('delegate()', () => {
       expect(result.sponsor).toBe(VALID_SPONSOR);
       expect(result.agent).toBe(VALID_AGENT);
       expect(result.amount).toBe(100);
-      expect(result.round).toBe(0);
+      expect(result.confirmedRound).toBe(12345);
+      expect(result.status).toBe('confirmed');
+      expect(result.round).toBe(12345);
       expect(result.timestamp).toBeGreaterThan(0);
     });
 
+    it('reports status:pending when the tx is still pending after the poll window', async () => {
+      mockSubmitApplicationCall.mockResolvedValue({
+        txId: 'TXID_PEND',
+        confirmedRound: 0,
+        status: 'pending',
+      });
+
+      const result = await delegate(VALID_SPONSOR, VALID_AGENT, 100);
+
+      expect(result.confirmedRound).toBe(0);
+      expect(result.status).toBe('pending');
+      expect(result.round).toBe(0);
+    });
+
     it('floors fractional amount', async () => {
-      mockSubmitApplicationCall.mockResolvedValue('TXID123');
+      mockSubmitApplicationCall.mockResolvedValue({
+        txId: 'TXID123',
+        confirmedRound: 12345,
+        status: 'confirmed',
+      });
 
       const result = await delegate(VALID_SPONSOR, VALID_AGENT, 99.7);
 
@@ -177,7 +201,11 @@ describe('delegate()', () => {
     });
 
     it('records contract endorsement event', async () => {
-      mockSubmitApplicationCall.mockResolvedValue('TXID123');
+      mockSubmitApplicationCall.mockResolvedValue({
+        txId: 'TXID123',
+        confirmedRound: 12345,
+        status: 'confirmed',
+      });
 
       await delegate(VALID_SPONSOR, VALID_AGENT, 100);
 
@@ -185,7 +213,11 @@ describe('delegate()', () => {
     });
 
     it('passes correct appArgs to submitApplicationCall', async () => {
-      mockSubmitApplicationCall.mockResolvedValue('TXID123');
+      mockSubmitApplicationCall.mockResolvedValue({
+        txId: 'TXID123',
+        confirmedRound: 12345,
+        status: 'confirmed',
+      });
 
       await delegate(VALID_SPONSOR, VALID_AGENT, 200);
 
@@ -279,19 +311,29 @@ describe('revoke()', () => {
 
   describe('success', () => {
     it('returns revocation result with txId', async () => {
-      mockSubmitApplicationCall.mockResolvedValue('REVOKE_TX');
+      mockSubmitApplicationCall.mockResolvedValue({
+        txId: 'REVOKE_TX',
+        confirmedRound: 54321,
+        status: 'confirmed',
+      });
 
       const result = await revoke(VALID_SPONSOR, VALID_AGENT);
 
       expect(result.txId).toBe('REVOKE_TX');
       expect(result.sponsor).toBe(VALID_SPONSOR);
       expect(result.agent).toBe(VALID_AGENT);
-      expect(result.round).toBe(0);
+      expect(result.confirmedRound).toBe(54321);
+      expect(result.status).toBe('confirmed');
+      expect(result.round).toBe(54321);
       expect(result.timestamp).toBeGreaterThan(0);
     });
 
     it('records contract revocation event', async () => {
-      mockSubmitApplicationCall.mockResolvedValue('REVOKE_TX');
+      mockSubmitApplicationCall.mockResolvedValue({
+        txId: 'REVOKE_TX',
+        confirmedRound: 54321,
+        status: 'confirmed',
+      });
 
       await revoke(VALID_SPONSOR, VALID_AGENT);
 
@@ -299,7 +341,11 @@ describe('revoke()', () => {
     });
 
     it('passes correct appArgs with revoke_delegation', async () => {
-      mockSubmitApplicationCall.mockResolvedValue('REVOKE_TX');
+      mockSubmitApplicationCall.mockResolvedValue({
+        txId: 'REVOKE_TX',
+        confirmedRound: 54321,
+        status: 'confirmed',
+      });
 
       await revoke(VALID_SPONSOR, VALID_AGENT);
 

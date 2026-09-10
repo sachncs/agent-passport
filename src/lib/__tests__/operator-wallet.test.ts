@@ -13,6 +13,7 @@ vi.mock('../algorand-client', () => ({
   algod: {
     getTransactionParams: vi.fn(),
     sendRawTransaction: vi.fn(),
+    pendingTransactionInformation: vi.fn(),
   },
 }));
 
@@ -93,7 +94,7 @@ describe('operator-wallet', () => {
       expect(result).toBeNull();
     });
 
-    it('returns txId on successful submission', async () => {
+    it('returns txId and confirmed round on successful submission', async () => {
       process.env.OPERATOR_MNEMONIC = VALID_MNEMONIC;
       const { initOperatorWallet, submitApplicationCall } = await import('../operator-wallet');
       initOperatorWallet();
@@ -105,13 +106,45 @@ describe('operator-wallet', () => {
       vi.mocked(algod.sendRawTransaction).mockReturnValueOnce({
         do: vi.fn().mockResolvedValue({ txid: 'TXID_abc123' }),
       } as never);
+      vi.mocked(algod.pendingTransactionInformation).mockReturnValueOnce({
+        do: vi.fn().mockResolvedValue({ 'confirmed-round': 4242 }),
+      } as never);
 
       const result = await submitApplicationCall(
         7,
         [new Uint8Array([1, 2])],
         ['REF_ADDR'],
       );
-      expect(result).toBe('TXID_abc123');
+      expect(result).toEqual({
+        txId: 'TXID_abc123',
+        confirmedRound: 4242,
+        status: 'confirmed',
+      });
+    });
+
+    it('returns status:pending when the poll window expires before confirmation', async () => {
+      process.env.OPERATOR_MNEMONIC = VALID_MNEMONIC;
+      const { initOperatorWallet, submitApplicationCall } = await import('../operator-wallet');
+      initOperatorWallet();
+
+      const { algod } = await import('../algorand-client');
+      vi.mocked(algod.getTransactionParams).mockReturnValueOnce({
+        do: vi.fn().mockResolvedValue({ fee: 1000, lastRound: 100 }),
+      } as never);
+      vi.mocked(algod.sendRawTransaction).mockReturnValueOnce({
+        do: vi.fn().mockResolvedValue({ txid: 'TXID_pending' }),
+      } as never);
+      // Always return "not yet confirmed" for the full poll window.
+      vi.mocked(algod.pendingTransactionInformation).mockReturnValue({
+        do: vi.fn().mockResolvedValue({}),
+      } as never);
+
+      const result = await submitApplicationCall(1, []);
+      expect(result).toEqual({
+        txId: 'TXID_pending',
+        confirmedRound: 0,
+        status: 'pending',
+      });
     });
 
     it('returns null on timeout error from withTimeout', async () => {
@@ -176,6 +209,9 @@ describe('operator-wallet', () => {
       } as never);
       vi.mocked(algod.sendRawTransaction).mockReturnValueOnce({
         do: vi.fn().mockResolvedValue({ txid: 'TX2' }),
+      } as never);
+      vi.mocked(algod.pendingTransactionInformation).mockReturnValueOnce({
+        do: vi.fn().mockResolvedValue({ 'confirmed-round': 99 }),
       } as never);
 
       await submitApplicationCall(1, []);
