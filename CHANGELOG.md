@@ -347,6 +347,13 @@ generated as a runtime artifact, causing
   so existing SDK clients work unchanged.
 - Removed `@x402/core`, `@x402/evm`, `@x402/express` from
   `package.json` and `pnpm-lock.yaml`. 3 fewer dependencies,
+- **Renamed the npm package from `agent-passport` to
+  `@agent-passport/api`.** The unscoped `agent-passport` name was
+  already published on npm by an unrelated Apache-2.0 project; npm
+  forbids duplicate unscoped names. The TypeScript SDK
+  (`@agent-passport/sdk`) and Python SDK (`agent-passport-sdk`)
+  were already scoped/unique and remain unchanged. v0.1.0 was never
+  published under the conflicting name.
   ~0.7 MB smaller install.
 
 ### Fixed

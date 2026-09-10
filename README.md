@@ -70,7 +70,7 @@ truth for architecture, algorithms, operations, and contributing.
 ### From npm
 
 ```bash
-npm install agent-passport
+npm install @agent-passport/api
 ```
 
 ### From source
@@ -95,8 +95,8 @@ npm run dev
 ### From Docker
 
 ```bash
-docker build -t agent-passport:0.1.0 .
-docker run --rm -p 3000:3000 --env-file .env agent-passport:0.1.0
+docker build -t agent-passport-api:0.1.0 .
+docker run --rm -p 3000:3000 --env-file .env agent-passport-api:0.1.0
 ```
 
 For production deployment, see
