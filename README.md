@@ -4,6 +4,7 @@
   <p align="center">
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License"></a>
     <a href="https://github.com/sachncs/agent-passport/actions"><img src="https://img.shields.io/github/actions/workflow/status/sachncs/agent-passport/ci.yml?branch=master" alt="CI"></a>
+    <a href="https://sachncs.github.io/agent-passport/"><img src="https://img.shields.io/badge/docs-sachncs.github.io%2Fagent--passport-blue" alt="Website"></a>
     <a href="https://www.npmjs.com/package/@agent-passport/api"><img src="https://img.shields.io/npm/v/@agent-passport/api" alt="npm"></a>
     <a href="https://github.com/sachncs/agent-passport/stargazers"><img src="https://img.shields.io/github/stars/sachncs/agent-passport" alt="Stars"></a>
   </p>

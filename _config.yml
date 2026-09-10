@@ -1,8 +1,12 @@
 title: "agent-passport"
-description: " Stateless trust & risk API for AI agents. 0–100 trust score, sybil detection, credit underwriting, on-chain reputation. Pay-per-query via x402"
+description: "Stateless trust & risk API for AI agents. 0–100 trust score, sybil detection, credit underwriting, on-chain reputation. Pay-per-query via x402"
 theme: minima
 logo: /assets/logo.svg
 show_downloads: false
 permalink: /:title/
+# Project pages (sachncs.github.io/agent-passport/) need this so asset
+# and link URLs resolve at the project subpath rather than the domain root.
+baseurl: "/agent-passport"
+url: "https://sachncs.github.io"
 plugins:
   - jekyll-feed

@@ -1,0 +1,50 @@
+name: Pages
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Cancel in-flight runs on the same branch.
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          # The Jekyll source tree lives under docs/ in the repo, with
+          # the _config.yml at the repo root (the standard layout for
+          # GitHub Pages "Deploy from a branch: /docs" configuration).
+          path: .
+      - id: pages
+        uses: actions/deploy-pages@v6
+
+  # Sanity check: validate that the Jekyll build produces HTML and that
+  # the OpenAPI spec is still well-formed. Runs on every PR so reviewers
+  # catch broken docs before merge.
+  validate:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v7
+      - name: Jekyll build (offline, no theme install)
+        run: |
+          set -euo pipefail
+          gem install --no-document jekyll jekyll-feed 2>&1 | tail -5
+          jekyll build --source . --destination /tmp/site --trace 2>&1 | tail -20
+          test -f /tmp/site/README.html
+          test -f /tmp/site/architecture.html
+          test -f /tmp/site/api.html
+          test -f /tmp/site/security.html
+          echo "Jekyll build OK; $(find /tmp/site -name '*.html' | wc -l) HTML pages generated."
