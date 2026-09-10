@@ -257,3 +257,16 @@ groups:
         annotations:
           summary: "Unusual number of idempotency conflicts"
           description: "Idempotency-Key conflicts above 5% for 5 minutes. May indicate client retry misuse."
+
+      # P2: Algorand timeout leak — surfaces the documented algosdk-no-AbortSignal
+      # limitation. Each tick is one in-flight HTTP request that outlived its
+      # withTimeout race and will eventually write to an unused buffer.
+      - alert: AlgosdkTimeoutLeakSpike
+        expr: rate(agent_passport_algosdk_timeout_leaks_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: info
+          team: platform
+        annotations:
+          summary: "Algorand timeout leaks elevated"
+          description: "More than 10% of withTimeout races fire the timeout but leave the underlying algosdk call in flight. Investigate Algorand node health or move to a fetch-based shim."

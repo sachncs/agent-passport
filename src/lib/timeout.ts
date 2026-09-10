@@ -2,11 +2,15 @@
  * Promise.race-based timeout for algosdk and other callables that don't
  * accept an AbortSignal. The inner promise is NOT cancelled on timeout —
  * algosdk has no AbortSignal hook, so any in-flight request continues
- * server-side and resolves to an unused result.
+ * server-side and resolves to an unused result. Each leaked call is
+ * counted via `agent_passport_algosdk_timeout_leaks_total{operation}` so
+ * operators can alert on the leak (see alerts/alert-rules.yml).
  *
  * For fetch-based calls, prefer the platform-native
  * `fetch(url, { signal: AbortSignal.timeout(ms) })`.
  */
+
+import { recordAlgosdkTimeoutLeak } from './metrics';
 
 const DEFAULT_TIMEOUT_MS = 10_000;
 
@@ -19,6 +23,7 @@ export async function withTimeout<T>(
 
   const timeout = new Promise<never>((_, reject) => {
     timeoutId = setTimeout(() => {
+      if (label) recordAlgosdkTimeoutLeak(label);
       reject(new Error(`Timeout after ${ms}ms${label ? `: ${label}` : ''}`));
     }, ms);
   });
