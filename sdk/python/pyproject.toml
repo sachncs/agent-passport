@@ -41,9 +41,9 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/sachncs/agent-passport"
+Homepage = "https://sachncs.github.io/agent-passport/"
 Repository = "https://github.com/sachncs/agent-passport.git"
-Documentation = "https://github.com/sachncs/agent-passport/tree/master/sdk/python"
+Documentation = "https://sachncs.github.io/agent-passport/"
 Issues = "https://github.com/sachncs/agent-passport/issues"
 Changelog = "https://github.com/sachncs/agent-passport/blob/master/sdk/python/CHANGELOG.md"
 
