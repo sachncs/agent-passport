@@ -55,8 +55,30 @@ if (process.env.RATE_LIMIT_OVERRIDES) {
   }
 }
 
-// Security: trust proxy for correct IP behind load balancers
-app.set('trust proxy', 1);
+// Security: trust proxy for correct IP behind load balancers. The
+// hop count is configurable via TRUST_PROXY_HOPS so multi-tier
+// deployments (CloudFront → ALB → app, k8s ingress → sidecar → app)
+// can pass the correct value. Default 0 = do NOT honour the
+// spoofable X-Forwarded-For header; single-LB deployments should set
+// TRUST_PROXY_HOPS=1 explicitly.
+const TRUST_PROXY_HOPS = (() => {
+  const raw = process.env.TRUST_PROXY_HOPS;
+  if (raw === undefined || raw === '') return 0;
+  const parsed = parseInt(raw, 10);
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    logger.warn('Invalid TRUST_PROXY_HOPS, defaulting to 0', { raw });
+    return 0;
+  }
+  if (parsed === 1) {
+    logger.warn(
+      'TRUST_PROXY_HOPS=1 trusts only the closest proxy. ' +
+      'For CloudFront → ALB → app or k8s ingress → sidecar → app, ' +
+      'set TRUST_PROXY_HOPS to the number of trusted hops (commonly 2).',
+    );
+  }
+  return parsed;
+})();
+app.set('trust proxy', TRUST_PROXY_HOPS);
 
 // Security: helmet for HTTP headers (HSTS, X-Content-Type-Options, CSP, etc.)
 app.use(helmet());
