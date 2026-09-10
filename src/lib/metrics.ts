@@ -99,6 +99,18 @@ export const algosdkTimeoutLeaksTotal = new client.Counter({
   registers: [baseRegistry],
 });
 
+// ── Delegation-cache invalidation metrics ────────────────────────
+// `single` = per-wallet invalidation (the fresh path drops only the
+// target wallet). `global` = the whole cache was wiped (a code smell;
+// used as a regression signal for future code paths).
+
+export const delegationCacheInvalidationsTotal = new client.Counter({
+  name: `${PREFIX}delegation_cache_invalidations_total`,
+  help: 'Delegation cache invalidations by scope (single wallet vs global)',
+  labelNames: ['scope'] as const,
+  registers: [baseRegistry],
+});
+
 // ── Smart-contract metrics ──────────────────────────────────────
 // Each contract event label includes the Algorand network (testnet /
 // mainnet) so a single Prometheus scrape distinguishes them. (L3)
@@ -283,6 +295,10 @@ export function recordX402SettlementFailure(reason: string): void {
 
 export function recordAlgosdkTimeoutLeak(operation: string): void {
   algosdkTimeoutLeaksTotal.inc({ operation });
+}
+
+export function recordDelegationCacheInvalidation(scope: 'single' | 'global'): void {
+  delegationCacheInvalidationsTotal.inc({ scope });
 }
 
 // ── Middleware ──────────────────────────────────────────────────

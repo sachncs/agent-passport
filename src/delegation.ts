@@ -3,6 +3,7 @@ import { withTimeout } from './lib/timeout';
 import { algod } from './lib/algorand-client';
 import { logger } from './lib/logger';
 import { isValidWallet, MICRO_ALGO } from './lib/constants';
+import { recordDelegationCacheInvalidation } from './lib/metrics';
 
 const INDEXER_URL = config.indexerUrl;
 
@@ -192,6 +193,20 @@ async function fetchDelegationCached(wallet: string): Promise<Delegation[]> {
 /** Clears the delegation BFS cache. Call after new delegations are recorded. */
 export function clearDelegationCache(): void {
   delegationCache.clear();
+  recordDelegationCacheInvalidation('global');
+}
+
+/**
+ * Drops a single wallet's entry from the delegation BFS cache so the
+ * next scoreDelegation call for that wallet re-fetches. Other wallets
+ * are unaffected. Prefer this over clearDelegationCache() on the
+ * fresh-data endpoints (/passport, /underwrite) to keep the cache hit
+ * ratio high for everyone else.
+ */
+export function invalidateDelegationCacheFor(wallet: string): void {
+  if (delegationCache.delete(wallet)) {
+    recordDelegationCacheInvalidation('single');
+  }
 }
 
 
@@ -260,12 +275,14 @@ export async function scoreDelegation(
 
 /**
  *
- * Clears the BFS delegation cache to guarantee fresh data.
+ * Drops only the target wallet from the BFS delegation cache before
+ * scoring so the fresh data for `wallet` is reflected. Other wallets'
+ * cache entries are preserved.
  */
 export async function scoreDelegationFresh(
   wallet: string,
 ): Promise<DelegationTrustScore | null> {
-  clearDelegationCache();
+  invalidateDelegationCacheFor(wallet);
   return scoreDelegationInternal(wallet, true);
 }
 

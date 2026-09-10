@@ -774,6 +774,34 @@ describe('scoreDelegationFresh()', () => {
     expect(result).not.toBeNull();
     expect(result!.wallet).toBe(VALID_WALLET);
   });
+
+  it('only invalidates the target wallet — other wallets keep their cached entry', async () => {
+    fetch.mockResolvedValue(mockIndexerEmpty() as never);
+
+    // Populate cache by running scoreDelegation for two wallets.
+    await scoreDelegation(VALID_WALLET);
+    await scoreDelegation(VALID_DELEGATEE);
+
+    // Reset fetch to count how many times we hit the indexer after the
+    // fresh path. The previous (buggy) implementation cleared the
+    // entire map, so BOTH wallets would have re-fetched. Now only the
+    // target wallet is invalidated.
+    fetch.mockClear();
+
+    await scoreDelegationFresh(VALID_WALLET);
+
+    // Collect every wallet the fresh path fetched for.
+    const fetchedWallets = fetch.mock.calls.map(call => {
+      const url = String(call[0]);
+      const match = url.match(/\/v2\/accounts\/([^/]+)\//);
+      return match ? match[1] : null;
+    });
+
+    // The target wallet MAY re-fetch (it was invalidated); the other
+    // wallet MUST NOT.
+    expect(fetchedWallets).not.toContain(VALID_DELEGATEE);
+    expect(fetchedWallets.filter(w => w === VALID_WALLET).length).toBeGreaterThanOrEqual(1);
+  });
 });
 
 describe('Explanation generation', () => {
