@@ -39,6 +39,21 @@ function validateConfig() {
     }
   }
 
+  // Validate X402_NETWORK against an explicit allow-list. The default is
+  // an Algorand identifier; an unknown value fails fast so a typo cannot
+  // silently advertise an unsupported chain to paying clients.
+  if (process.env.X402_NETWORK !== undefined && process.env.X402_NETWORK !== '') {
+    const ALLOWED_X402_NETWORKS = new Set([
+      'algorand-testnet',
+      'algorand-mainnet',
+    ]);
+    if (!ALLOWED_X402_NETWORKS.has(process.env.X402_NETWORK)) {
+      errors.push(
+        `X402_NETWORK must be one of: ${Array.from(ALLOWED_X402_NETWORKS).join(', ')}`,
+      );
+    }
+  }
+
   // Validate URL schemes to prevent SSRF / typo crashes.
   for (const [name, url] of [
     ['ALGOD_URL', process.env.ALGOD_URL],
@@ -70,7 +85,7 @@ export const config = {
   x402Enabled: process.env.X402_ENABLED === 'true',
   x402FacilitatorUrl: process.env.X402_FACILITATOR_URL || 'https://x402.org/facilitator',
   x402PaymentRecipient: process.env.X402_PAYMENT_RECIPIENT || '',
-  x402Network: (process.env.X402_NETWORK || 'eip155:84532') as `${string}:${string}`,
+  x402Network: (process.env.X402_NETWORK || 'algorand-testnet') as `${string}:${string}`,
 
   corsAllowedOrigins: process.env.CORS_ALLOWED_ORIGINS || '*',
 

@@ -212,7 +212,7 @@ at [docs/operations.md#1-environment-variables](docs/operations.md#1-environment
 | `X402_ENABLED`            | Enable pay-per-query (default `false`) |
 | `X402_FACILITATOR_URL`    | x402 facilitator endpoint     |
 | `X402_PAYMENT_RECIPIENT`  | USDC recipient address        |
-| `X402_NETWORK`            | `algorand-testnet` / `-mainnet` |
+| `X402_NETWORK`            | `algorand-testnet` / `algorand-mainnet` |
 
 ### Rate limiting & system exposure
 

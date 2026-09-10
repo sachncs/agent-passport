@@ -143,9 +143,9 @@ describe('config', () => {
   });
 
   it('uses custom X402_NETWORK', async () => {
-    process.env.X402_NETWORK = 'eip155:1';
+    process.env.X402_NETWORK = 'algorand-mainnet';
     const { config } = await import('../config');
-    expect(config.x402Network).toBe('eip155:1');
+    expect(config.x402Network).toBe('algorand-mainnet');
   });
 
   it('uses custom LOG_FILE', async () => {
@@ -192,6 +192,20 @@ describe('validateConfig', () => {
     delete process.env.X402_PAYMENT_RECIPIENT;
     const { config } = await import('../config');
     expect(config.x402Enabled).toBe(false);
+  });
+
+  it('throws on unknown X402_NETWORK', async () => {
+    process.env.X402_NETWORK = 'eip155:84532';
+    await expect(import('../config')).rejects.toThrow('X402_NETWORK must be one of');
+  });
+
+  it('accepts algorand-testnet and algorand-mainnet', async () => {
+    for (const net of ['algorand-testnet', 'algorand-mainnet']) {
+      process.env.X402_NETWORK = net;
+      vi.resetModules();
+      const { config } = await import('../config');
+      expect(config.x402Network).toBe(net);
+    }
   });
 
   it('includes both errors when multiple invalid', async () => {
