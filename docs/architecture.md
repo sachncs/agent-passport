@@ -35,7 +35,7 @@ handler. Each middleware is registered in `src/app.ts`.
 
 | # | Middleware | Purpose | Headers added |
 |---|------------|---------|---------------|
-| 1 | `app.set('trust proxy', 1)` | Honour `X-Forwarded-For` from one hop of LB | — |
+| 1 | `app.set('trust proxy', TRUST_PROXY_HOPS)` | Honour `X-Forwarded-For` from N trusted proxy hops; 0 (default) trusts nothing, 1 trusts one hop, 2+ trusts N hops for CloudFront → ALB → app style chains | — |
 | 2 | `helmet()` | HSTS, X-Content-Type-Options, X-Frame-Options, CSP | `Strict-Transport-Security`, etc. |
 | 3 | `requestIdMiddleware` | UUID per request; reads `X-Request-ID` if valid | `X-Request-ID` |
 | 4 | `requestLoggingMiddleware` | One JSON log line per request | — |
@@ -177,8 +177,12 @@ all in parallel where independent.
 
 For horizontal scaling:
 
-1. Add a load balancer that forwards `X-Forwarded-For` (already
-   trusted via `app.set('trust proxy', 1)`).
+1. Add a load balancer that forwards `X-Forwarded-For` and set
+   `TRUST_PROXY_HOPS` to the number of trusted hops. The default of
+   `0` is fail-closed (does not honour the spoofable header); set
+   to `1` for a single reverse proxy (ALB, nginx), to `2` for
+   CloudFront → ALB → app, and to `2` or `3` for k8s ingress →
+   sidecar → app depending on the topology.
 2. Back the rate-limit map, idempotency store, and system-exposure
    ledger with Redis. The `src/lib/json-store.ts` interface is
    designed to be drop-in replaceable.
