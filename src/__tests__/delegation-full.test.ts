@@ -804,6 +804,38 @@ describe('scoreDelegationFresh()', () => {
   });
 });
 
+describe('sponsor-fetch failure handling', () => {
+  it('does NOT collapse trust score to 0 when all sponsor fetches fail', async () => {
+    fetch.mockResolvedValue(
+      mockIndexerResponse([
+        {
+          sender: VALID_WALLET,
+          'asset-transfer-transaction': {
+            receiver: VALID_DELEGATEE,
+            amount: 1_000_000,
+          },
+          'round-time': 1000,
+          'confirmed-round': 100,
+        },
+      ]) as never,
+    );
+    // Force every scoreWallet call to fail so fetchWalletTrustScore
+    // returns null for every sponsor.
+    mockScoreWallet.mockRejectedValue(new Error('algorand unreachable'));
+
+    const result = await scoreDelegation(VALID_WALLET);
+
+    expect(result).not.toBeNull();
+    // The previous buggy behaviour was: maxSponsorTrust = 0 → cap = 0
+    // → Math.min(rawScore, 0) = 0. With the fix, the cap is skipped
+    // when no sponsor scores are known, so the raw score stands.
+    expect(result!.trustScore).toBeGreaterThan(0);
+    expect(result!.explanation.some(
+      e => e.includes('sponsor fetch') && e.includes('failed'),
+    )).toBe(true);
+  });
+});
+
 describe('Explanation generation', () => {
   it('includes delegation depth info', async () => {
     fetch.mockResolvedValue(
