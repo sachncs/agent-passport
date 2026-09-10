@@ -635,7 +635,11 @@ describe('recordEvent', () => {
         transactions: [{ 'payment-transaction': { receiver: VALID_B } }],
       }),
     }));
-    (submitApplicationCall as ReturnType<typeof vi.fn>).mockResolvedValue('txid123');
+    (submitApplicationCall as ReturnType<typeof vi.fn>).mockResolvedValue({
+      txId: 'txid123',
+      confirmedRound: 100,
+      status: 'confirmed',
+    });
 
     const result = await recordEvent(VALID_W, 'payment', 1000);
     expect(result).not.toBeNull();
@@ -655,7 +659,7 @@ describe('recordEvent', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true, json: vi.fn().mockResolvedValue({ transactions: [] }),
     }));
-    (submitApplicationCall as ReturnType<typeof vi.fn>).mockResolvedValue('txid');
+    (submitApplicationCall as ReturnType<typeof vi.fn>).mockResolvedValue({ txId: 'txid', confirmedRound: 100, status: 'confirmed' });
 
     const result = await recordEvent(VALID_W, 'payment', 500);
     expect(result).not.toBeNull();
@@ -672,7 +676,7 @@ describe('recordEvent', () => {
         transactions: [{ 'payment-transaction': { receiver: VALID_B } }],
       }),
     }));
-    (submitApplicationCall as ReturnType<typeof vi.fn>).mockResolvedValue('txid');
+    (submitApplicationCall as ReturnType<typeof vi.fn>).mockResolvedValue({ txId: 'txid', confirmedRound: 100, status: 'confirmed' });
 
     // Pin Date.now so both calls compute the same hash (production
     // salts with Date.now to avoid collision between concurrent events,
@@ -696,7 +700,7 @@ describe('recordEvent', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true, json: vi.fn().mockResolvedValue({ transactions: [] }),
     }));
-    (submitApplicationCall as ReturnType<typeof vi.fn>).mockResolvedValue('txid');
+    (submitApplicationCall as ReturnType<typeof vi.fn>).mockResolvedValue({ txId: 'txid', confirmedRound: 100, status: 'confirmed' });
 
     const result = await recordEvent(VALID_W, 'endorsement', 0, VALID_B);
     expect(result).not.toBeNull();
@@ -714,7 +718,7 @@ describe('recordEvent', () => {
         transactions: [{ 'payment-transaction': { receiver: VALID_B } }],
       }),
     }));
-    (submitApplicationCall as ReturnType<typeof vi.fn>).mockResolvedValue('txid');
+    (submitApplicationCall as ReturnType<typeof vi.fn>).mockResolvedValue({ txId: 'txid', confirmedRound: 100, status: 'confirmed' });
 
     const result = await recordEvent(VALID_W, 'payment', 100);
     expect(result).not.toBeNull();
@@ -753,7 +757,7 @@ describe('recordEvent', () => {
         transactions: [{ 'payment-transaction': { receiver: VALID_B } }],
       }),
     }));
-    (submitApplicationCall as ReturnType<typeof vi.fn>).mockResolvedValue('txid');
+    (submitApplicationCall as ReturnType<typeof vi.fn>).mockResolvedValue({ txId: 'txid', confirmedRound: 100, status: 'confirmed' });
 
     for (const et of EVENT_TYPES) {
       clearDuplicateEvents();
@@ -794,7 +798,7 @@ describe('recordEvent', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true, json: vi.fn().mockResolvedValue({ transactions: [] }),
     }));
-    (submitApplicationCall as ReturnType<typeof vi.fn>).mockResolvedValue('txid');
+    (submitApplicationCall as ReturnType<typeof vi.fn>).mockResolvedValue({ txId: 'txid', confirmedRound: 100, status: 'confirmed' });
 
     const r1 = await recordEvent(VALID_W, 'endorsement', 0, VALID_B);
     expect(r1).not.toBeNull();

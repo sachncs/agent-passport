@@ -807,10 +807,10 @@ export async function recordEvent(
 
   const accounts = [wallet];
 
-  const txId = await submitApplicationCall(
+  const result = await submitApplicationCall(
     REPUTATION_APP_ID, appArgs, accounts,
   );
-  if (!txId) {
+  if (!result) {
     logger.warn('Failed to submit reputation transaction — event recorded off-chain only', {
       wallet, eventType, eventHash,
     });
@@ -830,7 +830,7 @@ export async function recordEvent(
     eventHash,
     counterpartyVerified,
     selfReportVerified,
-    ...(txId ? { txId } : {}),
+    ...(result?.txId ? { txId: result.txId } : {}),
   };
 }
 
