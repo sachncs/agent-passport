@@ -4,10 +4,16 @@
   <p align="center">
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License"></a>
     <a href="https://github.com/sachncs/agent-passport/actions"><img src="https://img.shields.io/github/actions/workflow/status/sachncs/agent-passport/ci.yml?branch=master" alt="CI"></a>
-    <a href="https://www.npmjs.com/package/agent-passport"><img src="https://img.shields.io/npm/v/agent-passport" alt="npm"></a>
+    <a href="https://www.npmjs.com/package/@agent-passport/api"><img src="https://img.shields.io/npm/v/@agent-passport/api" alt="npm"></a>
     <a href="https://github.com/sachncs/agent-passport/stargazers"><img src="https://img.shields.io/github/stars/sachncs/agent-passport" alt="Stars"></a>
   </p>
 </p>
+
+> **Status:** v0.1.0 dev preview — see [CHANGELOG](CHANGELOG.md).
+> Production-readiness targets (HMAC auth, mandatory Idempotency-Key,
+> shared-state adapters, webhook secret redaction, on-chain round
+> confirmation) are landing in `[Unreleased]`. Treat the v0.1.0 tag
+> as a developer preview.
 
 A stateless trust-scoring API at `http://localhost:3000`, pointed at the
 public Algorand testnet. No database, no wallet, no signup —
@@ -40,12 +46,16 @@ truth for architecture, algorithms, operations, and contributing.
   [docs/architecture.md#4-smart-contracts](docs/architecture.md#4-smart-contracts).
 - **Optional x402 micropayments** — pay-per-query in USDC, settled
   on-chain, with replay protection.
-- **Stateless service** — every request fetches from Algorand and caches
-  in-memory for 60 s. No database, no message queue, no shared state.
-  Scale horizontally by adding pods.
-- **Production-grade observability** — Prometheus metrics, 19 alert
-  rules, 17-panel Grafana dashboard, runbooks per alert, two SLO profiles.
-  See [docs/operations.md#5-observability](docs/operations.md#5-observability).
+- **Stateless service (for read endpoints)** — every request fetches
+  from Algorand and caches in-memory for 60 s. No database, no
+  message queue. The four state stores (idempotency, rate-limit,
+  system-exposure, webhook subscribers) are per-process; see
+  [docs/architecture.md](docs/architecture.md) for the multi-replica
+  requirements and the boot-time warning that surfaces them.
+- **Production-targeted observability** — Prometheus metrics, 19
+  alert rules, 17-panel Grafana dashboard, runbooks per alert, two
+  SLO profiles. See
+  [docs/operations.md#5-observability](docs/operations.md#5-observability).
 - **First-class SDKs** — TypeScript (`@agent-passport/sdk`) and Python
   (`agent-passport-sdk`), both with typed errors, idempotency helpers,
   and x402 payment callbacks. See
@@ -58,10 +68,13 @@ truth for architecture, algorithms, operations, and contributing.
   operational status pill in the header, dedicated developer-surface
   treatment for `/endorse`, `/counterparty`, `/monitor`, and
   `/discovery`.
-- **Security hardened** — Helmet headers, 600 req/min/IP rate limit, CORS,
-  100 KB body limit, 30 s request timeout, per-request UUID,
-  `Idempotency-Key` middleware, on-chain payment verification. See
-  [docs/security.md](docs/security.md).
+- **Defence-in-depth security** — Helmet headers, 600 req/min/IP rate
+  limit, CORS, 100 KB body limit, 30 s request timeout, per-request
+  UUID, `Idempotency-Key` middleware, on-chain payment verification.
+  The current threat model and known limitations are documented in
+  [docs/security.md](docs/security.md); "hardened" here means the
+  documented controls are in place — not that every hardening
+  improvement has shipped.
 
 ---
 
@@ -467,9 +480,11 @@ npm run build --workspaces   # All workspace packages
 
 ## Deployment
 
-The service is **production-ready** and fully stateless. See
-[docs/operations.md#4-deployment](docs/operations.md#4-deployment) for the
-full checklist.
+The service targets production readiness but is currently in
+pre-release — see [CHANGELOG.md](CHANGELOG.md). The
+deployment checklist, environment variables, and per-environment
+notes are at
+[docs/operations.md#4-deployment](docs/operations.md#4-deployment).
 
 The default deployment works against the public Algorand testnet out of
 the box. To deploy to mainnet, update `ALGOD_URL` and `INDEXER_URL` to a
