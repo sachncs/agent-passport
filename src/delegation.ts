@@ -165,14 +165,14 @@ async function fetchDelegations(wallet: string): Promise<Delegation[]> {
   return fetchDelegationsFromIndexer(wallet);
 }
 
-async function fetchWalletTrustScore(wallet: string): Promise<number> {
+async function fetchWalletTrustScore(wallet: string): Promise<number | null> {
   try {
     const { scoreWallet } = await import('./trust-score');
     const result = await scoreWallet(wallet);
-    return result?.trustScore ?? 0;
+    return result?.trustScore ?? null;
   } catch (e) {
     logger.warn('fetchWalletTrustScore failed', { wallet, error: String(e) });
-    return 0;
+    return null;
   }
 }
 
@@ -338,13 +338,21 @@ async function scoreDelegationInternal(
     delegationPath = deepest.path;
   }
 
-  // Fetch sponsor trust scores in parallel
+  // Fetch sponsor trust scores in parallel. A null return means the
+  // Algorand/indexer call for that sponsor failed — we keep the null
+  // (not 0) so we can distinguish "fetched and scored 0" from "fetch
+  // failed entirely". The cap formula at the bottom uses only the
+  // non-null scores; if every fetch fails the cap is skipped and the
+  // raw score stands.
   const sponsorScores = await Promise.all(
     delegations.slice(0, 5).map(d => fetchWalletTrustScore(d.delegatee))
   );
+  const knownSponsorScores = sponsorScores.filter(
+    (s): s is number => s !== null,
+  );
 
-  const avgSponsorQuality = sponsorScores.length > 0
-    ? sponsorScores.reduce((a, b) => a + b, 0) / sponsorScores.length
+  const avgSponsorQuality = knownSponsorScores.length > 0
+    ? knownSponsorScores.reduce((a, b) => a + b, 0) / knownSponsorScores.length
     : 0;
 
   const totalDelegatedAmount = delegations.reduce(
@@ -370,23 +378,14 @@ async function scoreDelegationInternal(
   // through its endorsement network. It cannot exceed the trust of the most
   // trusted entity in that network.
   // Analogous to PageRank: a hub's score is bounded by authority scores.
-  if (sponsorScores.length > 0) {
-    const maxSponsorTrust = Math.max(...sponsorScores);
-    // Depth-adjusted cap: trust attenuates with graph distance.
-    // At depth 0 (anchor), cap = maxSponsorTrust (no reduction).
-    // At depth d, cap = maxSponsorTrust - (d × 20).
-    // This prevents relative amplification: a wallet at depth 2 cannot exceed
-    // a wallet at depth 1 with the same sponsor quality.
-    //
-    // Mathematical proof:
-    //   For wallets A (depth d+1) and B (depth d) with same sponsor quality Q:
-    //   Raw_A - Raw_B = -7 + 0.12Q (worst case: A has 5 sponsors, B has 1)
-    //   For Q ≤ 100: Raw_A - Raw_B ≤ 5
-    //   Cap_A = Q - (d+1)×20, Cap_B = Q - d×20
-    //   If Raw_A > Cap_A: trustScore(A) ≤ Cap_A = Q - (d+1)×20
-    //   trustScore(B) ≥ Raw_B ≥ Q - 7 (minimum when count=0)
-    //   For d ≥ 1: Cap_A = Q - 40 < Q - 7 ≤ trustScore(B)
-    //   ∴ trustScore(A) < trustScore(B) for all d ≥ 1
+  //
+  // The cap is applied only when at least one sponsor score is known.
+  // When every sponsor fetch fails (Algorand outage, indexer flakiness),
+  // skip the cap so the score reflects the local graph only and
+  // surface a degraded-data explanation line.
+  const failedSponsorFetches = sponsorScores.length - knownSponsorScores.length;
+  if (knownSponsorScores.length > 0) {
+    const maxSponsorTrust = Math.max(...knownSponsorScores);
     const depthPenalty = depth * 20;
     const adjustedCap = Math.max(0, maxSponsorTrust - depthPenalty);
     trustScore = Math.min(trustScore, adjustedCap);
@@ -419,6 +418,12 @@ async function scoreDelegationInternal(
 
   if (trustedAncestors.length > 0) {
     explanation.push(`${trustedAncestors.length} trusted ancestor${trustedAncestors.length > 1 ? 's' : ''} reachable`);
+  }
+
+  if (failedSponsorFetches > 0) {
+    explanation.push(
+      `${failedSponsorFetches} sponsor fetch${failedSponsorFetches > 1 ? 'es' : ''} failed — score reflects local graph only`,
+    );
   }
 
   if (trustScore >= 70) explanation.push('Strong delegation trust profile');
