@@ -124,22 +124,60 @@ For production deployment, see
 ### 1. Confirm the service is up
 
 ```bash
-curl http://localhost:3000/health
-# {"status":"ok","service":"Agent Passport", ...}
+$ curl http://localhost:3000/health
+{
+  "status": "ok",
+  "service": "Agent Passport",
+  "version": "0.1.0",
+  "network": "testnet",
+  "x402": false,
+  "timestamp": "2026-09-11T03:00:00.000Z"
+}
 ```
 
 ### 2. Make your first call
 
 ```bash
-# Trust score
-curl -s "http://localhost:3000/score?wallet=GD64YIY3TWGDMCNPP553DZPPR6LDUSFQOIJVFDPPXWEG3FVOJCCDBBHU5A" | jq
+$ curl -s "http://localhost:3000/score?wallet=GD64YIY3TWGDMCNPP553DZPPR6LDUSFQOIJVFDPPXWEG3FVOJCCDBBHU5A" | jq
+{
+  "wallet": "GD64YIY3TWGDMCNPP553DZPPR6LDUSFQOIJVFDPPXWEG3FVOJCCDBBHU5A",
+  "trustScore": 78,
+  "riskLevel": "low",
+  "approved": true,
+  "recommendedLimit": 500,
+  "breakdown": {
+    "ageScore": 90, "activityScore": 75,
+    "volumeScore": 70, "velocityScore": 65,
+    "complianceScore": 100
+  },
+  "onChain": {
+    "balanceAlgo": 512.34, "totalTxns": 287,
+    "assetCount": 4, "appCount": 2,
+    "accountAgeDays": 412,
+    "firstSeenRound": 12345678, "lastSeenRound": 54000000
+  },
+  "explanation": [
+    "Wallet is 412 days old — well-aged",
+    "287 transactions — active history",
+    "Sanctions screen: clean"
+  ]
+}
+```
 
+```bash
 # Full passport document
 curl -s "http://localhost:3000/passport?wallet=GD64YIY3TWGDMCNPP553DZPPR6LDUSFQOIJVFDPPXWEG3FVOJCCDBBHU5A" | jq
 
 # Underwriting decision
 curl -s "http://localhost:3000/underwrite?wallet=GD64YIY3TWGDMCNPP553DZPPR6LDUSFQOIJVFDPPXWEG3FVOJCCDBBHU5A" | jq
 ```
+
+The Next.js 16 + shadcn/ui v4 console in `frontend/` renders the
+same data as a verdict-first `/dashboard` (emerald = verified,
+cyan = operational). See
+[frontend/README.md](frontend/README.md) for the local dev
+loop; binary screenshots will land under `docs/img/` once the
+demo is hosted (sister issue with GitHub Pages configuration).
 
 A 5-minute walkthrough is in
 [../README.md](../README.md#installation).
