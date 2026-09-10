@@ -136,8 +136,12 @@ credit must not exceed reserves.
 ## 9. HMAC auth
 
 When `HMAC_SECRET` is set (≥ 32 chars), the service requires
-HMAC-SHA256 signed requests on `/delegate`, `/revoke`,
-`/reputation/record`, and `/reputation/subscribe`.
+HMAC-SHA256 signed requests on every mutating endpoint:
+`/delegate`, `/revoke`, `/reputation/record`, and the webhook
+management endpoints `/reputation/subscribe`,
+`DELETE /reputation/subscribe/:id`, and `/reputation/subscribers`.
+Webhook registration, listing, and removal are credentialed —
+without a signed request the route returns `401`.
 
 **Wire format** (request headers):
 

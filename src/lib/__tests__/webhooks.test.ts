@@ -6,6 +6,7 @@ import {
    fireWebhook,
    clearSubscribers
 } from '../webhooks';
+import { HMAC_BYPASS_PATHS } from '../hmac-auth';
 
 describe('webhooks', () => {
   beforeEach(() => {
@@ -62,4 +63,32 @@ describe('webhooks', () => {
     await fireWebhook('WALLET_NONE', { data: 1 });
     expect(fetchSpy).not.toHaveBeenCalled();
   });
+
+  it('listSubscribers never returns the signing secret', () => {
+    addSubscriber('WALLET_A', 'https://a.example.com/hook');
+    addSubscriber('WALLET_B', 'https://b.example.com/hook');
+    const all = listSubscribers();
+    expect(all).toHaveLength(2);
+    for (const sub of all) {
+      expect(sub).not.toHaveProperty('secret');
+    }
+    const filtered = listSubscribers('WALLET_A');
+    expect(filtered).toHaveLength(1);
+    expect(filtered[0]).not.toHaveProperty('secret');
+  });
+});
+
+describe('HMAC bypass list covers reputation management paths', () => {
+  const PROTECTED = [
+    '/reputation/subscribe',
+    '/reputation/subscribers',
+  ];
+
+  it.each(PROTECTED)(
+    'does NOT match %s (so the global hmacAuth gate enforces auth when HMAC_SECRET is set)',
+    (path) => {
+      const matched = HMAC_BYPASS_PATHS.some(re => re.test(path));
+      expect(matched).toBe(false);
+    },
+  );
 });
