@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from 'crypto';
 import type { NextFunction, Request, Response } from 'express';
 import { recordIdempotencyConflict } from './metrics';
+import { warnIfMultiReplica } from './security';
 
 const KEY_MIN_LENGTH = 8;
 const KEY_MAX_LENGTH = 255;
@@ -21,6 +22,8 @@ export interface IdempotencyRecord {
 const store: Map<string, IdempotencyRecord> = new Map();
 
 let sweepTimer: NodeJS.Timeout | null = null;
+
+warnIfMultiReplica('idempotency');
 
 function sweep(): void {
   const now = Date.now();

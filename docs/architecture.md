@@ -24,9 +24,24 @@ creditworthiness, and exposes two on-chain mutating endpoints
 └──────────────┘     └────────────────────────────────────────┘     └─────────────────────┘
 ```
 
-**Stateless** — every request fetches data from Algorand and caches
-in-memory for 60 s. No database, no Redis, no message queue. Scale
-horizontally by adding pods.
+**Stateless** for read endpoints — every request fetches data from
+Algorand and caches in-memory for 60 s. No database, no Redis, no
+message queue.
+
+For stateful endpoints, **four per-process stores are NOT shared
+across pods** and must be backed by Redis (or equivalent) when
+running with `REPLICA_COUNT > 1`:
+
+- `src/lib/idempotency.ts` — Idempotency-Key cache
+- `src/lib/security.ts` — per-IP rate-limit map
+- `src/lib/system-exposure.ts` — global + per-wallet exposure ledger
+- `src/lib/webhooks.ts` — webhook subscriber registry
+
+A boot-time warning is logged for each store when `REPLICA_COUNT > 1`.
+The on-disk JSON files (`data/*.json`) only protect against restart
+loss, not against pod fan-out — each replica independently enforces
+its cap and serves its subscriber list. Scale reads by adding pods;
+scale state by adding Redis.
 
 ## 2. Request lifecycle
 
@@ -183,8 +198,10 @@ For horizontal scaling:
    to `1` for a single reverse proxy (ALB, nginx), to `2` for
    CloudFront → ALB → app, and to `2` or `3` for k8s ingress →
    sidecar → app depending on the topology.
-2. Back the rate-limit map, idempotency store, and system-exposure
-   ledger with Redis. The `src/lib/json-store.ts` interface is
-   designed to be drop-in replaceable.
+2. Set `REPLICA_COUNT` to the planned replica fan-out. The service
+   will emit a boot-time warning for each per-process store
+   (rate-limit, idempotency, system-exposure, webhook subscribers)
+   so you remember to back them with Redis. The `src/lib/json-store.ts`
+   interface is designed to be drop-in replaceable.
 3. Configure your orchestrator's `readinessProbe` to `/ready` and
    `livenessProbe` to `/health`.

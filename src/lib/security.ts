@@ -40,6 +40,7 @@ function loadRateLimitState(): Map<string, RateLimitEntry> {
   } catch {
     // Start fresh on any error
   }
+  warnIfMultiReplica('rate-limit');
   return clients;
 }
 
@@ -54,10 +55,29 @@ function saveRateLimitState(clients: Map<string, RateLimitEntry>): void {
   );
 }
 
+const REPLICA_COUNT = (() => {
+  const raw = process.env.REPLICA_COUNT;
+  if (raw === undefined || raw === '') return 1;
+  const parsed = parseInt(raw, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
+})();
+const MULTI_REPLICA_LIBS = ['rate-limit', 'idempotency', 'system-exposure', 'webhook'];
+
 export function resetRateLimiter(): void {
   if (globalClients) globalClients.clear();
   globalClients = null;
   cleanupTimer = null;
+}
+
+const warnedLibs = new Set<string>();
+export function warnIfMultiReplica(lib: string): void {
+  if (REPLICA_COUNT <= 1 || warnedLibs.has(lib)) return;
+  warnedLibs.add(lib);
+  if (!MULTI_REPLICA_LIBS.includes(lib)) return;
+  logger.warn(
+    'In-memory store used in multi-replica deployment; configure a shared store for cross-pod consistency',
+    { library: lib, replicaCount: REPLICA_COUNT },
+  );
 }
 
 let cleanupTimer: NodeJS.Timeout | null = null;
