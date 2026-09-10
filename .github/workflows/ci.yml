@@ -26,6 +26,25 @@ jobs:
         run: node scripts/ci/check-md-links.mjs
       - name: Test + coverage (thresholds enforced in vitest.config.ts)
         run: npx vitest run --coverage
+      - name: README test-count drift check
+        env:
+          EXPECTED_TESTS: '1589'
+          EXPECTED_FILES: '44'
+          DRIFT_TOLERANCE: '5'
+        run: |
+          set -euo pipefail
+          count=$(npx tsx scripts/test-count.ts)
+          tests=$(node -e "console.log(JSON.parse(process.argv[1]).tests)" "$count")
+          files=$(node -e "console.log(JSON.parse(process.argv[1]).files)" "$count")
+          expected_tests=$EXPECTED_TESTS
+          expected_files=$EXPECTED_FILES
+          drift=$(node -e "console.log(Math.abs(process.argv[1] - process.argv[2]))" "$tests" "$expected_tests")
+          if [ "$drift" -gt "$DRIFT_TOLERANCE" ]; then
+            echo "::error::README test count drift ($tests actual vs $expected_tests baseline, tolerance ±$DRIFT_TOLERANCE). Update README.md or scripts/test-count.ts."
+            exit 1
+          fi
+          echo "Tests: $tests (baseline $expected_tests, drift $drift)"
+          echo "Files: $files (baseline $expected_files)"
 
   build:
     runs-on: ubuntu-latest
