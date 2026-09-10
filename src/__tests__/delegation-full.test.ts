@@ -800,7 +800,9 @@ describe('scoreDelegationFresh()', () => {
     // The target wallet MAY re-fetch (it was invalidated); the other
     // wallet MUST NOT.
     expect(fetchedWallets).not.toContain(VALID_DELEGATEE);
-    expect(fetchedWallets.filter(w => w === VALID_WALLET).length).toBeGreaterThanOrEqual(1);
+    const targetRefetches = fetchedWallets
+      .filter(w => w === VALID_WALLET).length;
+    expect(targetRefetches).toBeGreaterThanOrEqual(1);
   });
 });
 

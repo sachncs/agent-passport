@@ -97,7 +97,8 @@ export async function delegate(
   ];
   const accounts = [agent];
 
-  const result = await submitApplicationCall(REGISTRY_APP_ID, appArgs, accounts);
+  const result =
+    await submitApplicationCall(REGISTRY_APP_ID, appArgs, accounts);
   if (!result) {
     throw new Error('Failed to submit delegation transaction');
   }
@@ -136,7 +137,8 @@ export async function revoke(
   ];
   const accounts = [agent];
 
-  const result = await submitApplicationCall(REGISTRY_APP_ID, appArgs, accounts);
+  const result =
+    await submitApplicationCall(REGISTRY_APP_ID, appArgs, accounts);
   if (!result) {
     throw new Error('Failed to submit revocation transaction');
   }
