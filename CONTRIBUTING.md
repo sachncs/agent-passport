@@ -123,6 +123,18 @@ or want a fast feedback loop:
 SKIP_E2E=1 npm test
 ```
 
+### Keep README test counts honest
+
+The README advertises the unit-test count at HEAD (currently `44 test
+files / 1589 tests`). A CI drift check in `.github/workflows/ci.yml`
+fails the build if the count drifts by more than ±5 from the baseline.
+To update the baseline after intentionally adding or removing tests:
+
+1. Run `npx tsx scripts/test-count.ts` to read the current count.
+2. Update the `EXPECTED_TESTS` / `EXPECTED_FILES` env vars in the CI
+   job and the inline numbers in `README.md`.
+3. Open a single PR for both the test changes and the baseline bump.
+
 ## Project Layout
 
 ```

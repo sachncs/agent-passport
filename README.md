@@ -305,7 +305,7 @@ agent-passport/
 │   ├── trust-graph.ts      # Trust graph analytics, exposure, what-ifs
 │   ├── counterparty.ts     # Merchant counterparty check
 │   ├── registry.ts         # On-chain delegate + revoke
-│   ├── __tests__/          # 44 unit test files (1 576 tests passing)
+│   ├── __tests__/          # 44 unit test files (1 589 tests passing at HEAD)
 │   └── lib/                # 13 helper modules (cache, idempotency, x402, …)
 ├── sdk/                    # TypeScript + Python SDKs
 │   ├── src/                # TypeScript SDK
@@ -346,7 +346,7 @@ agent-passport/
 npm run dev              # Start with hot reload
 npm run build            # Build TypeScript
 npm run typecheck        # Type checking
-npm test                 # All unit tests (1 576 passing)
+npm test                 # All unit tests (1 589 passing at HEAD — see scripts/test-count.ts)
 npm run test:integration # Live testnet integration suite
 npm run lint             # ESLint
 ```
@@ -433,7 +433,7 @@ chore: bump @x402/core to 2.18.0
 ## Testing
 
 ```bash
-npm test                       # 44 test files (1 576 tests)
+npm test                       # 44 test files (1 589 tests at HEAD — see scripts/test-count.ts)
 npm run test:integration       # Live Algorand testnet integration
 npm run test:coverage          # Unit tests with coverage
 ```
