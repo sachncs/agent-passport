@@ -357,3 +357,26 @@ describe('setRateLimitOverrides', () => {
     expect(overrides['POST /delegate']).toBeDefined();
   });
 });
+
+describe('warnIfMultiReplica', () => {
+  it('does NOT warn when REPLICA_COUNT is 1 (default)', async () => {
+    delete process.env.REPLICA_COUNT;
+    vi.resetModules();
+    const { warnIfMultiReplica: warnFn } = await import('../security');
+    const before = vi.mocked(logger.warn).mock.calls.length;
+    warnFn('rate-limit');
+    const after = vi.mocked(logger.warn).mock.calls.length;
+    expect(after - before).toBe(0);
+  });
+
+  it('warns once per library when REPLICA_COUNT > 1', async () => {
+    process.env.REPLICA_COUNT = '3';
+    vi.resetModules();
+    const { warnIfMultiReplica: warnFn } = await import('../security');
+    const before = vi.mocked(logger.warn).mock.calls.length;
+    warnFn('idempotency');
+    warnFn('idempotency'); // duplicate — should not re-warn
+    const after = vi.mocked(logger.warn).mock.calls.length;
+    expect(after - before).toBe(1);
+  });
+});

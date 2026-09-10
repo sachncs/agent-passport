@@ -19,6 +19,7 @@
 import { join } from 'path';
 import { logger } from './logger';
 import { queueJsonWrite, readJsonFile } from './json-store';
+import { warnIfMultiReplica } from './security';
 
 const MAX_SYSTEM_EXPOSURE = 100_000;
 const MAX_WALLET_SHARE = MAX_SYSTEM_EXPOSURE / 10;
@@ -35,6 +36,7 @@ interface PersistedState {
 }
 
 function loadFromDisk(): void {
+  warnIfMultiReplica('system-exposure');
   const state = readJsonFile<Partial<PersistedState>>(PERSISTENCE_PATH, {});
   if (typeof state.total === 'number' && Number.isFinite(state.total)) {
     totalSystemExposure = Math.max(0, state.total);

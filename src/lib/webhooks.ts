@@ -14,6 +14,7 @@ import { createHmac, randomUUID } from 'crypto';
 import { join } from 'path';
 import { logger } from './logger';
 import { queueJsonWrite, readJsonFile } from './json-store';
+import { warnIfMultiReplica } from './security';
 
 interface WebhookSubscriber {
   id: string;
@@ -34,6 +35,7 @@ function loadFromDisk(): void {
   if (loaded) return;
   loaded = true;
   if (PERSISTENCE_DISABLED) return;
+  warnIfMultiReplica('webhook');
   const parsed = readJsonFile<WebhookSubscriber[]>(PERSISTENCE_PATH, []);
   if (Array.isArray(parsed)) {
     for (const sub of parsed) {
