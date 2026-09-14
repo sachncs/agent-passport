@@ -1,0 +1,28 @@
+---
+interface Props {
+  tone?: "neutral" | "accent" | "risk-low" | "risk-med" | "risk-high";
+  class?: string;
+}
+
+const {
+  tone = "neutral",
+  class: className = "",
+} = Astro.props;
+
+const toneClass =
+  tone === "accent"
+    ? "bg-accent-soft text-accent border-accent/30"
+    : tone === "risk-low"
+      ? "bg-[oklch(0.78_0.16_162_/_0.12)] text-[oklch(0.85_0.16_162)] border-[oklch(0.78_0.16_162_/_0.3)]"
+      : tone === "risk-med"
+        ? "bg-[oklch(0.78_0.14_75_/_0.12)] text-[oklch(0.85_0.14_75)] border-[oklch(0.78_0.14_75_/_0.3)]"
+        : tone === "risk-high"
+          ? "bg-[oklch(0.7_0.18_30_/_0.12)] text-[oklch(0.78_0.18_30)] border-[oklch(0.7_0.18_30_/_0.3)]"
+          : "bg-surface-1 text-ink-2 border-line";
+---
+
+<span
+  class={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-medium tracking-tight ${toneClass} ${className}`}
+>
+  <slot />
+</span>

@@ -1,0 +1,35 @@
+---
+const items = [
+  "Stateless",
+  "60s edge cache",
+  "x402 micropayments",
+  "HMAC auth",
+  "OpenAPI 3.0",
+  "TypeScript SDK",
+  "Python SDK",
+  "Prometheus metrics",
+  "On-chain verified",
+  "SLO-instrumented",
+];
+---
+
+<section
+  class="relative border-y border-line bg-surface-1/30 py-6"
+  aria-label="Capabilities"
+>
+  <div
+    class="relative overflow-hidden"
+    style="mask-image: linear-gradient(90deg, transparent, black 10%, black 90%, transparent);"
+  >
+    <div class="marquee-track flex w-max items-center gap-12 whitespace-nowrap">
+      {
+        [...items, ...items].map((item) => (
+          <span class="inline-flex items-center gap-3 text-[12px] tracking-tight text-ink-3">
+            <span class="h-1 w-1 rounded-full bg-accent" />
+            <span class="font-medium text-ink-2">{item}</span>
+          </span>
+        ))
+      }
+    </div>
+  </div>
+</section>

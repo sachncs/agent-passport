@@ -1,0 +1,52 @@
+---
+import Container from "../layout/Container.astro";
+import Eyebrow from "../ui/Eyebrow.astro";
+import SybilHeatmap from "../mockups/SybilHeatmap.astro";
+---
+
+<section class="relative py-24 md:py-32">
+  <Container>
+    <div class="grid items-center gap-12 lg:grid-cols-[1fr_1.15fr] lg:gap-20">
+      
+        <Eyebrow icon>Twelve signals. One verdict.</Eyebrow>
+        <h2
+          class="mt-4 text-balance text-[36px] font-semibold leading-[1.1] tracking-[-0.025em] text-ink-1 md:text-[44px]"
+        >
+          Sybil detection that <span class="font-serif-italic font-normal">actually fires.</span>
+        </h2>
+        <p
+          class="mt-5 max-w-md text-pretty text-[15px] leading-relaxed text-ink-2"
+        >
+          Clustering coefficient. Timing fingerprint. Funding correlation.
+          Burst signatures. Twelve on-chain and graph-traversal signals,
+          each weighted, each explained, each replayable.
+        </p>
+
+        <div class="mt-8 flex flex-wrap items-center gap-2">
+          <span
+            class="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface-1 px-2.5 py-1 text-[11px] text-ink-2"
+          >
+            <span class="h-1 w-1 rounded-full bg-accent"></span>
+            Real-time
+          </span>
+          <span
+            class="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface-1 px-2.5 py-1 text-[11px] text-ink-2"
+          >
+            <span class="h-1 w-1 rounded-full bg-accent"></span>
+            Thresholded
+          </span>
+          <span
+            class="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface-1 px-2.5 py-1 text-[11px] text-ink-2"
+          >
+            <span class="h-1 w-1 rounded-full bg-accent"></span>
+            Auditable
+          </span>
+        </div>
+      
+
+      
+        <SybilHeatmap />
+      
+    </div>
+  </Container>
+</section>

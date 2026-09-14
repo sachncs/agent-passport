@@ -1,0 +1,38 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Header from "../components/layout/Header.astro";
+import Footer from "../components/layout/Footer.astro";
+import Hero from "../components/sections/Hero.astro";
+import TrustStrip from "../components/sections/TrustStrip.astro";
+import ValueProps from "../components/sections/ValueProps.astro";
+import ProductScore from "../components/sections/ProductScore.astro";
+import ProductDelegation from "../components/sections/ProductDelegation.astro";
+import ProductSybil from "../components/sections/ProductSybil.astro";
+import Features from "../components/sections/Features.astro";
+import HowItWorks from "../components/sections/HowItWorks.astro";
+import CodeSample from "../components/sections/CodeSample.astro";
+import SDKs from "../components/sections/SDKs.astro";
+import Security from "../components/sections/Security.astro";
+import Metrics from "../components/sections/Metrics.astro";
+import CTA from "../components/sections/CTA.astro";
+---
+
+<BaseLayout>
+  <Header />
+  <main id="main">
+    <Hero />
+    <TrustStrip />
+    <ValueProps />
+    <ProductScore />
+    <ProductDelegation />
+    <ProductSybil />
+    <Features />
+    <HowItWorks />
+    <CodeSample />
+    <SDKs />
+    <Security />
+    <Metrics />
+    <CTA />
+  </main>
+  <Footer />
+</BaseLayout>

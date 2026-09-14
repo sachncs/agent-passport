@@ -1,0 +1,15 @@
+---
+interface Props {
+  class?: string;
+  icon?: boolean;
+}
+
+const { class: className = "", icon = false } = Astro.props;
+---
+
+<span
+  class={`inline-flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.18em] text-ink-3 ${className}`}
+>
+  {icon && <span class="h-1 w-1 rounded-full bg-accent"></span>}
+  <slot />
+</span>

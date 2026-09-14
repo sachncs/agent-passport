@@ -1,0 +1,65 @@
+---
+interface Props {
+  variant?: "primary" | "secondary" | "ghost";
+  href?: string;
+  type?: "button" | "submit";
+  size?: "default" | "sm" | "lg";
+  class?: string;
+  external?: boolean;
+  download?: boolean;
+  ariaLabel?: string;
+}
+
+const {
+  variant = "primary",
+  href,
+  type = "button",
+  size = "default",
+  class: className = "",
+  external = false,
+  download = false,
+  ariaLabel,
+} = Astro.props;
+
+const sizeClass =
+  size === "sm"
+    ? "h-9 px-4 text-[13px]"
+    : size === "lg"
+      ? "h-12 px-6 text-[15px]"
+      : "h-10 px-5 text-sm";
+
+const baseClass = `group inline-flex items-center justify-center gap-2 rounded-full font-medium tracking-tight transition-all duration-200 ease-out active:scale-[0.98] whitespace-nowrap ${sizeClass}`;
+
+const variantClass =
+  variant === "primary"
+    ? "bg-ink-1 text-canvas border border-ink-1 hover:bg-ink-2 hover:shadow-[0_8px_30px_-10px_oklch(0.78_0.16_162_/_0.5)]"
+    : variant === "secondary"
+      ? "bg-surface-1 text-ink-1 border border-line hover:border-line-strong hover:bg-surface-2"
+      : "text-ink-2 hover:text-ink-1 hover:bg-surface-1";
+
+const externalAttrs = external
+  ? { target: "_blank", rel: "noopener noreferrer" }
+  : {};
+---
+
+{
+  href ? (
+    <a
+      href={href}
+      class={`${baseClass} ${variantClass} ${className}`}
+      aria-label={ariaLabel}
+      download={download}
+      {...externalAttrs}
+    >
+      <slot />
+    </a>
+  ) : (
+    <button
+      type={type}
+      class={`${baseClass} ${variantClass} ${className}`}
+      aria-label={ariaLabel}
+    >
+      <slot />
+    </button>
+  )
+}

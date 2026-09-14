@@ -1,0 +1,91 @@
+---
+import Container from "../layout/Container.astro";
+import Button from "../ui/Button.astro";
+---
+
+<section class="relative py-32 md:py-40">
+  <Container>
+    
+      <div
+        class="relative overflow-hidden rounded-3xl border border-line bg-gradient-to-b from-surface-2 via-surface-1 to-surface-1 px-8 py-20 text-center md:px-16 md:py-28"
+      >
+        <div
+          class="absolute inset-0 -z-0 opacity-60"
+          style="background: radial-gradient(ellipse 60% 50% at 50% 0%, oklch(0.78 0.16 162 / 0.18), transparent 60%);"
+        >
+        </div>
+        <div class="bg-grain absolute inset-0 -z-0"></div>
+
+        <div class="relative">
+          <span
+            class="inline-flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent-soft px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-accent"
+          >
+            <span class="h-1.5 w-1.5 rounded-full bg-accent"></span>
+            Pay-per-query · x402 USDC
+          </span>
+
+          <h2
+            class="mx-auto mt-6 max-w-3xl text-balance text-[44px] font-semibold leading-[1.05] tracking-[-0.03em] text-ink-1 md:text-[60px]"
+          >
+            One endpoint.<br />
+            <span class="font-serif-italic font-normal">One verdict.</span>
+          </h2>
+
+          <p
+            class="mx-auto mt-6 max-w-xl text-pretty text-base leading-relaxed text-ink-2 md:text-lg"
+          >
+            No subscription tier. No seat licences. Pay only for the queries
+            you make — settled on-chain in USDC, replay-protected, transparent.
+          </p>
+
+          <div class="mt-10 flex flex-wrap items-center justify-center gap-3">
+            <Button
+              href="https://github.com/sachncs/agent-passport/blob/master/docs/README.md"
+              external
+              size="lg"
+              variant="primary"
+            >
+              Start building
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="14"
+                height="14"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M5 12h14M13 5l7 7-7 7"></path>
+              </svg>
+            </Button>
+            <Button
+              href="https://github.com/sachncs/agent-passport"
+              external
+              size="lg"
+              variant="secondary"
+            >
+              View source
+            </Button>
+          </div>
+
+          <div class="mt-12 flex items-center justify-center gap-6 text-[12px] text-ink-3">
+            <span class="inline-flex items-center gap-2">
+              <span class="h-1.5 w-1.5 rounded-full bg-accent"></span>
+              MIT licensed
+            </span>
+            <span class="inline-flex items-center gap-2">
+              <span class="h-1.5 w-1.5 rounded-full bg-accent"></span>
+              Algorand testnet ready
+            </span>
+            <span class="hidden items-center gap-2 sm:inline-flex">
+              <span class="h-1.5 w-1.5 rounded-full bg-accent"></span>
+              v0.1.0 preview
+            </span>
+          </div>
+        </div>
+      </div>
+    
+  </Container>
+</section>

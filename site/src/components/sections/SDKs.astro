@@ -1,0 +1,130 @@
+---
+import Container from "../layout/Container.astro";
+import Eyebrow from "../ui/Eyebrow.astro";
+
+const sdks = [
+  {
+    name: "TypeScript SDK",
+    pkg: "@agent-passport/sdk",
+    version: "v0.1.0",
+    install: "npm install @agent-passport/sdk",
+    code: `import { AgentPassportClient } from "@agent-passport/sdk";
+
+const client = new AgentPassportClient({
+  baseUrl: "https://api.agentpassport.ai",
+});
+
+const score = await client.getScore(
+  "GD64…BHU5A"
+);
+
+if (score.riskLevel === "low") {
+  await client.delegate({
+    sponsor: "GD64…BHU5A",
+    amount: 50_000,
+  });
+}`,
+  },
+  {
+    name: "Python SDK",
+    pkg: "agent-passport-sdk",
+    version: "v0.1.0",
+    install: "pip install agent-passport-sdk",
+    code: `from agent_passport import Client
+
+client = Client(base_url="https://api.agentpassport.ai")
+
+score = client.get_score(
+    "GD64YI…DBBHU5A"
+)
+
+if score.risk_level == "low":
+    client.delegate(
+        sponsor="GD64…BHU5A",
+        amount=50_000,
+    )`,
+  },
+];
+---
+
+<section id="sdks" class="relative py-24 md:py-32">
+  <Container>
+    
+      <Eyebrow icon>First-class SDKs</Eyebrow>
+      <h2
+        class="mt-4 text-balance text-[36px] font-semibold leading-[1.1] tracking-[-0.025em] text-ink-1 md:text-[48px]"
+      >
+        Typed errors. <span class="font-serif-italic font-normal">Idempotency. x402.</span>
+      </h2>
+      <p class="mt-5 max-w-xl text-pretty text-base leading-relaxed text-ink-2 md:text-lg">
+        Both SDKs ship with a typed error model, an idempotency helper for
+        mutating routes, and an x402 payment callback that retries with the
+        on-chain proof attached.
+      </p>
+    
+
+    <div class="mt-12 grid gap-px overflow-hidden rounded-2xl border border-line bg-line lg:grid-cols-2">
+      {
+        sdks.map((s) => (
+          <div class="bg-surface-1 p-6 md:p-8">
+            <div class="flex items-baseline justify-between">
+              <div>
+                <div class="text-[10px] font-medium uppercase tracking-[0.18em] text-ink-3">
+                  {s.name}
+                </div>
+                <code class="mt-1 inline-block font-mono text-[13px] tracking-tight text-ink-1">
+                  {s.pkg}
+                </code>
+              </div>
+              <span class="font-mono text-[10px] text-ink-3">{s.version}</span>
+            </div>
+
+            <div class="mt-5 flex items-center gap-2 rounded-lg border border-line bg-surface-2/60 px-3 py-2">
+              <span class="font-mono text-[11px] text-accent">$</span>
+              <code class="flex-1 font-mono text-[12px] tracking-tight text-ink-1">
+                {s.install}
+              </code>
+              <button
+                type="button"
+                data-copy={s.install}
+                aria-label="Copy install command"
+                class="text-ink-3 transition-colors hover:text-ink-1"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width="13"
+                  height="13"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <rect x="9" y="9" width="13" height="13" rx="2" />
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </svg>
+              </button>
+            </div>
+
+            <pre class="mt-4 overflow-x-auto rounded-lg border border-line bg-[oklch(0.16_0.005_250)] p-4 font-mono text-[11.5px] leading-relaxed text-ink-1"><code>{s.code}</code></pre>
+          </div>
+        ))
+      }
+    </div>
+  </Container>
+</section>
+
+<script>
+  document.querySelectorAll("[data-copy]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const text = btn.getAttribute("data-copy");
+      if (!text) return;
+      navigator.clipboard.writeText(text).then(() => {
+        const original = btn.innerHTML;
+        btn.innerHTML =
+          '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+        setTimeout(() => (btn.innerHTML = original), 1500);
+      });
+    });
+  });
+</script>

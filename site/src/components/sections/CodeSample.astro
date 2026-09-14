@@ -1,0 +1,105 @@
+---
+import Container from "../layout/Container.astro";
+import Eyebrow from "../ui/Eyebrow.astro";
+
+const request = `curl https://api.agentpassport.ai/score \\
+  -H "X-Request-ID: 8c3d…b41" \\
+  -H "Accept: application/json" \\
+  --data-urlencode "wallet=GD64YIY3TWGDMCNPP553DZPPR6LDUSFQOIJVFDPPXWEG3FVOJCCDBBHU5A"`;
+
+const response = `{
+  "trustScore": 87,
+  "riskLevel": "low",
+  "breakdown": {
+    "age": 92,
+    "activity": 78,
+    "volume": 88,
+    "velocity": 81,
+    "compliance": 95
+  },
+  "onChain": {
+    "address": "GD64…BHU5A",
+    "balanceAlgo": 12480.42,
+    "assetsHeld": 14,
+    "firstSeenBlock": 19283746,
+    "lastSeenBlock": 40291847
+  },
+  "explanation": [
+    "Wallet age 412 days · strongly established",
+    "Median 18.2 txns/month · consistent activity",
+    "Balance 12,480 ALGO · diversified holdings",
+    "No sanctions or counterparty flags (24h)"
+  ],
+  "requestId": "8c3d…b41",
+  "cached": false,
+  "latencyMs": 87
+}`;
+---
+
+<section class="relative py-24 md:py-32">
+  <Container>
+    
+      <Eyebrow icon>Wire format</Eyebrow>
+      <h2
+        class="mt-4 text-balance text-[36px] font-semibold leading-[1.1] tracking-[-0.025em] text-ink-1 md:text-[44px]"
+      >
+        Plain HTTP. <span class="font-serif-italic font-normal">Predictable JSON.</span>
+      </h2>
+      <p class="mt-5 max-w-xl text-pretty text-base leading-relaxed text-ink-2 md:text-lg">
+        Every endpoint follows the same conventions — query params in,
+        JSON out, an <code class="font-mono text-[13px] text-accent">X-Request-ID</code> on every response, and an optional 402 payment required body when
+        billing is enabled.
+      </p>
+    
+
+    
+      <div
+        class="overflow-hidden rounded-2xl border border-line bg-surface-1 shadow-card"
+      >
+        <div
+          class="flex items-center justify-between border-b border-line bg-surface-2 px-4 py-3"
+        >
+          <div class="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.16em] text-ink-3">
+            <span class="h-1.5 w-1.5 rounded-full bg-accent"></span>
+            Live example · GET /score
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span class="h-2.5 w-2.5 rounded-full bg-[oklch(0.65_0.18_15)] opacity-50"></span>
+            <span class="h-2.5 w-2.5 rounded-full bg-[oklch(0.78_0.14_75)] opacity-50"></span>
+            <span class="h-2.5 w-2.5 rounded-full bg-accent opacity-60"></span>
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-2">
+          <div class="border-b border-line p-6 md:border-b-0 md:border-r">
+            <div class="mb-4 flex items-center gap-2">
+              <span
+                class="rounded-md border border-line bg-surface-2 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-accent"
+              >
+                Request
+              </span>
+              <span class="font-mono text-[10px] text-ink-3">curl</span>
+            </div>
+            <pre
+              class="overflow-x-auto font-mono text-[12px] leading-relaxed text-ink-1"
+            ><code>{request}</code></pre>
+          </div>
+
+          <div class="p-6">
+            <div class="mb-4 flex items-center gap-2">
+              <span
+                class="rounded-md border border-line bg-surface-2 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-accent"
+              >
+                Response · 200 OK
+              </span>
+              <span class="font-mono text-[10px] text-ink-3">87ms</span>
+            </div>
+            <pre
+              class="overflow-x-auto font-mono text-[12px] leading-relaxed text-ink-1"
+            ><code>{response}</code></pre>
+          </div>
+        </div>
+      </div>
+    
+  </Container>
+</section>

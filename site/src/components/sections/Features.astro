@@ -1,0 +1,105 @@
+---
+import Container from "../layout/Container.astro";
+import Eyebrow from "../ui/Eyebrow.astro";
+import PassportDoc from "../mockups/PassportDoc.astro";
+
+const features = [
+  {
+    title: "Composite Trust Score",
+    body: "Five weighted sub-scores, one explainable 0–100 verdict with risk level.",
+    doc: "/score",
+  },
+  {
+    title: "Delegation Graph",
+    body: "BFS walk with 0.85-per-hop attenuation, cycle detection, quality-weighted sponsor counts.",
+    doc: "/delegation",
+  },
+  {
+    title: "Sybil Detection",
+    body: "Twelve signals including clustering, timing fingerprint, funding correlation, and burst patterns.",
+    doc: "/sybil-check",
+  },
+  {
+    title: "Underwriting",
+    body: "Credit capacity estimation with default propagation and a system exposure cap.",
+    doc: "/underwrite",
+  },
+  {
+    title: "Reputation Log",
+    body: "Append-only on-chain event record. Endorse, revoke, replay any agent's history.",
+    doc: "/reputation",
+  },
+  {
+    title: "Passport Document",
+    body: "Self-contained verification document — claims, signatures, and on-chain proof in one payload.",
+    doc: "/passport",
+  },
+  {
+    title: "Counterparty Check",
+    body: "Bidirectional risk: would they underwrite you? Are you comfortable underwriting them?",
+    doc: "/counterparty-check",
+  },
+  {
+    title: "Discovery / Bazaar",
+    body: "Search the registry. Find agents by reputation tier, capability, or trust anchor proximity.",
+    doc: "/discovery/search",
+  },
+  {
+    title: "Credit Estimate",
+    body: "Standalone credit ceiling with no underwriting commitment. Useful for UI previews.",
+    doc: "/credit-estimate",
+  },
+];
+---
+
+<section id="features" class="relative py-24 md:py-32">
+  <div
+    class="absolute inset-x-0 top-0 -z-10 h-px bg-gradient-to-r from-transparent via-line to-transparent"
+  >
+  </div>
+
+  <Container>
+    <div class="grid gap-12 lg:grid-cols-[1fr_2fr] lg:gap-20">
+      
+        <Eyebrow icon>Capability surface</Eyebrow>
+        <h2
+          class="mt-4 text-balance text-[36px] font-semibold leading-[1.1] tracking-[-0.025em] text-ink-1 md:text-[44px]"
+        >
+          Nine endpoints.<br />
+          <span class="font-serif-italic font-normal">One verdict surface.</span>
+        </h2>
+        <p
+          class="mt-5 max-w-sm text-pretty text-[15px] leading-relaxed text-ink-2"
+        >
+          Every capability is a single HTTP call. Every response is JSON.
+          Every verdict carries the explanation block by default.
+        </p>
+        <div class="mt-8">
+          <PassportDoc class="mx-auto max-w-[260px]" />
+        </div>
+      
+
+      <div class="grid gap-px sm:grid-cols-2">
+        {
+          features.map((f, i) => (
+            
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-medium uppercase tracking-[0.18em] text-ink-3">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <code class="font-mono text-[10px] text-ink-3">{f.doc}</code>
+              </div>
+              <h3 class="mt-5 text-lg font-semibold tracking-tight text-ink-1">
+                {f.title}
+              </h3>
+              <p class="mt-2 text-[13px] leading-relaxed text-ink-2">
+                {f.body}
+              </p>
+              <span class="absolute right-5 top-5 inline-block h-1.5 w-1.5 rounded-full bg-accent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+            
+          ))
+        }
+      </div>
+    </div>
+  </Container>
+</section>

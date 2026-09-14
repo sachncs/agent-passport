@@ -1,0 +1,76 @@
+---
+import Container from "../layout/Container.astro";
+import Eyebrow from "../ui/Eyebrow.astro";
+
+const props = [
+  {
+    title: "Score",
+    outcome: "Composite trust in a single number",
+    body: "Five weighted sub-scores (age, activity, volume, velocity, compliance) collapsed into one explainable 0–100 verdict with risk level.",
+    metric: "0–100",
+    metricLabel: "composite trust",
+  },
+  {
+    title: "Delegate",
+    outcome: "Trust propagates through relationships",
+    body: "Walk the delegation graph from any wallet, attenuating per hop, weighted by sponsor quality. Know if the counterparty is one degree from an anchor.",
+    metric: "×0.85",
+    metricLabel: "per-hop decay",
+  },
+  {
+    title: "Underwrite",
+    outcome: "Approve, deny, or limit in one call",
+    body: "Credit capacity estimation with default propagation and a system-wide exposure cap. No state to manage. Every call is a fresh decision.",
+    metric: "$100k",
+    metricLabel: "system cap",
+  },
+];
+---
+
+<section id="value" class="py-24 md:py-32">
+  <Container>
+    
+      <Eyebrow icon>Three primitives. One surface.</Eyebrow>
+      <h2
+        class="mt-4 text-balance text-[36px] font-semibold leading-[1.1] tracking-[-0.025em] text-ink-1 md:text-[48px]"
+      >
+        Score, delegate, and underwrite — <span class="font-serif-italic font-normal">without a database.</span>
+      </h2>
+      <p class="mt-5 max-w-xl text-pretty text-base leading-relaxed text-ink-2 md:text-lg">
+        Every call hits Algorand directly, caches for 60 seconds, and returns
+        a single self-explanatory verdict. There is no signup, no API key
+        required to try, and no state to keep warm.
+      </p>
+    
+
+    <div class="mt-16 grid gap-px overflow-hidden rounded-2xl border border-line bg-line md:grid-cols-3">
+      {
+        props.map((p, i) => (
+          
+            <div class="flex items-baseline justify-between">
+              <span class="text-[10px] font-medium uppercase tracking-[0.18em] text-ink-3">
+                {String(i + 1).padStart(2, "0")} / {p.title}
+              </span>
+              <span class="font-mono text-[10px] text-ink-3">v2</span>
+            </div>
+            <h3 class="mt-6 text-balance text-2xl font-semibold tracking-tight text-ink-1 md:text-[26px]">
+              {p.outcome}
+            </h3>
+            <p class="mt-4 text-pretty text-[14px] leading-relaxed text-ink-2">
+              {p.body}
+            </p>
+            <div class="mt-10 flex items-end justify-between border-t border-line pt-6">
+              <span class="text-[10px] font-medium uppercase tracking-[0.16em] text-ink-3">
+                {p.metricLabel}
+              </span>
+              <span class="font-serif-italic text-3xl tracking-tight text-ink-1 tabular">
+                {p.metric}
+              </span>
+            </div>
+            <span class="absolute right-6 top-6 inline-block h-1.5 w-1.5 rounded-full bg-accent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+          
+        ))
+      }
+    </div>
+  </Container>
+</section>

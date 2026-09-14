@@ -1,0 +1,73 @@
+---
+import Container from "../layout/Container.astro";
+import Eyebrow from "../ui/Eyebrow.astro";
+
+const steps = [
+  {
+    n: "01",
+    title: "Call the endpoint",
+    body: "POST or GET with a wallet address. Optional Idempotency-Key for mutating routes. x402 payment header if you've enabled metered billing.",
+    code: "GET /score?wallet=GD64…",
+  },
+  {
+    n: "02",
+    title: "Composite the verdict",
+    body: "Five weighted sub-scores, four sybil signals, three delegation fields collapse into a single explainable response. Cached at the edge for 60s.",
+    code: "{ trustScore: 87, riskLevel: 'low' }",
+  },
+  {
+    n: "03",
+    title: "Verify on-chain",
+    body: "Every verdict is reproducible from Algorand state. The Passport endpoint signs the claims and stores the signature on TEAL contracts.",
+    code: "x402 → tx confirmed",
+  },
+];
+---
+
+<section id="how" class="relative py-24 md:py-32">
+  <Container>
+    <div class="max-w-2xl">
+      <Eyebrow icon>How it works</Eyebrow>
+      <h2
+        class="mt-4 text-balance text-[36px] font-semibold leading-[1.1] tracking-[-0.025em] text-ink-1 md:text-[48px]"
+      >
+        Three calls from cold to <span class="font-serif-italic font-normal">verdict.</span>
+      </h2>
+      <p class="mt-5 max-w-xl text-pretty text-base leading-relaxed text-ink-2 md:text-lg">
+        No boot. No warmup. No "contact us for an API key." Paste a wallet into
+        any endpoint and the verdict returns in the same shape every time.
+      </p>
+    </div>
+
+    <div class="mt-16 grid gap-px overflow-hidden rounded-2xl border border-line bg-line lg:grid-cols-3">
+      {
+        steps.map((s, i) => (
+          <div class="relative bg-surface-1 p-8 md:p-10">
+            <div class="flex items-center justify-between">
+              <span class="font-serif-italic text-3xl tracking-tight text-accent tabular">
+                {s.n}
+              </span>
+              <span class="font-mono text-[10px] tracking-tight text-ink-3">
+                STEP {i + 1}
+              </span>
+            </div>
+            <h3 class="mt-8 text-2xl font-semibold tracking-tight text-ink-1">
+              {s.title}
+            </h3>
+            <p class="mt-3 text-[14px] leading-relaxed text-ink-2">
+              {s.body}
+            </p>
+            <div class="mt-8 rounded-lg border border-line bg-surface-2/60 px-4 py-2.5">
+              <code class="font-mono text-[12px] tracking-tight text-ink-1">
+                {s.code}
+              </code>
+            </div>
+            {i < steps.length - 1 && (
+              <div class="absolute -right-2 top-1/2 hidden h-px w-4 -translate-y-1/2 bg-line lg:block" />
+            )}
+          </div>
+        ))
+      }
+    </div>
+  </Container>
+</section>

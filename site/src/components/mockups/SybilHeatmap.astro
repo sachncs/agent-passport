@@ -1,0 +1,108 @@
+---
+interface Signal {
+  label: string;
+  weight: number; // 0-1 contribution to sybil score
+  flagged: boolean;
+}
+
+interface Props {
+  class?: string;
+}
+
+const { class: className = "" } = Astro.props;
+
+// 12 sybil signals per docs/concepts.md
+const signals: Signal[] = [
+  { label: "Clustering coefficient", weight: 0.92, flagged: true },
+  { label: "Timing fingerprint", weight: 0.86, flagged: true },
+  { label: "Amount fingerprint", weight: 0.71, flagged: true },
+  { label: "Funding correlation", weight: 0.94, flagged: true },
+  { label: "Balance similarity", weight: 0.58, flagged: false },
+  { label: "Interaction density", weight: 0.42, flagged: false },
+  { label: "Circular activity", weight: 0.81, flagged: true },
+  { label: "Hop-distance variance", weight: 0.36, flagged: false },
+  { label: "Coinbase overlap", weight: 0.27, flagged: false },
+  { label: "Asset overlap", weight: 0.49, flagged: false },
+  { label: "Timezone heuristic", weight: 0.18, flagged: false },
+  { label: "Burst signature", weight: 0.66, flagged: true },
+];
+
+const flaggedCount = signals.filter((s) => s.flagged).length;
+---
+
+<div class={`relative ${className}`}>
+  <div
+    class="absolute -inset-px rounded-[26px] bg-gradient-to-tr from-[oklch(0.7_0.18_15_/_0.16)] via-transparent to-accent/10 opacity-50 blur-sm"
+  >
+  </div>
+
+  <div
+    class="relative overflow-hidden rounded-[26px] border border-line bg-surface-1 shadow-card"
+  >
+    <div
+      class="flex items-center justify-between border-b border-line bg-surface-2 px-5 py-3"
+    >
+      <div class="flex items-center gap-1.5">
+        <span class="h-2.5 w-2.5 rounded-full bg-[oklch(0.65_0.18_15)] opacity-50"></span>
+        <span class="h-2.5 w-2.5 rounded-full bg-[oklch(0.78_0.14_75)] opacity-50"></span>
+        <span class="h-2.5 w-2.5 rounded-full bg-accent opacity-60"></span>
+      </div>
+      <div class="font-mono text-[10px] tracking-tight text-ink-3">
+        GET /sybil-check?wallet=GD64…
+      </div>
+      <div class="text-[10px] font-medium tracking-tight text-accent">
+        12 signals evaluated
+      </div>
+    </div>
+
+    <div class="p-6">
+      <div class="mb-5 flex items-baseline justify-between">
+        <div>
+          <div
+            class="text-[10px] font-medium uppercase tracking-[0.16em] text-ink-3"
+          >
+            Sybil probability
+          </div>
+          <div class="mt-2 flex items-baseline gap-2">
+            <span
+              class="font-serif-italic text-[64px] leading-none tracking-tight text-[oklch(0.78_0.18_30)] tabular"
+            >
+              0.68
+            </span>
+            <span class="text-base font-light text-ink-3">high</span>
+          </div>
+        </div>
+        <div class="text-right">
+          <div
+            class="text-[10px] font-medium uppercase tracking-[0.16em] text-ink-3"
+          >
+            Flagged
+          </div>
+          <div class="mt-2 font-mono text-2xl tabular text-ink-1">
+            {flaggedCount}<span class="text-ink-3">/12</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3">
+        {
+          signals.map((s) => (
+            <div class="flex items-center gap-2">
+              <span
+                class={`inline-block h-1.5 w-1.5 shrink-0 rounded-full ${
+                  s.flagged
+                    ? "bg-[oklch(0.78_0.18_30)]"
+                    : "bg-[oklch(0.4_0.006_250)]"
+                }`}
+              />
+              <span class="flex-1 truncate text-[11px] text-ink-2">{s.label}</span>
+              <span class="font-mono text-[10px] tabular text-ink-3">
+                {(s.weight * 100).toFixed(0)}
+              </span>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </div>
+</div>

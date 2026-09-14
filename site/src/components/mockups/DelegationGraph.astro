@@ -1,0 +1,151 @@
+---
+interface Props {
+  class?: string;
+}
+
+const { class: className = "" } = Astro.props;
+---
+
+<!--
+  Custom SVG delegation graph.
+  Anchor (root) at left, with depth attenuation through sponsors.
+  Line opacity attenuates with depth — a real production behavior described in docs/concepts.md.
+-->
+<div class={`relative ${className}`}>
+  <div
+    class="absolute -inset-px rounded-[26px] bg-gradient-to-br from-[oklch(0.7_0.18_200_/_0.18)] via-transparent to-accent/15 opacity-50 blur-sm"
+  >
+  </div>
+
+  <div
+    class="relative overflow-hidden rounded-[26px] border border-line bg-surface-1 shadow-card"
+  >
+    <div
+      class="flex items-center justify-between border-b border-line bg-surface-2 px-5 py-3"
+    >
+      <div class="flex items-center gap-1.5">
+        <span class="h-2.5 w-2.5 rounded-full bg-[oklch(0.65_0.18_15)] opacity-50"></span>
+        <span class="h-2.5 w-2.5 rounded-full bg-[oklch(0.78_0.14_75)] opacity-50"></span>
+        <span class="h-2.5 w-2.5 rounded-full bg-accent opacity-60"></span>
+      </div>
+      <div class="font-mono text-[10px] tracking-tight text-ink-3">
+        GET /trust-graph?wallet=GD64…
+      </div>
+      <div class="text-[10px] font-medium tracking-tight text-accent">
+        depth 3 · 11 sponsors
+      </div>
+    </div>
+
+    <div class="relative aspect-[5/3] w-full px-2 py-4 sm:px-6">
+      <svg
+        viewBox="0 0 500 300"
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-full w-full"
+        aria-label="Delegation graph"
+      >
+        <defs>
+          <radialGradient id="anchor-glow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="oklch(0.78 0.16 162)" stop-opacity="0.45"
+            ></stop>
+            <stop offset="100%" stop-color="oklch(0.78 0.16 162)" stop-opacity="0"></stop>
+          </radialGradient>
+          <linearGradient id="edge-deep" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="oklch(0.78 0.16 162)" stop-opacity="0.7"
+            ></stop>
+            <stop offset="100%" stop-color="oklch(0.78 0.16 162)" stop-opacity="0.05"
+            ></stop>
+          </linearGradient>
+        </defs>
+
+        <!-- Edges with depth-attenuated opacity -->
+        <g fill="none" stroke-linecap="round">
+          <!-- Level 1: bright -->
+          <path d="M70,150 C140,150 160,80 230,80" stroke="oklch(0.78 0.16 162)" stroke-width="1.5" stroke-opacity="0.65"></path>
+          <path d="M70,150 C140,150 160,150 230,150" stroke="oklch(0.78 0.16 162)" stroke-width="1.5" stroke-opacity="0.55"></path>
+          <path d="M70,150 C140,150 160,220 230,220" stroke="oklch(0.78 0.16 162)" stroke-width="1.5" stroke-opacity="0.55"></path>
+          <!-- Level 2: medium -->
+          <path d="M230,80 C290,80 320,40 400,40" stroke="url(#edge-deep)" stroke-width="1.2" stroke-opacity="0.45"></path>
+          <path d="M230,80 C290,80 320,110 400,110" stroke="url(#edge-deep)" stroke-width="1.2" stroke-opacity="0.4"></path>
+          <path d="M230,150 C290,150 320,180 400,180" stroke="url(#edge-deep)" stroke-width="1.2" stroke-opacity="0.4"></path>
+          <path d="M230,220 C290,220 320,250 400,250" stroke="url(#edge-deep)" stroke-width="1.2" stroke-opacity="0.45"></path>
+          <!-- Level 3: faint -->
+          <path d="M400,40 C430,40 440,30 460,20" stroke="oklch(0.78 0.16 162)" stroke-width="1" stroke-opacity="0.18"></path>
+          <path d="M400,110 C430,110 440,90 470,80" stroke="oklch(0.78 0.16 162)" stroke-width="1" stroke-opacity="0.15"></path>
+          <path d="M400,180 C430,180 440,200 470,210" stroke="oklch(0.78 0.16 162)" stroke-width="1" stroke-opacity="0.15"></path>
+        </g>
+
+        <!-- Anchor node (left, large) -->
+        <g>
+          <circle cx="70" cy="150" r="36" fill="url(#anchor-glow)"></circle>
+          <circle cx="70" cy="150" r="22" fill="oklch(0.21 0.006 250)" stroke="oklch(0.78 0.16 162)" stroke-width="2"></circle>
+          <circle cx="70" cy="150" r="14" fill="oklch(0.78 0.16 162)" fill-opacity="0.18"></circle>
+          <text x="70" y="155" text-anchor="middle" font-family="ui-monospace, monospace" font-size="9" fill="oklch(0.85 0.16 162)" letter-spacing="0.5">YOU</text>
+        </g>
+
+        <!-- Level 1 sponsors -->
+        <g>
+          <circle cx="230" cy="80" r="14" fill="oklch(0.245 0.007 250)" stroke="oklch(0.78 0.16 162)" stroke-width="1.5" stroke-opacity="0.7"></circle>
+          <circle cx="230" cy="150" r="14" fill="oklch(0.245 0.007 250)" stroke="oklch(0.78 0.16 162)" stroke-width="1.5" stroke-opacity="0.7"></circle>
+          <circle cx="230" cy="220" r="14" fill="oklch(0.245 0.007 250)" stroke="oklch(0.78 0.16 162)" stroke-width="1.5" stroke-opacity="0.7"></circle>
+        </g>
+
+        <!-- Level 2 sponsors -->
+        <g>
+          <circle cx="400" cy="40" r="9" fill="oklch(0.245 0.007 250)" stroke="oklch(0.78 0.16 162)" stroke-width="1" stroke-opacity="0.5"></circle>
+          <circle cx="400" cy="110" r="9" fill="oklch(0.245 0.007 250)" stroke="oklch(0.78 0.16 162)" stroke-width="1" stroke-opacity="0.5"></circle>
+          <circle cx="400" cy="180" r="9" fill="oklch(0.245 0.007 250)" stroke="oklch(0.78 0.16 162)" stroke-width="1" stroke-opacity="0.5"></circle>
+          <circle cx="400" cy="250" r="9" fill="oklch(0.245 0.007 250)" stroke="oklch(0.78 0.16 162)" stroke-width="1" stroke-opacity="0.5"></circle>
+        </g>
+
+        <!-- Level 3: leaf nodes -->
+        <g fill="oklch(0.78 0.16 162)" fill-opacity="0.4">
+          <circle cx="460" cy="20" r="3"></circle>
+          <circle cx="470" cy="80" r="3"></circle>
+          <circle cx="470" cy="210" r="3"></circle>
+        </g>
+
+        <!-- Labels -->
+        <g font-family="ui-sans-serif, system-ui, sans-serif" font-size="9" fill="oklch(0.6 0.006 250)" letter-spacing="0.4">
+          <text x="70" y="210" text-anchor="middle">Anchor</text>
+          <text x="230" y="110" text-anchor="middle">depth 1</text>
+          <text x="400" y="60" text-anchor="middle">depth 2</text>
+          <text x="455" y="35" text-anchor="end">depth 3</text>
+        </g>
+
+        <!-- Depth legend -->
+        <g transform="translate(20, 270)">
+          <text x="0" y="0" font-family="ui-sans-serif, system-ui, sans-serif" font-size="9" fill="oklch(0.6 0.006 250)" letter-spacing="0.6">
+            Depth attenuation × 0.85 per level
+          </text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="grid grid-cols-3 border-t border-line">
+      <div class="border-r border-line px-5 py-4">
+        <div class="text-[10px] font-medium uppercase tracking-[0.16em] text-ink-3">
+          Trust score
+        </div>
+        <div class="mt-1 font-serif-italic text-2xl tracking-tight text-ink-1 tabular">
+          74
+        </div>
+      </div>
+      <div class="border-r border-line px-5 py-4">
+        <div class="text-[10px] font-medium uppercase tracking-[0.16em] text-ink-3">
+          Sponsors
+        </div>
+        <div class="mt-1 font-serif-italic text-2xl tracking-tight text-ink-1 tabular">
+          11
+        </div>
+      </div>
+      <div class="px-5 py-4">
+        <div class="text-[10px] font-medium uppercase tracking-[0.16em] text-ink-3">
+          Max depth
+        </div>
+        <div class="mt-1 font-serif-italic text-2xl tracking-tight text-ink-1 tabular">
+          3
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,138 @@
+/*
+ * Agent Passport — Design Tokens
+ * Apple-grade restraint: restrained surfaces, single emerald accent.
+ * Light + dark themes. Emerald is reserved for verdicts, CTAs, and verified states.
+ *
+ * Tokens are split into two layers:
+ *   1. `@theme inline` — the source of truth for every `--color-*` token
+ *   2. `:root` light/dark variables — semantic aliases (`--canvas`, `--ink-1`)
+ *      that components reference so we can swap palettes without touching
+ *      Tailwind utilities.
+ */
+
+@theme {
+  /* These are the BASE tokens. Tailwind utilities like `bg-surface-1` and
+     `text-ink-1` resolve to `var(--color-surface-1)` and `var(--color-ink-1)`,
+     which are reassigned in :root and :root.light below for theme switching.
+
+     NOTE: We intentionally avoid `@theme inline` here — `@theme inline` bakes
+     values into utilities at build time, which prevents runtime overrides. */
+
+  --color-canvas: oklch(0.16 0.005 250);
+  --color-surface-1: oklch(0.2 0.006 250);
+  --color-surface-2: oklch(0.235 0.007 250);
+  --color-surface-3: oklch(0.275 0.008 250);
+
+  --color-ink-1: oklch(0.97 0.003 250);
+  --color-ink-2: oklch(0.78 0.005 250);
+  --color-ink-3: oklch(0.58 0.006 250);
+
+  --color-border-1: oklch(1 0 0 / 0.08);
+  --color-border-2: oklch(1 0 0 / 0.12);
+
+  --color-accent: oklch(0.78 0.16 162);
+  --color-accent-soft: oklch(0.78 0.16 162 / 0.14);
+  --color-accent-deep: oklch(0.66 0.16 162);
+  --color-accent-fg: oklch(0.16 0.005 250);
+
+  --color-glow: oklch(0.78 0.16 162 / 0.35);
+  --color-glow-soft: oklch(0.78 0.16 162 / 0.08);
+
+  --color-risk-low: oklch(0.78 0.16 162);
+  --color-risk-med: oklch(0.78 0.14 75);
+  --color-risk-high: oklch(0.7 0.18 30);
+  --color-risk-crit: oklch(0.62 0.22 18);
+
+  --color-line: var(--color-border-1);
+  --color-line-strong: var(--color-border-2);
+
+  --shadow-card: 0 1px 0 oklch(1 0 0 / 0.05) inset,
+    0 30px 80px -30px oklch(0 0 0 / 0.5);
+  --shadow-glow: 0 0 0 1px oklch(0.78 0.16 162 / 0.2),
+    0 20px 60px -10px oklch(0.78 0.16 162 / 0.18);
+
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-2xl: 36px;
+
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, "SF Mono", "Menlo",
+    "Cascadia Code", monospace;
+  --font-serif: "Instrument Serif", ui-serif, Georgia, "Times New Roman", serif;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* Theme overrides — applied at runtime based on the .light class on <html>
+   (or by prefers-color-scheme media query). */
+:root {
+  color-scheme: dark;
+}
+
+:root.light {
+  color-scheme: light;
+
+  --color-canvas: oklch(0.985 0.003 90);
+  --color-surface-1: oklch(0.97 0.004 90);
+  --color-surface-2: oklch(0.95 0.005 90);
+  --color-surface-3: oklch(0.93 0.006 90);
+
+  --color-ink-1: oklch(0.16 0.006 250);
+  --color-ink-2: oklch(0.34 0.008 250);
+  --color-ink-3: oklch(0.5 0.01 250);
+
+  --color-border-1: oklch(0 0 0 / 0.06);
+  --color-border-2: oklch(0 0 0 / 0.1);
+
+  --color-accent-fg: oklch(0.985 0.003 90);
+
+  --shadow-card: 0 1px 0 oklch(1 0 0 / 0.6) inset,
+    0 20px 60px -25px oklch(0 0 0 / 0.12);
+
+  --color-line: var(--color-border-1);
+  --color-line-strong: var(--color-border-2);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not(.dark):not(.force-dark) {
+    color-scheme: light;
+
+    --color-canvas: oklch(0.985 0.003 90);
+    --color-surface-1: oklch(0.97 0.004 90);
+    --color-surface-2: oklch(0.95 0.005 90);
+    --color-surface-3: oklch(0.93 0.006 90);
+
+    --color-ink-1: oklch(0.16 0.006 250);
+    --color-ink-2: oklch(0.34 0.008 250);
+    --color-ink-3: oklch(0.5 0.01 250);
+
+    --color-border-1: oklch(0 0 0 / 0.06);
+    --color-border-2: oklch(0 0 0 / 0.1);
+
+    --color-accent-fg: oklch(0.985 0.003 90);
+
+    --shadow-card: 0 1px 0 oklch(1 0 0 / 0.6) inset,
+      0 20px 60px -25px oklch(0 0 0 / 0.12);
+
+    --color-line: var(--color-border-1);
+    --color-line-strong: var(--color-border-2);
+  }
+}
+
+/* Semantic aliases for components that reference these directly. */
+:root {
+  --canvas: var(--color-canvas);
+  --surface-1: var(--color-surface-1);
+  --surface-2: var(--color-surface-2);
+  --surface-3: var(--color-surface-3);
+  --ink-1: var(--color-ink-1);
+  --ink-2: var(--color-ink-2);
+  --ink-3: var(--color-ink-3);
+  --border-1: var(--color-border-1);
+  --border-2: var(--color-border-2);
+}

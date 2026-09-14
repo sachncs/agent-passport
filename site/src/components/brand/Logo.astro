@@ -1,0 +1,46 @@
+---
+import Mark from "./Mark.astro";
+
+interface Props {
+  size?: number;
+  showTagline?: boolean;
+  href?: string;
+  class?: string;
+}
+
+const {
+  size = 28,
+  showTagline = false,
+  href,
+  class: className = "",
+} = Astro.props;
+
+const wordmarkSize = Math.round(size * 0.5);
+const Tag = href ? "a" : "span";
+---
+
+<Tag
+  href={href}
+  class={`inline-flex items-center gap-2.5 font-semibold tracking-tight text-ink-1 transition-opacity hover:opacity-80 ${className}`}
+  aria-label="Agent Passport"
+>
+  <Mark size={size} />
+  <span class="flex flex-col leading-none">
+    <span
+      class="font-semibold tracking-[-0.02em]"
+      style={`font-size: ${wordmarkSize}px;`}
+    >
+      Agent Passport
+    </span>
+    {
+      showTagline && (
+        <span
+          class="mt-1 font-normal tracking-tight text-ink-3"
+          style={`font-size: ${Math.round(wordmarkSize * 0.42)}px;`}
+        >
+          Trust infrastructure for AI agents
+        </span>
+      )
+    }
+  </span>
+</Tag>
