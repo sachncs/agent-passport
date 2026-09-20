@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-const VALID_SPONSOR = 'A'.repeat(58);
-const VALID_AGENT = 'B'.repeat(58);
+const VALID_SPONSOR = 'GD64YIY3TWGDMCNPP553DZPPR6LDUSFQOIJVFDPPXWEG3FVOJCCDBBHU5A';
+const VALID_AGENT = '7JTDBZA5REDMWGFMYNJRGV24EVRCVZOQ5HKOSSH6KYI6WE6GOAKVAWFC7Y';
 
 vi.mock('../lib/constants', () => ({
   isValidWallet: (w: string) => typeof w === 'string' && w.length === 58 && /^[A-Z2-7]+$/.test(w),
@@ -226,7 +226,7 @@ describe('delegate()', () => {
         mockSubmitApplicationCall.mock.calls[0];
       expect(typeof appIndex).toBe('number');
       expect(appArgs).toHaveLength(2);
-      expect(accounts).toEqual([VALID_AGENT]);
+      expect(accounts).toEqual([VALID_AGENT, VALID_SPONSOR]);
     });
   });
 });
@@ -355,7 +355,7 @@ describe('revoke()', () => {
       expect(appArgs).toHaveLength(1);
       const decoded = new TextDecoder().decode(appArgs[0]);
       expect(decoded).toBe('revoke_delegation');
-      expect(accounts).toEqual([VALID_AGENT]);
+      expect(accounts).toEqual([VALID_AGENT, VALID_SPONSOR]);
     });
   });
 });

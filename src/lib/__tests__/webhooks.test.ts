@@ -1,4 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+vi.mock('dns/promises', () => ({
+  lookup: vi.fn().mockResolvedValue([{ address: '93.184.216.34' }]),
+}));
 import {
   addSubscriber,
    removeSubscriber,

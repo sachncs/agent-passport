@@ -5,6 +5,20 @@ vi.mock('../lib/logger', () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
 
+vi.mock('../config', () => ({
+  config: {
+    algoNetwork: 'testnet',
+    corsAllowedOrigins: '*',
+    gitCommit: 'test',
+    hmacSecret: '',
+    hmacSkewMs: 60_000,
+    registryAppId: 12345,
+    reputationAppId: 12345,
+    requestTimeoutMs: 10_000,
+    x402Enabled: false,
+  },
+}));
+
 vi.mock('../lib/security', () => {
   const passthrough = (
     _req: unknown,

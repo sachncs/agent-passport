@@ -738,8 +738,7 @@ describe('recordEvent', () => {
     (submitApplicationCall as ReturnType<typeof vi.fn>).mockResolvedValue(null);
 
     const result = await recordEvent(VALID_W, 'payment', 100);
-    expect(result).not.toBeNull();
-    expect(result!.txId).toBeUndefined();
+    expect(result).toBeNull();
     vi.unstubAllGlobals();
   });
 

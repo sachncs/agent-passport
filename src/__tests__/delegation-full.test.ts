@@ -372,7 +372,9 @@ describe('fetchDelegationsFromIndexer()', () => {
     await scoreDelegation(VALID_WALLET);
 
     expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/v2/accounts/'),
+      expect.objectContaining({
+        href: expect.stringContaining('/v2/transactions'),
+      }),
       expect.objectContaining({ signal: expect.anything() }),
     );
   });

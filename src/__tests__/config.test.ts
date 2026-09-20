@@ -36,16 +36,14 @@ describe('config', () => {
     expect(config.port).toBe(8080);
   });
 
-  it('falls back to default for non-numeric PORT', async () => {
+  it('rejects non-numeric PORT', async () => {
     process.env.PORT = 'not-a-number';
-    const { config } = await import('../config');
-    expect(config.port).toBe(3000);
+    await expect(import('../config')).rejects.toThrow('PORT must be an integer');
   });
 
-  it('falls back to default for Infinity PORT', async () => {
+  it('rejects Infinity PORT', async () => {
     process.env.PORT = 'Infinity';
-    const { config } = await import('../config');
-    expect(config.port).toBe(3000);
+    await expect(import('../config')).rejects.toThrow('PORT must be an integer');
   });
 
   it('parses REGISTRY_APP_ID', async () => {
@@ -54,10 +52,9 @@ describe('config', () => {
     expect(config.registryAppId).toBe(12345);
   });
 
-  it('falls back to 0 for non-numeric REGISTRY_APP_ID', async () => {
+  it('rejects non-numeric REGISTRY_APP_ID', async () => {
     process.env.REGISTRY_APP_ID = 'abc';
-    const { config } = await import('../config');
-    expect(config.registryAppId).toBe(0);
+    await expect(import('../config')).rejects.toThrow('REGISTRY_APP_ID must be an integer');
   });
 
   it('parses REPUTATION_APP_ID', async () => {
