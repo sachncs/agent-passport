@@ -34,6 +34,9 @@ function validateConfig() {
       errors.push('HMAC_SECRET must be at least 32 characters (256 bits). Generate with: openssl rand -hex 32');
     }
   }
+  if (process.env.NODE_ENV === 'production' && !process.env.HMAC_SECRET) {
+    errors.push('HMAC_SECRET is required when NODE_ENV=production');
+  }
 
   if (process.env.REQUEST_TIMEOUT_MS !== undefined) {
     const ms = Number(process.env.REQUEST_TIMEOUT_MS);

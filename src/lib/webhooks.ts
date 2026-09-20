@@ -11,6 +11,8 @@
  */
 
 import { createHmac, randomUUID } from 'crypto';
+import { isIP } from 'net';
+import { lookup } from 'dns/promises';
 import { join } from 'path';
 import { logger } from './logger';
 import { queueJsonWrite, readJsonFile } from './json-store';
@@ -57,6 +59,25 @@ function persistToDisk(): void {
 
 function isPrivateOrLoopback(hostname: string): boolean {
   const lower = hostname.toLowerCase();
+  if (isIP(lower) === 6) {
+    return lower === '::1'
+      || lower === '::'
+      || lower.startsWith('fc')
+      || lower.startsWith('fd')
+      || lower.startsWith('fe8')
+      || lower.startsWith('fe9')
+      || lower.startsWith('fea')
+      || lower.startsWith('feb');
+  }
+  if (isIP(lower) === 4) {
+    const octets = lower.split('.').map(Number);
+    return octets[0] === 0
+      || octets[0] === 10
+      || octets[0] === 127
+      || (octets[0] === 169 && octets[1] === 254)
+      || (octets[0] === 172 && octets[1] >= 16 && octets[1] <= 31)
+      || (octets[0] === 192 && octets[1] === 168);
+  }
   if (lower === 'localhost' || lower === '0.0.0.0' || lower === '::1' || lower === '[::1]') return true;
   if (lower.startsWith('127.') || lower.startsWith('10.') || lower.startsWith('192.168.')) return true;
   if (lower.startsWith('169.254.')) return true; // link-local / AWS metadata
@@ -66,6 +87,18 @@ function isPrivateOrLoopback(hostname: string): boolean {
   }
   if (lower.endsWith('.local') || lower.endsWith('.internal')) return true;
   return false;
+}
+
+async function assertPublicWebhookHost(url: string): Promise<void> {
+  const hostname = new URL(url).hostname;
+  if (isPrivateOrLoopback(hostname)) {
+    throw new Error('Private/loopback/link-local webhook host is not allowed');
+  }
+  if (isIP(hostname)) return;
+  const addresses = await lookup(hostname, { all: true, verbatim: true });
+  if (addresses.length === 0 || addresses.some(a => isPrivateOrLoopback(a.address))) {
+    throw new Error('Webhook hostname resolves to a private or loopback address');
+  }
 }
 
 export interface UrlValidationResult {
@@ -181,6 +214,7 @@ export async function fireWebhook(
   const body = JSON.stringify(payload);
   await Promise.allSettled(subs.map(async (sub) => {
     try {
+      await assertPublicWebhookHost(sub.url);
       const res = await fetch(sub.url, {
         method: 'POST',
         headers: {

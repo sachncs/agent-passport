@@ -34,6 +34,12 @@ interface FacilitatorVerifyResult {
   invalidMessage?: string;
 }
 
+declare module 'express-serve-static-core' {
+  interface Request {
+    x402Verified?: boolean;
+  }
+}
+
 async function callFacilitator(
   baseUrl: string,
   path: string,
@@ -115,6 +121,7 @@ export function x402Middleware(
       });
       return;
     }
+    req.x402Verified = true;
     next();
   }).catch(e => {
     logger.error('x402 verification threw', { error: String(e) });
@@ -163,6 +170,9 @@ export function settlementVerificationMiddleware(
   next: NextFunction,
 ): void {
   if (!config.x402Enabled) {
+    return next();
+  }
+  if (req.x402Verified) {
     return next();
   }
   const paymentHeader = req.headers['x-payment'];

@@ -804,3 +804,21 @@ app.get('/health/deep', async (_req, res) => {
 if (process.env.NODE_ENV !== 'test') {
   startMetricsCollectors();
 }
+
+// Keep the public API contract JSON-shaped even for unknown routes and
+// framework/parser failures.
+app.use((_req, res) => {
+  res.status(404).json({ error: 'Not found' });
+});
+
+app.use((error: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  if (res.headersSent) return;
+  const message = error instanceof Error ? error.message : String(error);
+  const status = typeof error === 'object' && error !== null
+    && 'status' in error && typeof error.status === 'number'
+    ? error.status : 500;
+  logger.error('Unhandled request error', { error: message, status });
+  res.status(status).json({
+    error: status === 500 ? 'Internal server error' : message,
+  });
+});
