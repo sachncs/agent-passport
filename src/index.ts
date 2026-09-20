@@ -1,4 +1,3 @@
-import * as dotenv from 'dotenv';
 import type express from 'express';
 import { config } from './config';
 import { app } from './app';
@@ -9,8 +8,6 @@ import { stopIdempotencySweeper } from './lib/idempotency';
 import { stopDedupCleanup } from './reputation';
 import { stopRateLimiter } from './lib/security';
 import { isHmacAuthEnabled } from './lib/hmac-auth';
-
-dotenv.config();
 
 const PORT = config.port;
 

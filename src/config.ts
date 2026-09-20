@@ -1,7 +1,10 @@
+import 'dotenv/config';
+
 function safeParseInt(value: string | undefined, fallback: number): number {
   if (value === undefined) return fallback;
-  const parsed = parseInt(value, 10);
-  return Number.isFinite(parsed) ? parsed : fallback;
+  if (!/^[+-]?\d+$/.test(value.trim())) return fallback;
+  const parsed = Number(value);
+  return Number.isSafeInteger(parsed) ? parsed : fallback;
 }
 
 function validateConfig() {
@@ -33,10 +36,15 @@ function validateConfig() {
   }
 
   if (process.env.REQUEST_TIMEOUT_MS !== undefined) {
-    const ms = parseInt(process.env.REQUEST_TIMEOUT_MS, 10);
-    if (!Number.isFinite(ms) || ms <= 0) {
+    const ms = Number(process.env.REQUEST_TIMEOUT_MS);
+    if (!Number.isSafeInteger(ms) || ms <= 0) {
       errors.push('REQUEST_TIMEOUT_MS must be a positive integer');
     }
+  }
+
+  if (process.env.ALGO_NETWORK !== undefined
+    && !['testnet', 'mainnet'].includes(process.env.ALGO_NETWORK)) {
+    errors.push('ALGO_NETWORK must be either testnet or mainnet');
   }
 
   // Validate X402_NETWORK against an explicit allow-list. The default is
@@ -51,6 +59,13 @@ function validateConfig() {
       errors.push(
         `X402_NETWORK must be one of: ${Array.from(ALLOWED_X402_NETWORKS).join(', ')}`,
       );
+    }
+  }
+
+  if (process.env.HMAC_TIMESTAMP_SKEW_MS !== undefined) {
+    const skew = Number(process.env.HMAC_TIMESTAMP_SKEW_MS);
+    if (!Number.isSafeInteger(skew) || skew <= 0) {
+      errors.push('HMAC_TIMESTAMP_SKEW_MS must be a positive integer');
     }
   }
 
