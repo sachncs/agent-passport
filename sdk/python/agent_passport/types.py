@@ -31,6 +31,9 @@ class PaymentProof:
 @dataclass
 class AgentPassportConfig:
     base_url: str
+    hmac_secret: Optional[str] = None
+    hmac_key_id: str = "sdk"
+    # Deprecated alias for hmac_secret.
     api_key: Optional[str] = None
     timeout: int = 30
     retries: int = 3

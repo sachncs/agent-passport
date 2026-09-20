@@ -7,8 +7,11 @@ with the `responses` mocking library used in tests.
 from __future__ import annotations
 
 import json
+import hashlib
+import hmac
 import re
 import time
+import uuid
 from typing import Any, Callable, Dict, Optional
 
 import requests
@@ -90,7 +93,8 @@ class AgentPassportClient:
 
     Args:
         base_url: Base URL of the Agent Passport API.
-        api_key: Optional API key for authentication.
+        hmac_secret: HMAC secret for state-changing authentication. The
+            deprecated api_key argument is accepted as an alias.
         timeout: Request timeout in seconds.
         retries: Number of retry attempts for failed requests.
         retry_delay: Base delay between retries in seconds.
@@ -106,6 +110,8 @@ class AgentPassportClient:
         self,
         base_url: str,
         api_key: Optional[str] = None,
+        hmac_secret: Optional[str] = None,
+        hmac_key_id: str = "sdk",
         timeout: int = 30,
         retries: int = 3,
         retry_delay: float = 1.0,
@@ -117,6 +123,8 @@ class AgentPassportClient:
             raise ValueError("base_url is required")
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key
+        self.hmac_secret = hmac_secret or api_key
+        self.hmac_key_id = hmac_key_id
         self.timeout = timeout
         self.retries = retries
         self.retry_delay = retry_delay
@@ -141,6 +149,9 @@ class AgentPassportClient:
 
     def _build_headers(
         self,
+        method: str = "GET",
+        path: str = "/",
+        body: Any = None,
         idempotency_key: Optional[str] = None,
         x_payment: Optional[str] = None,
     ) -> Dict[str, str]:
@@ -149,8 +160,20 @@ class AgentPassportClient:
             "User-Agent": USER_AGENT,
             **self.default_headers,
         }
-        if self.api_key:
-            headers["Authorization"] = f"Bearer {self.api_key}"
+        if self.hmac_secret:
+            timestamp = str(int(time.time() * 1000))
+            nonce = uuid.uuid4().hex
+            body_json = "" if body is None else _canonical_json(body)
+            body_hash = hmac.new(b"", body_json.encode(), hashlib.sha256).hexdigest()
+            canonical = f"{method}\n{path.split('?')[0]}\n{body_hash}\n{timestamp}\n{nonce}"
+            headers.update({
+                "X-Auth-Timestamp": timestamp,
+                "X-Auth-Nonce": nonce,
+                "X-Auth-KeyId": self.hmac_key_id,
+                "X-Auth-Signature": hmac.new(
+                    self.hmac_secret.encode(), canonical.encode(), hashlib.sha256,
+                ).hexdigest(),
+            })
         if idempotency_key:
             headers["Idempotency-Key"] = idempotency_key
         if x_payment:
@@ -167,7 +190,13 @@ class AgentPassportClient:
         attempts_left: Optional[int] = None,
     ) -> Dict[str, Any]:
         url = f"{self.base_url}{path}"
-        headers = self._build_headers(idempotency_key=idempotency_key, x_payment=x_payment)
+        headers = self._build_headers(
+            method,
+            path,
+            body,
+            idempotency_key=idempotency_key,
+            x_payment=x_payment,
+        )
         json_body = body if method != "GET" else None
 
         if attempts_left is None:
@@ -239,6 +268,10 @@ class AgentPassportClient:
                 time.sleep(max(0.0, delay))
 
         raise last_error or AgentPassportError("Request failed after retries", 500)
+
+
+def _canonical_json(value: Any) -> str:
+    return json.dumps(value, sort_keys=True, separators=(",", ":"))
 
     # ── Health ────────────────────────────────────────────────────
 

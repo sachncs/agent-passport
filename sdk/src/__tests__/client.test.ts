@@ -135,15 +135,18 @@ describe('AgentPassportClient', () => {
   });
 
   describe('headers', () => {
-    it('sets Authorization header when apiKey is configured', async () => {
-      const c = new AgentPassportClient({ baseUrl: 'http://x', apiKey: 'secret-key' });
+    it('sets HMAC headers when a secret is configured', async () => {
+      const c = new AgentPassportClient({ baseUrl: 'http://x', hmacSecret: 'secret-key-that-is-long-enough-32' });
       let capturedHeaders: any;
       globalThis.fetch = vi.fn(async (_url, init: any) => {
         capturedHeaders = init.headers;
         return mockFetchResponse(200, { status: 'ok' });
       }) as any;
       await c.health();
-      expect(capturedHeaders['Authorization']).toBe('Bearer secret-key');
+      expect(capturedHeaders['X-Auth-Timestamp']).toMatch(/^\d+$/);
+      expect(capturedHeaders['X-Auth-Nonce']).toBeTruthy();
+      expect(capturedHeaders['X-Auth-KeyId']).toBe('sdk');
+      expect(capturedHeaders['X-Auth-Signature']).toMatch(/^[a-f0-9]{64}$/);
     });
 
     it('sends Idempotency-Key header on endorse', async () => {

@@ -149,8 +149,12 @@ def test_get_score_500_maps_to_server_error(client: AgentPassportClient) -> None
 
 
 @responses.activate
-def test_authorization_header_set_when_api_key_configured() -> None:
-    client = AgentPassportClient(base_url=BASE_URL, api_key="secret", retries=0)
+def test_hmac_headers_set_when_secret_configured() -> None:
+    client = AgentPassportClient(
+        base_url=BASE_URL,
+        hmac_secret="secret-key-that-is-long-enough-32",
+        retries=0,
+    )
     responses.add(
         responses.GET,
         f"{BASE_URL}/health",
@@ -159,7 +163,10 @@ def test_authorization_header_set_when_api_key_configured() -> None:
     )
     client.health()
     sent = responses.calls[0].request
-    assert sent.headers.get("Authorization") == "Bearer secret"
+    assert sent.headers.get("X-Auth-Timestamp", "").isdigit()
+    assert sent.headers.get("X-Auth-Nonce")
+    assert sent.headers.get("X-Auth-KeyId") == "sdk"
+    assert len(sent.headers.get("X-Auth-Signature", "")) == 64
 
 
 @responses.activate

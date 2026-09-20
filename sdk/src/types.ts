@@ -6,6 +6,11 @@ import type { PaymentRequirements, PaymentProof } from './errors';
 
 export interface AgentPassportConfig {
   baseUrl: string;
+  /** HMAC secret matching the service's HMAC_SECRET. */
+  hmacSecret?: string;
+  /** Audit identifier included in X-Auth-KeyId. */
+  hmacKeyId?: string;
+  /** @deprecated Use hmacSecret. */
   apiKey?: string;
   timeout?: number;
   retries?: number;

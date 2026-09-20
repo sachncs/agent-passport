@@ -9,7 +9,7 @@
  *
  * const client = new AgentPassportClient({
  *   baseUrl: 'https://passport.example.com',
- *   apiKey: 'your-api-key',
+ *   hmacSecret: 'your-32-byte-secret',
  * });
  *
  * const score = await client.getScore('WALLET_ADDRESS_58_CHARS...');
@@ -30,6 +30,7 @@ import {
   ConnectionError,
 } from './errors';
 import type { PaymentRequirements, PaymentProof } from './errors';
+import { createHmac, randomUUID } from 'node:crypto';
 import {
   AgentPassportConfig,
   TrustScoreResponse,
@@ -65,7 +66,8 @@ function isWallet(s: string): boolean {
 
 export class AgentPassportClient {
   private baseUrl: string;
-  private apiKey?: string;
+  private hmacSecret?: string;
+  private hmacKeyId: string;
   private timeout: number;
   private retries: number;
   private retryDelay: number;
@@ -77,7 +79,8 @@ export class AgentPassportClient {
       throw new Error('AgentPassportClient: baseUrl is required');
     }
     this.baseUrl = config.baseUrl.replace(/\/$/, '');
-    this.apiKey = config.apiKey;
+    this.hmacSecret = config.hmacSecret ?? config.apiKey;
+    this.hmacKeyId = config.hmacKeyId ?? 'sdk';
     this.timeout = config.timeout ?? DEFAULT_TIMEOUT;
     this.retries = config.retries ?? DEFAULT_RETRIES;
     this.retryDelay = config.retryDelay ?? DEFAULT_RETRY_DELAY;
@@ -93,14 +96,31 @@ export class AgentPassportClient {
     }
   }
 
-  private buildHeaders(idempotencyKey?: string, xPayment?: string): Record<string, string> {
+  private buildHeaders(
+    method: string,
+    path: string,
+    body: unknown,
+    idempotencyKey?: string,
+    xPayment?: string,
+  ): Record<string, string> {
     const headers: Record<string, string> = {
       'Accept': 'application/json',
       'User-Agent': 'agent-passport-sdk/0.2.0',
       ...this.defaultHeaders,
     };
-    if (this.apiKey) {
-      headers['Authorization'] = `Bearer ${this.apiKey}`;
+    if (this.hmacSecret) {
+      const timestamp = Date.now();
+      const nonce = randomUUID().replace(/-/g, '');
+      const bodyJson = body === undefined ? '' : canonicalJson(body);
+      const bodyHash = createHmac('sha256', '').update(bodyJson).digest('hex');
+      const signedPath = path.split('?')[0];
+      const canonical = `${method}\n${signedPath}\n${bodyHash}\n${timestamp}\n${nonce}`;
+      headers['X-Auth-Timestamp'] = String(timestamp);
+      headers['X-Auth-Nonce'] = nonce;
+      headers['X-Auth-KeyId'] = this.hmacKeyId;
+      headers['X-Auth-Signature'] = createHmac('sha256', this.hmacSecret)
+        .update(canonical)
+        .digest('hex');
     }
     if (idempotencyKey) {
       headers['Idempotency-Key'] = idempotencyKey;
@@ -118,7 +138,13 @@ export class AgentPassportClient {
     options: { idempotencyKey?: string; xPayment?: string } = {},
   ): Promise<T> {
     const url = `${this.baseUrl}${path}`;
-    const headers = this.buildHeaders(options.idempotencyKey, options.xPayment);
+    const headers = this.buildHeaders(
+      method,
+      path,
+      body,
+      options.idempotencyKey,
+      options.xPayment,
+    );
 
     if (body && method !== 'GET') {
       headers['Content-Type'] = 'application/json';
@@ -152,7 +178,13 @@ export class AgentPassportClient {
           try {
             retryResponse = await fetch(url, {
               method,
-              headers: this.buildHeaders(options.idempotencyKey, proof.paymentHeader),
+              headers: this.buildHeaders(
+                method,
+                path,
+                body,
+                options.idempotencyKey,
+                proof.paymentHeader,
+              ),
               body: body && method !== 'GET' ? JSON.stringify(body) : undefined,
               signal: retryController.signal,
             });
@@ -349,6 +381,15 @@ export class AgentPassportClient {
       { idempotencyKey: req.idempotencyKey },
     );
   }
+}
+
+function canonicalJson(value: unknown): string {
+  if (value === null || typeof value !== 'object') return JSON.stringify(value);
+  if (Array.isArray(value)) return '[' + value.map(canonicalJson).join(',') + ']';
+  const record = value as Record<string, unknown>;
+  return '{' + Object.keys(record).sort()
+    .map(key => `${JSON.stringify(key)}:${canonicalJson(record[key])}`)
+    .join(',') + '}';
 }
 
 export default AgentPassportClient;
