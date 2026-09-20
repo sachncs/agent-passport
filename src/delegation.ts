@@ -21,6 +21,11 @@ interface Delegation {
 
 interface IndexerTransaction {
   sender?: string;
+  tx-type?: string;
+  'application-transaction'?: {
+    application-args?: string[];
+    accounts?: string[];
+  };
   'asset-transfer-transaction'?: {
     receiver?: string;
     amount?: number;
@@ -137,14 +142,51 @@ async function fetchDelegationsFromIndexer(
   wallet: string,
 ): Promise<Delegation[]> {
   try {
-    const url = `${INDEXER_URL}/v2/accounts/${wallet}/transactions?limit=500&tx-type=axfer`;
-    const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
-    if (!res.ok) return [];
+    const appUrl = new URL(`${INDEXER_URL}/v2/transactions`);
+    appUrl.searchParams.set('limit', '1000');
+    appUrl.searchParams.set('tx-type', 'appl');
+    appUrl.searchParams.set('application-id', String(REGISTRY_APP_ID));
+    appUrl.searchParams.set('address', wallet);
+    appUrl.searchParams.set('address-role', 'accounts');
+    const appRes = await fetch(appUrl, { signal: AbortSignal.timeout(10_000) });
+    if (appRes.ok) {
+      const appData = (await appRes.json()) as { transactions?: IndexerTransaction[] };
+      const active = new Map<string, Delegation>();
+      for (const tx of appData.transactions || []) {
+        const app = tx['application-transaction'];
+        const args = app?.['application-args'] || [];
+        const method = args[0] ? Buffer.from(args[0], 'base64').toString() : '';
+        const accounts = app?.accounts || [];
+        const delegatee = accounts[0] || '';
+        const sponsor = accounts[1] || wallet;
+        if (!isValidWallet(delegatee) || sponsor !== wallet) continue;
+        const key = `${sponsor}:${delegatee}`;
+        if (method === 'revoke_delegation') {
+          active.delete(key);
+          continue;
+        }
+        if (method !== 'add_delegation' || !args[1]) continue;
+        const amountBytes = Buffer.from(args[1], 'base64');
+        if (amountBytes.length !== 8) continue;
+        const amount = Number(amountBytes.readBigUInt64BE(0));
+        if (!Number.isSafeInteger(amount)) continue;
+        active.set(key, {
+          delegator: sponsor,
+          delegatee,
+          amount,
+          timestamp: tx['round-time'] || 0,
+          round: tx['confirmed-round'] || 0,
+        });
+      }
+      if (active.size > 0) return Array.from(active.values());
+    }
 
-    const data = (await res.json()) as { transactions?: IndexerTransaction[] };
-    const txns = data.transactions || [];
-
-    return txns
+    // Legacy compatibility for pre-registry-transfer deployments.
+    const legacyUrl = `${INDEXER_URL}/v2/accounts/${wallet}/transactions?limit=500&tx-type=axfer`;
+    const legacyRes = await fetch(legacyUrl, { signal: AbortSignal.timeout(10_000) });
+    if (!legacyRes.ok) return [];
+    const data = (await legacyRes.json()) as { transactions?: IndexerTransaction[] };
+    return (data.transactions || [])
       .map((t) => ({
         delegator: wallet,
         delegatee: t['asset-transfer-transaction']?.receiver || t.sender || '',

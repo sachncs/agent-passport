@@ -10,8 +10,8 @@
 //   Value: amount (8 bytes, uint64) + timestamp (8 bytes, uint64)
 //
 // Methods:
-//   add_delegation(delegatee, amount) — sender delegates trust to delegatee
-//   revoke_delegation(delegatee) — sender revokes delegation
+//   add_delegation(delegatee, amount) — Accounts[1] delegates trust to delegatee
+//   revoke_delegation(delegatee) — Accounts[1] revokes delegation
 //   check_delegation(delegator, delegatee) — check if delegation exists
 //   get_delegations(wallet) — return count of outgoing delegations
 //   update_admin(new_admin) — admin only
@@ -137,21 +137,27 @@ route_method:
 // Sender delegates `amount` microUSDC to delegatee.
 // Creates or updates a delegation box.
 method_add_delegation:
+  byte "admin"
+  app_global_get
+  txn Sender
+  ==
+  assert
+
   // Validate 2 application args
   txn NumAppArgs
   int 2
   ==
   assert
 
-  // Validate 1 account arg (delegatee)
+  // Validate account args: delegatee and sponsor.
   txn NumAccounts
-  int 1
+  int 2
   ==
   assert
 
   // Sender cannot delegate to self
   txna Accounts 0
-  txn Sender
+  txna Accounts 1
   !=
   assert
 
@@ -162,9 +168,9 @@ method_add_delegation:
   >
   assert
 
-  // Build box key: "del:" + sender(32) + delegatee(32)
+  // Build box key: "del:" + sponsor(32) + delegatee(32)
   byte "del:"
-  txn Sender
+  txna Accounts 1
   txna Accounts 0
   concat
   concat
@@ -236,19 +242,25 @@ add_delegation_noop:
 // ─── revoke_delegation(delegatee_address) ──────────────────────
 // Sender revokes delegation to delegatee.
 method_revoke_delegation:
+  byte "admin"
+  app_global_get
+  txn Sender
+  ==
+  assert
+
   txn NumAppArgs
   int 1
   ==
   assert
 
   txn NumAccounts
-  int 1
+  int 2
   ==
   assert
 
   // Build box key
   byte "del:"
-  txn Sender
+  txna Accounts 1
   txna Accounts 0
   concat
   concat

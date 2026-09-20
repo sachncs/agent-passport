@@ -808,7 +808,10 @@ export async function recordEvent(
   const accounts = [wallet];
 
   const result = await submitApplicationCall(
-    REPUTATION_APP_ID, appArgs, accounts,
+    REPUTATION_APP_ID,
+    appArgs,
+    accounts,
+    [{ appIndex: REPUTATION_APP_ID, name: buildBoxKey(wallet, eventTypeChar) }],
   );
   if (!result) {
     logger.warn('Failed to submit reputation transaction — event recorded off-chain only', {

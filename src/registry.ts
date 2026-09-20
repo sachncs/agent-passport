@@ -61,6 +61,17 @@ interface RevocationResult {
   timestamp: number;
 }
 
+function delegationBoxName(sponsor: string, agent: string): Uint8Array {
+  const prefix = new TextEncoder().encode('del:');
+  const sponsorKey = algosdk.decodeAddress(sponsor).publicKey;
+  const agentKey = algosdk.decodeAddress(agent).publicKey;
+  const name = new Uint8Array(prefix.length + sponsorKey.length + agentKey.length);
+  name.set(prefix);
+  name.set(sponsorKey, prefix.length);
+  name.set(agentKey, prefix.length + sponsorKey.length);
+  return name;
+}
+
 function validateArgs(sponsor: string, agent: string, amount?: number): void {
   if (!isValidWallet(sponsor)) {
     throw new RegistryValidationError('Invalid sponsor wallet address. Must be 58-character base32 (A-Z, 2-7).');
@@ -95,10 +106,11 @@ export async function delegate(
     new TextEncoder().encode('add_delegation'),
     algosdk.encodeUint64(Math.floor(amount)),
   ];
-  const accounts = [agent];
+  const accounts = [agent, sponsor];
+  const boxes = [{ appIndex: REGISTRY_APP_ID, name: delegationBoxName(sponsor, agent) }];
 
   const result =
-    await submitApplicationCall(REGISTRY_APP_ID, appArgs, accounts);
+    await submitApplicationCall(REGISTRY_APP_ID, appArgs, accounts, boxes);
   if (!result) {
     throw new Error('Failed to submit delegation transaction');
   }
@@ -135,10 +147,11 @@ export async function revoke(
   const appArgs: Uint8Array[] = [
     new TextEncoder().encode('revoke_delegation'),
   ];
-  const accounts = [agent];
+  const accounts = [agent, sponsor];
+  const boxes = [{ appIndex: REGISTRY_APP_ID, name: delegationBoxName(sponsor, agent) }];
 
   const result =
-    await submitApplicationCall(REGISTRY_APP_ID, appArgs, accounts);
+    await submitApplicationCall(REGISTRY_APP_ID, appArgs, accounts, boxes);
   if (!result) {
     throw new Error('Failed to submit revocation transaction');
   }

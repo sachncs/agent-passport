@@ -79,6 +79,7 @@ export async function submitApplicationCall(
   appIndex: number,
   appArgs: Uint8Array[],
   accounts: string[] = [],
+  boxes: Array<{ appIndex: number; name: Uint8Array }> = [],
 ): Promise<SubmitApplicationCallResult | null> {
   if (!operatorAccount) {
     logger.warn('Operator wallet not initialized — cannot submit transaction');
@@ -98,6 +99,7 @@ export async function submitApplicationCall(
       onComplete: algosdk.OnApplicationComplete.NoOpOC,
       appArgs,
       accounts,
+      boxes,
       suggestedParams,
     });
 
