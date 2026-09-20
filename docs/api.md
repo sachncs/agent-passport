@@ -36,6 +36,9 @@ Canonical HTTP reference for the Agent Passport service.
 | [`/discovery/search`](#get-discoverysearch) | GET | — | no | — | below |
 | [`/delegate`](#post-delegate) | POST | HMAC | yes | invalidates | below |
 | [`/revoke`](#post-revoke) | POST | HMAC | yes | invalidates | below |
+| [`/reputation/subscribe`](#post-reputationsubscribe) | POST | HMAC | no | — | below |
+| [`/reputation/subscribers`](#get-reputationsubscribers) | GET | HMAC | no | — | below |
+| [`/reputation/subscribe/:id`](#delete-reputationsubscribeid) | DELETE | HMAC | no | — | below |
 | [`/health`](#get-health) | GET | — | no | — | [health](#health-readiness-metrics) |
 | [`/ready`](#get-ready) | GET | — | no | — | [health](#health-readiness-metrics) |
 | [`/health/deep`](#get-healthdeep) | GET | — | no | — | [health](#health-readiness-metrics) |
@@ -220,6 +223,15 @@ Same query as `/score`. Response: `valid`, `wallet`, `flags`
 Bazaar catalog search (single self-listing). Filters by `q`
 (substring match on name/description/category/tags) and `limit`
 (1–100, default 20).
+
+---
+
+## Webhook subscriptions
+
+`POST /reputation/subscribe`, `GET /reputation/subscribers`, and
+`DELETE /reputation/subscribe/:id` require HMAC authentication when enabled
+and require an `Idempotency-Key` for mutating calls. Subscription secrets are
+returned only once at creation time.
 
 ---
 

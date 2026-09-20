@@ -10,6 +10,11 @@ function safeParseInt(value: string | undefined, fallback: number): number {
 function validateConfig() {
   const errors: string[] = [];
 
+  const port = safeParseInt(process.env.PORT, 3000);
+  if (port < 1 || port > 65_535) {
+    errors.push('PORT must be an integer between 1 and 65535');
+  }
+
   if (process.env.X402_ENABLED === 'true' && !process.env.X402_PAYMENT_RECIPIENT) {
     errors.push('X402_PAYMENT_RECIPIENT is required when X402_ENABLED=true');
   }
@@ -72,14 +77,23 @@ function validateConfig() {
     }
   }
 
-  // Validate URL schemes to prevent SSRF / typo crashes.
+  // Validate URL schemes to prevent SSRF / typo crashes while allowing
+  // provider paths and query parameters.
   for (const [name, url] of [
     ['ALGOD_URL', process.env.ALGOD_URL],
     ['INDEXER_URL', process.env.INDEXER_URL],
     ['X402_FACILITATOR_URL', process.env.X402_FACILITATOR_URL],
   ] as const) {
-    if (url && !/^https?:\/\/[\w.-]+(:\d+)?\/?$/.test(url)) {
-      errors.push(`${name} is not a valid http(s) URL: ${url}`);
+    if (url) {
+      try {
+        const parsed = new URL(url);
+        if (!['http:', 'https:'].includes(parsed.protocol)
+          || !parsed.hostname || parsed.username || parsed.password) {
+          throw new Error('invalid');
+        }
+      } catch {
+        errors.push(`${name} is not a valid http(s) URL: ${url}`);
+      }
     }
   }
 

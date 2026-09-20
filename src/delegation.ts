@@ -4,6 +4,7 @@ import { algod } from './lib/algorand-client';
 import { logger } from './lib/logger';
 import { isValidWallet, MICRO_ALGO } from './lib/constants';
 import { recordDelegationCacheInvalidation } from './lib/metrics';
+import { TTLCache } from './lib/cache';
 
 const INDEXER_URL = config.indexerUrl;
 
@@ -178,7 +179,9 @@ async function fetchDelegationsFromIndexer(
           round: tx['confirmed-round'] || 0,
         });
       }
-      if (active.size > 0) return Array.from(active.values());
+      const hasRegistryTransactions = (appData.transactions || [])
+        .some(tx => tx['application-transaction']);
+      if (hasRegistryTransactions) return Array.from(active.values());
     }
 
     // Legacy compatibility for pre-registry-transfer deployments.
@@ -221,12 +224,14 @@ async function fetchWalletTrustScore(wallet: string): Promise<number | null> {
 // ── Graph traversal ────────────────────────────────────────────
 
 
-const delegationCache = new Map<string, Delegation[]>();
+const delegationCache = new TTLCache<Delegation[]>({
+  maxEntries: 500,
+  ttlMs: 60_000,
+});
 
 async function fetchDelegationCached(wallet: string): Promise<Delegation[]> {
-  if (delegationCache.has(wallet)) {
-    return delegationCache.get(wallet)!;
-  }
+  const cached = delegationCache.get(wallet);
+  if (cached) return cached;
   const delegations = await fetchDelegations(wallet);
   delegationCache.set(wallet, delegations);
   return delegations;

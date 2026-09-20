@@ -134,7 +134,7 @@ route_method:
   err
 
 // ─── add_delegation(delegatee_address, amount) ─────────────────
-// Sender delegates `amount` microUSDC to delegatee.
+// Accounts[1] delegates `amount` microALGO units to delegatee.
 // Creates or updates a delegation box.
 method_add_delegation:
   byte "admin"

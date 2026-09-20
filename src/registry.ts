@@ -8,7 +8,7 @@
  * (default in `.env.example`), every operation surfaces a
  * RegistryNotConfigured error and the HTTP layer must return 503.
  *
- * All amounts are microUSDC (uint64). The contract stores
+ * All amounts are microALGO units (uint64). The contract stores
  * `amount(8 bytes) + timestamp(8 bytes)` in a box keyed by
  * "del:" + delegator(32) + delegatee(32).
  */

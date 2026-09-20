@@ -106,7 +106,8 @@ Two TEAL v10 contracts under `contracts/`:
 
 - App ID: `REGISTRY_APP_ID` env var
 - Global state: `admin` (operator address)
-- Box storage: one box per `(sponsor, agent)` pair, value = `amount`
+- Box storage: one box per `(sponsor, agent)` pair, value = amount in
+  microALGO units plus the last-update timestamp
 - Methods:
   - `add_delegation(sponsor, agent, amount)` — creates a box
   - `revoke_delegation(sponsor, agent)` — deletes the box

@@ -775,7 +775,7 @@ app.get('/health/deep', async (_req, res) => {
   const health: Record<string, unknown> = {
     status: 'ok',
     service: 'Agent Passport',
-    version: '0.1.0',
+    version: packageVersion,
     network: config.algoNetwork,
     x402: config.x402Enabled,
     timestamp: new Date().toISOString(),

@@ -14,6 +14,7 @@ interface GraphEdge {
   to: string;
   amount: number;
   round: number;
+  depth?: number;
 }
 
 interface GraphNode {
@@ -78,14 +79,19 @@ export function computeExposure(
 ): ExposureAnalysis {
   const directEdges = edges.filter(e => e.from === wallet);
   const directExposure = directEdges.reduce((sum, e) => sum + e.amount, 0);
-
-  // Group by depth (simplified: direct = depth 1)
-  const exposureByDepth = [
-    { depth: 1, amount: directExposure, wallets: directEdges.length },
-  ];
-
   const indirectEdges = edges.filter(e => e.from !== wallet);
   const indirectExposure = indirectEdges.reduce((sum, e) => sum + e.amount, 0);
+  const byDepth = new Map<number, { amount: number; wallets: number }>();
+  for (const edge of edges) {
+    const depth = edge.depth ?? (edge.from === wallet ? 1 : 2);
+    const current = byDepth.get(depth) ?? { amount: 0, wallets: 0 };
+    current.amount += edge.amount;
+    current.wallets += 1;
+    byDepth.set(depth, current);
+  }
+  const exposureByDepth = Array.from(byDepth.entries())
+    .sort(([a], [b]) => a - b)
+    .map(([depth, value]) => ({ depth, ...value }));
 
   return {
     totalExposure: directExposure + indirectExposure,
@@ -132,6 +138,10 @@ async function fetchAccountInfo(
 }
 
 interface TrustGraphIndexerTransaction {
+  'application-transaction'?: {
+    'application-args'?: string[];
+    accounts?: string[];
+  };
   'payment-transaction'?: { receiver?: string; amount?: number };
   'confirmed-round'?: number;
 }
@@ -145,14 +155,52 @@ async function fetchDelegationEdges(
   limit = 100,
 ): Promise<GraphEdge[]> {
   try {
-    const url = `${INDEXER_URL}/v2/accounts/${wallet}/transactions?limit=${limit}&tx-type=pay`;
-    const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+    const appUrl = new URL(`${INDEXER_URL}/v2/transactions`);
+    appUrl.searchParams.set('limit', String(limit));
+    appUrl.searchParams.set('tx-type', 'appl');
+    appUrl.searchParams.set('application-id', String(config.registryAppId));
+    appUrl.searchParams.set('address', wallet);
+    appUrl.searchParams.set('address-role', 'accounts');
+    const appRes = await fetch(appUrl, { signal: AbortSignal.timeout(10_000) });
+    if (appRes.ok) {
+      const data = (await appRes.json()) as TrustGraphIndexerResponse;
+      const active = new Map<string, GraphEdge>();
+      for (const tx of data.transactions || []) {
+        const app = tx['application-transaction'];
+        const args = app?.['application-args'] || [];
+        const method = args[0] ? Buffer.from(args[0], 'base64').toString() : '';
+        const sponsor = app?.accounts?.[1] || '';
+        const agent = app?.accounts?.[0] || '';
+        if (sponsor !== wallet || !isValidWallet(agent)) continue;
+        const key = `${sponsor}:${agent}`;
+        if (method === 'revoke_delegation') {
+          active.delete(key);
+          continue;
+        }
+        if (method !== 'add_delegation' || !args[1]) continue;
+        const amountBytes = Buffer.from(args[1], 'base64');
+        if (amountBytes.length !== 8) continue;
+        const amount = Number(amountBytes.readBigUInt64BE(0));
+        if (!Number.isSafeInteger(amount)) continue;
+        active.set(key, {
+          from: sponsor,
+          to: agent,
+          amount,
+          round: tx['confirmed-round'] || 0,
+        });
+      }
+      const hasRegistryTransactions = (data.transactions || [])
+        .some(tx => tx['application-transaction']);
+      if (hasRegistryTransactions) {
+        return Array.from(active.values());
+      }
+    }
+
+    const legacyUrl = `${INDEXER_URL}/v2/accounts/${wallet}/transactions?limit=${limit}&tx-type=pay`;
+    const res = await fetch(legacyUrl, { signal: AbortSignal.timeout(10_000) });
     if (!res.ok) return [];
-
     const data = (await res.json()) as TrustGraphIndexerResponse;
-    const txns = data.transactions || [];
-
-    return txns
+    return (data.transactions || [])
       .filter((t) => {
         const receiver = t['payment-transaction']?.receiver;
         return receiver && receiver !== wallet && isValidWallet(receiver);
@@ -196,7 +244,7 @@ export async function analyzeTrustGraph(
 
     // Fetch edges for this wallet
     const edges = await fetchDelegationEdges(address);
-    allEdges.push(...edges);
+    allEdges.push(...edges.map(edge => ({ ...edge, depth: depth + 1 })));
 
     // Collect unique unseen targets, limit to 10 per depth level
     type TargetInfo = { balance: number; trustScore: number } | null;

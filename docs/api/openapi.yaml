@@ -246,6 +246,14 @@ paths:
         Self-reported events require on-chain transaction evidence.
       operationId: recordReputation
       tags: [Reputation]
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 8
+            maxLength: 255
       requestBody:
         required: true
         content:
@@ -510,7 +518,7 @@ paths:
       parameters:
         - name: Idempotency-Key
           in: header
-          required: false
+          required: true
           schema:
             type: string
             minLength: 8
@@ -572,7 +580,7 @@ paths:
       parameters:
         - name: Idempotency-Key
           in: header
-          required: false
+          required: true
           schema:
             type: string
       requestBody:
@@ -608,6 +616,103 @@ paths:
           description: Internal server error
         '503':
           description: Registry not configured
+
+  /version:
+    get:
+      summary: Service build metadata
+      operationId: version
+      tags: [System]
+      responses:
+        '200':
+          description: Build and runtime metadata
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /openapi.json:
+    get:
+      summary: Runtime OpenAPI document
+      operationId: openapi
+      tags: [System]
+      responses:
+        '200':
+          description: OpenAPI document
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /reputation/subscribe:
+    post:
+      summary: Subscribe to reputation events
+      operationId: subscribeReputation
+      tags: [Reputation]
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 8
+            maxLength: 255
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [wallet, url]
+              properties:
+                wallet: { type: string, pattern: '^[A-Z2-7]{58}$' }
+                url: { type: string, format: uri }
+      responses:
+        '201': { description: Subscription created }
+        '400': { description: Invalid input }
+        '401': { description: HMAC auth failed }
+
+  /reputation/subscribers:
+    get:
+      summary: List reputation webhook subscribers
+      operationId: listReputationSubscribers
+      tags: [Reputation]
+      parameters:
+        - name: wallet
+          in: query
+          required: false
+          schema: { type: string, pattern: '^[A-Z2-7]{58}$' }
+      responses:
+        '200': { description: Subscriber list }
+        '401': { description: HMAC auth failed }
+
+  /reputation/subscribe/{id}:
+    delete:
+      summary: Remove a reputation webhook subscription
+      operationId: unsubscribeReputation
+      tags: [Reputation]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string, minLength: 8, maxLength: 255 }
+      responses:
+        '204': { description: Subscription removed }
+        '404': { description: Subscription not found }
+        '401': { description: HMAC auth failed }
+
+  /dashboard:
+    get:
+      summary: Legacy HTML dashboard
+      operationId: dashboard
+      tags: [System]
+      responses:
+        '200': { description: Dashboard HTML }
 
   /metrics:
     get:

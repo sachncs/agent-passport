@@ -81,8 +81,8 @@ export function hmacAuth(opts: HmacAuthOptions) {
       return;
     }
 
-    const timestamp = parseInt(timestampRaw, 10);
-    if (!Number.isFinite(timestamp)) {
+    const timestamp = Number(timestampRaw);
+    if (!/^\d+$/.test(timestampRaw) || !Number.isSafeInteger(timestamp)) {
       res.status(401).json({ error: 'Invalid X-Auth-Timestamp (must be unix ms)' });
       return;
     }
