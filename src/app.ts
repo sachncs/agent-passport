@@ -316,6 +316,13 @@ app.post('/reputation/record', async (req, res) => {
   }
 
   try {
+    if (config.reputationAppId === 0) {
+      res.status(503).json({
+        error: 'Reputation contract is not configured (REPUTATION_APP_ID=0)',
+        code: 'REPUTATION_NOT_CONFIGURED',
+      });
+      return;
+    }
     const result = await recordEvent(
       wallet, eventType, amount || 0, counterparty, round ?? 0,
     );

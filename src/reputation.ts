@@ -721,6 +721,7 @@ export async function recordEvent(
   if (!isValidWallet(wallet)) return null;
   if (!EVENT_TYPES.includes(eventType)) return null;
   if (amount < 0) return null;
+  if (REPUTATION_APP_ID === 0) return null;
 
   if (eventType === 'endorsement' && counterparty) {
     if (wouldCreateEndorsementCycle(wallet, counterparty)) {
@@ -782,21 +783,6 @@ export async function recordEvent(
   }
   registerEventHash(eventHash);
 
-  if (REPUTATION_APP_ID === 0) {
-    logger.warn('REPUTATION_APP_ID is 0 — recording event off-chain only', { wallet, eventType });
-    return {
-      wallet,
-      eventType,
-      amount,
-      counterparty,
-      round: currentRound,
-      timestamp: Math.floor(Date.now() / 1000),
-      eventHash,
-      counterpartyVerified,
-      selfReportVerified,
-    };
-  }
-
   const eventTypeChar = EVENT_TYPE_MAP[eventType];
 
   const appArgs = [
@@ -814,9 +800,10 @@ export async function recordEvent(
     [{ appIndex: REPUTATION_APP_ID, name: buildBoxKey(wallet, eventTypeChar) }],
   );
   if (!result) {
-    logger.warn('Failed to submit reputation transaction — event recorded off-chain only', {
+    logger.warn('Failed to submit reputation transaction — event was not recorded', {
       wallet, eventType, eventHash,
     });
+    return null;
   }
 
   if (eventType === 'endorsement' && counterparty) {
