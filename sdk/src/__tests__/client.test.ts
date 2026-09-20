@@ -161,6 +161,7 @@ describe('AgentPassportClient', () => {
         agent: ALT_WALLET,
         amount: 1000,
         idempotencyKey: 'key-12345678',
+      });
       expect(capturedHeaders['Idempotency-Key']).toBe('key-12345678');
     });
   });

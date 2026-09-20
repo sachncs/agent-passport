@@ -238,7 +238,8 @@ export class AgentPassportClient {
     switch (response.status) {
       case 400: return new ValidationError(message, data, requestId);
       case 401: return new AuthenticationError(message, data, requestId);
-      case 402: return new PaymentRequiredError(data, requestId);
+      case 402:
+        return new PaymentRequiredError(data as PaymentRequirements, requestId);
       case 404: return new NotFoundError(message, data, requestId);
       case 408: return new TimeoutError(message, requestId);
       case 409:
