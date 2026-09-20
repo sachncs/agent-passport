@@ -48,7 +48,8 @@
     "start": "node dist/index.js",
     "dev": "tsx watch src/index.ts",
     "lint": "eslint src/ frontend/src",
-    "typecheck": "tsc --noEmit && pnpm --filter @agent-passport/frontend exec tsc --noEmit",
+    "typecheck": "tsc --noEmit && npm run typecheck --workspace=@agent-passport/web",
+    "typecheck:all": "npm run typecheck && npm run build --workspace=@agent-passport/sdk",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
@@ -62,11 +63,12 @@
     "deploy-reputation": "tsx scripts/deploy-reputation.ts",
     "record-reputation": "tsx scripts/record-reputation.ts",
     "check-reputation": "tsx scripts/check-reputation.ts",
-    "dashboard": "echo 'Dashboard at http://localhost:3000/dashboard.html'",
+    "dashboard": "echo 'Dashboard at http://localhost:3000/dashboard'",
     "benchmark": "vitest run src/__tests__/benchmark.test.ts --reporter=verbose",
-    "codegen:web-types": "pnpm --filter @agent-passport/frontend run codegen",
-    "web:dev": "pnpm --filter @agent-passport/frontend run dev",
-    "web:build": "pnpm --filter @agent-passport/frontend run build"
+    "codegen:web-types": "npm run codegen --workspace=@agent-passport/web",
+    "web:dev": "npm run dev --workspace=@agent-passport/web",
+    "web:build": "npm run build --workspace=@agent-passport/web",
+    "build:all": "npm run build && npm run build --workspace=@agent-passport/sdk && npm run build --workspace=@agent-passport/web && npm run build --prefix site"
   },
   "workspaces": [
     "frontend",
