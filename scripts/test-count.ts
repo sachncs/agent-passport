@@ -12,8 +12,8 @@ export interface TestCount {
 
 export function readTestCount(): TestCount {
   const result = spawnSync(
-    'pnpm',
-    ['vitest', 'run', '--reporter=json'],
+    'npm',
+    ['exec', '--', 'vitest', 'run', '--reporter=json'],
     { encoding: 'utf8', cwd: process.cwd() },
   );
   if (result.status !== 0) {

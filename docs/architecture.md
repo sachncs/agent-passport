@@ -114,6 +114,12 @@ Two TEAL v10 contracts under `contracts/`:
   - `update_admin(new_admin)` — rotates the operator key
 - Update permission: only the `admin` address
 
+The current transaction format passes the agent and sponsor as application
+accounts (`Accounts[0]` and `Accounts[1]`) and includes the deterministic box
+reference in the application call. Existing deployments created with the
+older payment-transfer format must be redeployed (or migrated with a planned
+contract upgrade) before enabling the updated service.
+
 ### `reputation.teal` — on-chain reputation events
 
 - App ID: `REPUTATION_APP_ID` env var

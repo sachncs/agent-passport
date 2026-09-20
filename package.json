@@ -47,7 +47,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "tsx watch src/index.ts",
-    "lint": "eslint src/ frontend/src",
+    "lint": "eslint src/",
     "typecheck": "tsc --noEmit && npm run typecheck --workspace=@agent-passport/web",
     "typecheck:all": "npm run typecheck && npm run build --workspace=@agent-passport/sdk",
     "test": "vitest run",

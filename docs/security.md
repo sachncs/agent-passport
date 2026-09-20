@@ -269,6 +269,11 @@ the admin address. To rotate the operator:
 There is no rolling-update path for the on-chain admin; rotation
 is a new contract deployment.
 
+When upgrading from a pre-v0.2 registry deployment, also redeploy the
+registry contract before setting `REGISTRY_APP_ID`: the service now submits
+application-call accounts and box references, while the legacy deployment
+may have accepted payment-transfer records only.
+
 ## 15. Known limitations
 
 | Limitation | Impact | Mitigation |
