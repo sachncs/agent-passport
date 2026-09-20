@@ -304,10 +304,11 @@ Slugs are lowercase, hyphenated, and descriptive (e.g.
 ## Documentation Expectations
 
 - Public APIs in `src/app.ts` and any new route must be reflected in
-  `docs/api.mdopenapi.yaml` and the [Postman collection](docs/api.mdpostman-collection.json).
+  [`docs/api.md`](docs/api.md), [`docs/api/openapi.yaml`](docs/api/openapi.yaml),
+  and the [Postman collection](docs/api/postman-collection.json).
 - New SDK methods require an entry in
-  [../sdk/README.md](../sdk/README.md)
-  (TS) or [../sdk/python/README.md](../sdk/python/README.md)
+  [sdk/README.md](sdk/README.md)
+  (TS) or [sdk/python/README.md](sdk/python/README.md)
   (Python) and a CHANGELOG entry.
 - New environment variables must be added to `.env.example` **and**
   [docs/operations.md#1-environment-variables](docs/operations.md#1-environment-variables).

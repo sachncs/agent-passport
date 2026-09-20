@@ -37,7 +37,7 @@ truth for architecture, algorithms, operations, and contributing.
   [docs/concepts.md#2-delegation-trust](docs/concepts.md#2-delegation-trust).
 - **Underwriting decisions** — credit capacity estimation, default
   propagation, $100k system exposure cap. See
-  [docs/concepts.md#5-credit--underwriting](docs/concepts.md#5-credit--underwriting).
+  [docs/concepts.md#5-credit-underwriting](docs/concepts.md#5-credit-underwriting).
 - **Sybil detection** — 12 signals (clustering, timing, amount fingerprint,
   funding correlation, balance similarity, interaction density, circular
   activity, plus 4 graph-traversal signals). See
@@ -60,8 +60,8 @@ truth for architecture, algorithms, operations, and contributing.
 - **First-class SDKs** — TypeScript (`@agent-passport/sdk`) and Python
   (`agent-passport-sdk`), both with typed errors, idempotency helpers,
   and x402 payment callbacks. See
-  [../sdk/README.md](../sdk/README.md)
-  and [../sdk/python/README.md](../sdk/python/README.md).
+  [sdk/README.md](sdk/README.md)
+  and [sdk/python/README.md](sdk/python/README.md).
 - **Premium dark-first SaaS console** — Next.js 16 + shadcn/ui v4 with
   a two-tier accent system (emerald for trust/verified, cyan for
   operational/data), verdict-first `/dashboard` report, custom
@@ -181,7 +181,7 @@ loop; binary screenshots will land under `docs/img/` once the
 demo is hosted (sister issue with GitHub Pages configuration).
 
 A 5-minute walkthrough is in
-[../README.md](../README.md#installation).
+[README.md](README.md#installation).
 
 ### Node.js / TypeScript SDK
 
@@ -214,8 +214,8 @@ print(client.get_score("GD64YIY3TWGDMCNPP553DZPPR6LDUSFQOIJVFDPPXWEG3FVOJCCDBBHU
 ```
 
 Full SDK reference:
-[../sdk/README.md](../sdk/README.md)
-and [../sdk/python/README.md](../sdk/python/README.md).
+[sdk/README.md](sdk/README.md)
+and [sdk/python/README.md](sdk/python/README.md).
 
 ---
 

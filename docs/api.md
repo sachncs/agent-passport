@@ -304,8 +304,9 @@ On failure: HTTP 503 with the same shape and `algorand.connected: false`.
 
 ### `GET /health/deep` — informational
 
-Combines `/health` and `/ready` shapes, **but always returns 200**
-even when Algorand is down. Used by operational dashboards.
+Combines `/health` and `/ready` shapes. It returns 200 when Algorand is
+reachable and 503 when the upstream probe is degraded. Used by operational
+dashboards and load balancers that need an upstream-aware health signal.
 
 ### `GET /registry/status`
 
@@ -387,7 +388,7 @@ missing, malformed, or out of range.
 
 ### `401 Unauthorized`
 
-HMAC auth failed or missing. See [security.md](security.md#hmac-auth).
+HMAC auth failed or missing. See [security.md](security.md#9-hmac-auth).
 
 ### `402 Payment Required`
 

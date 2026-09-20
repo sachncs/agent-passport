@@ -50,7 +50,7 @@ BCC), or your own node. See § 4 for latency trade-offs.
 | `OPERATOR_MNEMONIC` | string | — | 25-word Algorand mnemonic for the runtime operator wallet |
 | `DEPLOYER_MNEMONIC` | string | — | 25-word mnemonic used only by the deploy scripts |
 
-See [security.md](security.md#operator-wallet) for the operator
+See [security.md](security.md#14-operator-wallet) for the operator
 mnemonic handling and KMS guidance.
 
 ### x402
@@ -60,7 +60,7 @@ mnemonic handling and KMS guidance.
 | `X402_ENABLED` | bool | `false` | When `true`, every premium endpoint requires an `x-payment` header |
 | `X402_FACILITATOR_URL` | URL | `https://x402.org/facilitator` | x402 facilitator endpoint |
 | `X402_PAYMENT_RECIPIENT` | string | — | Algorand address that receives USDC payments (required when x402 is enabled) |
-| `X402_NETWORK` | string | `eip155:84532` | x402 network identifier (chain:ID format) |
+| `X402_NETWORK` | string | `algorand-testnet` | Supported x402 network identifier |
 
 ### Rate limiting
 
@@ -315,7 +315,7 @@ OPERATOR_MNEMONIC="word1 word2 ... word25"
 ```
 
 Or load from a secret manager at startup. See
-[security.md](security.md#operator-wallet) for KMS guidance.
+[security.md](security.md#14-operator-wallet) for KMS guidance.
 
 #### 4. Set `HMAC_SECRET` (recommended for production)
 
@@ -325,7 +325,8 @@ HMAC_SECRET="$(openssl rand -hex 32)"   # 64 hex chars = 256 bits
 
 Any state-changing endpoint will then require HMAC-SHA256
 authentication. Public reads and the operational endpoints
-remain unauthenticated. See [security.md](security.md#hmac-auth).
+remain unauthenticated in development. Production requires HMAC. See
+[security.md](security.md#9-hmac-auth).
 
 #### 5. Build the Docker image
 

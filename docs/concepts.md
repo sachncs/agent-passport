@@ -164,7 +164,7 @@ Let wallets publish **on-chain endorsements** of other wallets so
 a new wallet with no history can inherit trust from its sponsors.
 
 Implemented in `src/delegation.ts`. On-chain state lives in
-`registry.teal` — see [architecture.md](architecture.md#smart-contracts).
+`registry.teal` — see [architecture.md](architecture.md#4-smart-contracts).
 
 ## 2.1 Formula
 
@@ -304,7 +304,7 @@ Records observable behaviour events for a wallet, with a 0–100
 reputation score derived from the weighted sum of those events.
 
 Implemented in `src/reputation.ts`. On-chain state in
-`reputation.teal` — see [architecture.md](architecture.md#smart-contracts).
+`reputation.teal` — see [architecture.md](architecture.md#4-smart-contracts).
 
 ## 4.1 Event types and weights
 
@@ -369,7 +369,7 @@ reputation = clamp(0, 100, Σ (event_count_i × weight_i × sign_i) / maxReputat
 combines credit with trust, delegation, sybil, and reputation to
 make a final approve/deny decision. The underwriting decision is
 gated by the **system exposure cap** (`MAX_SYSTEM_EXPOSURE = 100 000`
-USDC) — see [operations.md](operations.md#system-exposure-cap).
+USDC) — see [operations.md](operations.md#9-system-exposure-cap).
 
 ## 5.1 Credit capacity
 

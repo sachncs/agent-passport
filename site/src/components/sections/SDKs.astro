@@ -19,8 +19,9 @@ const score = await client.getScore(
 );
 
 if (score.riskLevel === "low") {
-  await client.delegate({
+  await client.endorse({
     sponsor: "GD64…BHU5A",
+    agent: "GD64…BHU5A",
     amount: 50_000,
   });
 }`,
@@ -30,19 +31,21 @@ if (score.riskLevel === "low") {
     pkg: "agent-passport-sdk",
     version: "v0.1.0",
     install: "pip install agent-passport-sdk",
-    code: `from agent_passport import Client
+code: `from agent_passport import AgentPassportClient
+from agent_passport.types import EndorsementRequest
 
-client = Client(base_url="https://api.agentpassport.ai")
+client = AgentPassportClient(base_url="https://api.agentpassport.ai")
 
 score = client.get_score(
     "GD64YI…DBBHU5A"
 )
 
 if score.risk_level == "low":
-    client.delegate(
+    client.endorse(EndorsementRequest(
         sponsor="GD64…BHU5A",
+        agent="GD64…BHU5A",
         amount=50_000,
-    )`,
+    ))`,
   },
 ];
 ---

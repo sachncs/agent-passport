@@ -370,7 +370,7 @@ generated as a runtime artifact, causing
 ### Security (CRITICAL — read before deploying)
 
 These are the production-readiness findings from the v0.1.0 audit
-([`docs/reports/production-readiness.md`](docs/reports/production-readiness.md)).
+([the production-readiness review](docs/reports/production-readiness.md)).
 The `0.1.0` tag was **NOT** production-ready; this release is.
 
 - **HMAC-SHA256 auth on state-changing endpoints.** A new

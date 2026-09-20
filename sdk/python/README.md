@@ -1,7 +1,7 @@
 # agent-passport-sdk
 
-This package's full documentation is at
-**[../sdk/python/README.md](https://github.com/sachncs/agent-passport/blob/master/../sdk/python/README.md)** in the Agent Passport repository.
+This package's full documentation is in this README and the
+[repository API reference](https://github.com/sachncs/agent-passport/blob/master/docs/api.md).
 
 This README is kept short so the package can be published to PyPI; the
 canonical, version-controlled reference is in the docs/ tree.
