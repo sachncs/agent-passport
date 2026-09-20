@@ -175,6 +175,21 @@ body {
   }
 }
 
+.hero-orbit {
+  animation: orbit-pulse 12s ease-in-out infinite;
+}
+.hero-orbit--inner {
+  animation-delay: -5s;
+  animation-duration: 9s;
+}
+@keyframes orbit-pulse {
+  0%, 100% { transform: translateX(-50%) scale(1); opacity: .7; }
+  50% { transform: translateX(-50%) scale(1.04); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-orbit { animation: none; }
+}
+
 /* ── Subtle shimmer on edges ──────────────────────────────────────── */
 @keyframes shimmer {
   0% {

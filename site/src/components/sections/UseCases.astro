@@ -1,0 +1,69 @@
+---
+import Container from "../layout/Container.astro";
+import Eyebrow from "../ui/Eyebrow.astro";
+
+const useCases = [
+  {
+    number: "01",
+    label: "Marketplaces",
+    title: "Make every agent legible before the first task.",
+    body: "Rank providers by verifiable history, surface risk before a match, and give buyers a shared trust language.",
+    signal: "DISCOVERY / PASSPORT",
+    color: "teal",
+  },
+  {
+    number: "02",
+    label: "Credit & payments",
+    title: "Turn identity into a decision your system can use.",
+    body: "Set an explainable credit ceiling, check counterparties, and propagate defaults without building a risk stack from scratch.",
+    signal: "UNDERWRITE / CHECK",
+    color: "amber",
+  },
+  {
+    number: "03",
+    label: "Autonomous commerce",
+    title: "Let software transact with software—safely.",
+    body: "Gate actions with deterministic wallet signals, replayable proofs, and pay-per-query infrastructure designed for agents.",
+    signal: "SCORE / X402",
+    color: "violet",
+  },
+];
+---
+
+<section id="use-cases" class="relative overflow-hidden border-y border-line bg-surface-1/30 py-24 md:py-32">
+  <Container>
+    <div class="flex flex-col justify-between gap-8 lg:flex-row lg:items-end">
+      <div class="max-w-2xl">
+        <Eyebrow icon>Built for the agent economy</Eyebrow>
+        <h2 class="mt-4 text-balance text-[36px] font-semibold leading-[1.04] tracking-[-0.035em] text-ink-1 md:text-[54px]">
+          Trust is the missing<br />
+          <span class="font-serif-italic font-normal text-accent">product primitive.</span>
+        </h2>
+      </div>
+      <p class="max-w-sm text-pretty text-[15px] leading-relaxed text-ink-2 lg:mb-1">
+        Agent Passport gives marketplaces, lenders, and autonomous systems the same reliable answer to one question: should I trust this wallet with the next action?
+      </p>
+    </div>
+
+    <div class="mt-14 grid gap-3 lg:grid-cols-3">
+      {useCases.map((item) => (
+        <article class="group relative min-h-[320px] overflow-hidden rounded-[22px] border border-line bg-surface-1 p-7 transition-transform duration-300 hover:-translate-y-1 hover:border-line-strong md:p-8">
+          <div class={`absolute -right-20 -top-24 h-64 w-64 rounded-full blur-3xl ${item.color === "teal" ? "bg-accent/10" : item.color === "amber" ? "bg-[oklch(0.78_0.14_75_/_0.10)]" : "bg-[oklch(0.68_0.16_300_/_0.10)]"}`}></div>
+          <div class="relative flex h-full flex-col">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-[11px] tracking-[0.18em] text-accent">{item.number}</span>
+              <span class="rounded-full border border-line bg-surface-2 px-2.5 py-1 font-mono text-[9px] tracking-[0.14em] text-ink-3">{item.signal}</span>
+            </div>
+            <div class="mt-12 text-[11px] font-medium uppercase tracking-[0.18em] text-ink-3">{item.label}</div>
+            <h3 class="mt-3 max-w-xs text-[25px] font-semibold leading-[1.08] tracking-[-0.025em] text-ink-1">{item.title}</h3>
+            <p class="mt-4 max-w-sm text-[14px] leading-relaxed text-ink-2">{item.body}</p>
+            <div class="mt-auto flex items-center gap-2 pt-8 text-[11px] font-medium text-accent opacity-80 transition-opacity group-hover:opacity-100">
+              <span class="h-1.5 w-1.5 rounded-full bg-accent"></span>
+              Make the decision observable
+            </div>
+          </div>
+        </article>
+      ))}
+    </div>
+  </Container>
+</section>

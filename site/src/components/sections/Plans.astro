@@ -1,0 +1,65 @@
+---
+import Container from "../layout/Container.astro";
+import Eyebrow from "../ui/Eyebrow.astro";
+import Button from "../ui/Button.astro";
+
+const plans = [
+  {
+    name: "Open source",
+    description: "Own the full stack and run the trust layer beside your product.",
+    items: ["MIT licensed", "Algorand-native contracts", "Full API + SDK source"],
+    action: "Read the repository",
+    href: "https://github.com/sachncs/agent-passport",
+  },
+  {
+    name: "Metered API",
+    description: "Start with the hosted surface and pay only when your agents query.",
+    items: ["x402 USDC settlement", "Replay-safe requests", "JSON + typed SDKs"],
+    action: "Read the API docs",
+    href: "https://github.com/sachncs/agent-passport/blob/master/docs/api.md",
+    featured: true,
+  },
+  {
+    name: "Production",
+    description: "Bring your operating model, controls, and infrastructure requirements.",
+    items: ["HMAC request signing", "Prometheus + SLOs", "Documented threat model"],
+    action: "Explore security",
+    href: "https://github.com/sachncs/agent-passport/blob/master/docs/security.md",
+  },
+];
+---
+
+<section id="plans" class="relative py-24 md:py-32">
+  <Container>
+    <div class="max-w-2xl">
+      <Eyebrow icon>Adopt at your pace</Eyebrow>
+      <h2 class="mt-4 text-balance text-[36px] font-semibold leading-[1.05] tracking-[-0.035em] text-ink-1 md:text-[52px]">
+        Start open.<br /><span class="font-serif-italic font-normal">Scale with confidence.</span>
+      </h2>
+      <p class="mt-5 max-w-xl text-pretty text-base leading-relaxed text-ink-2 md:text-lg">
+        The product is transparent by design. Prototype against the API, inspect every decision, then move the parts you need into your own deployment model.
+      </p>
+    </div>
+
+    <div class="mt-12 grid gap-3 lg:grid-cols-3">
+      {plans.map((plan) => (
+        <article class={`relative flex flex-col rounded-[22px] border p-7 md:p-8 ${plan.featured ? "border-accent/50 bg-accent/[0.07] shadow-glow" : "border-line bg-surface-1"}`}>
+          {plan.featured && <span class="absolute right-6 top-6 rounded-full bg-accent px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-accent-fg">Recommended</span>}
+          <div class="text-[11px] font-medium uppercase tracking-[0.18em] text-ink-3">{plan.name}</div>
+          <h3 class="mt-5 max-w-[14rem] text-[24px] font-semibold leading-tight tracking-[-0.025em] text-ink-1">{plan.description}</h3>
+          <ul class="mt-8 space-y-3 border-t border-line pt-6 text-[13px] text-ink-2">
+            {plan.items.map((item) => (
+              <li class="flex items-center gap-2.5"><span class="flex h-4 w-4 items-center justify-center rounded-full bg-accent/15 text-accent">✓</span>{item}</li>
+            ))}
+          </ul>
+          <div class="mt-auto pt-9">
+            <Button href={plan.href} external variant={plan.featured ? "primary" : "secondary"} size="sm" class="w-full justify-center">
+              {plan.action}
+              <span aria-hidden="true">↗</span>
+            </Button>
+          </div>
+        </article>
+      ))}
+    </div>
+  </Container>
+</section>
