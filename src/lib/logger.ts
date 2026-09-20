@@ -93,7 +93,10 @@ export function formatEntry(entry: LogEntry): string {
 
 const STANDARD_FIELDS = new Set(['level', 'timestamp', 'message'])
 
-export function formatPretty(entry: LogEntry, useColor = process.stdout.isTTY): string {
+export function formatPretty(
+  entry: LogEntry,
+  useColor = process.stdout.isTTY,
+): string {
   const ts = entry.timestamp
   const level = LEVEL_PADDED[entry.level]
   const color = useColor ? LEVEL_COLORS[entry.level] : ''

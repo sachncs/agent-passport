@@ -811,7 +811,8 @@ app.use((_req, res) => {
   res.status(404).json({ error: 'Not found' });
 });
 
-app.use((error: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+app.use((error: unknown, _req: express.Request, res: express.Response,
+  _next: express.NextFunction) => {
   if (res.headersSent) return;
   const message = error instanceof Error ? error.message : String(error);
   const status = typeof error === 'object' && error !== null

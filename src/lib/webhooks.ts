@@ -96,7 +96,8 @@ async function assertPublicWebhookHost(url: string): Promise<void> {
   }
   if (isIP(hostname)) return;
   const addresses = await lookup(hostname, { all: true, verbatim: true });
-  if (addresses.length === 0 || addresses.some(a => isPrivateOrLoopback(a.address))) {
+  if (addresses.length === 0
+    || addresses.some(a => isPrivateOrLoopback(a.address))) {
     throw new Error('Webhook hostname resolves to a private or loopback address');
   }
 }

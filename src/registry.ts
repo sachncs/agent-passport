@@ -65,7 +65,9 @@ function delegationBoxName(sponsor: string, agent: string): Uint8Array {
   const prefix = new TextEncoder().encode('del:');
   const sponsorKey = algosdk.decodeAddress(sponsor).publicKey;
   const agentKey = algosdk.decodeAddress(agent).publicKey;
-  const name = new Uint8Array(prefix.length + sponsorKey.length + agentKey.length);
+  const name = new Uint8Array(
+    prefix.length + sponsorKey.length + agentKey.length,
+  );
   name.set(prefix);
   name.set(sponsorKey, prefix.length);
   name.set(agentKey, prefix.length + sponsorKey.length);
@@ -74,20 +76,28 @@ function delegationBoxName(sponsor: string, agent: string): Uint8Array {
 
 function validateArgs(sponsor: string, agent: string, amount?: number): void {
   if (!isValidWallet(sponsor)) {
-    throw new RegistryValidationError('Invalid sponsor wallet address. Must be 58-character base32 (A-Z, 2-7).');
+    throw new RegistryValidationError(
+      'Invalid sponsor wallet address. Must be 58-character base32 (A-Z, 2-7).',
+    );
   }
   if (!isValidWallet(agent)) {
-    throw new RegistryValidationError('Invalid agent wallet address. Must be 58-character base32 (A-Z, 2-7).');
+    throw new RegistryValidationError(
+      'Invalid agent wallet address. Must be 58-character base32 (A-Z, 2-7).',
+    );
   }
   if (sponsor === agent) {
     throw new RegistryValidationError('Sponsor and agent must be different wallets');
   }
   if (amount !== undefined) {
     if (!Number.isFinite(amount) || amount <= 0) {
-      throw new RegistryValidationError('Amount must be a positive finite number');
+    throw new RegistryValidationError(
+      'Amount must be a positive finite number',
+    );
     }
     if (amount > Number.MAX_SAFE_INTEGER) {
-      throw new RegistryValidationError('Amount exceeds maximum safe integer');
+      throw new RegistryValidationError(
+        'Amount exceeds maximum safe integer',
+      );
     }
   }
 }
@@ -107,7 +117,10 @@ export async function delegate(
     algosdk.encodeUint64(Math.floor(amount)),
   ];
   const accounts = [agent, sponsor];
-  const boxes = [{ appIndex: REGISTRY_APP_ID, name: delegationBoxName(sponsor, agent) }];
+  const boxes = [{
+    appIndex: REGISTRY_APP_ID,
+    name: delegationBoxName(sponsor, agent),
+  }];
 
   const result =
     await submitApplicationCall(REGISTRY_APP_ID, appArgs, accounts, boxes);
@@ -148,7 +161,10 @@ export async function revoke(
     new TextEncoder().encode('revoke_delegation'),
   ];
   const accounts = [agent, sponsor];
-  const boxes = [{ appIndex: REGISTRY_APP_ID, name: delegationBoxName(sponsor, agent) }];
+  const boxes = [{
+    appIndex: REGISTRY_APP_ID,
+    name: delegationBoxName(sponsor, agent),
+  }];
 
   const result =
     await submitApplicationCall(REGISTRY_APP_ID, appArgs, accounts, boxes);

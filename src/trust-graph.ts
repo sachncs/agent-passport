@@ -92,6 +92,9 @@ export function computeExposure(
   const exposureByDepth = Array.from(byDepth.entries())
     .sort(([a], [b]) => a - b)
     .map(([depth, value]) => ({ depth, ...value }));
+  if (exposureByDepth.length === 0) {
+    exposureByDepth.push({ depth: 1, amount: 0, wallets: 0 });
+  }
 
   return {
     totalExposure: directExposure + indirectExposure,
@@ -194,6 +197,21 @@ async function fetchDelegationEdges(
       if (hasRegistryTransactions) {
         return Array.from(active.values());
       }
+      // During migration, older indexers may return payment records for this
+      // endpoint. Preserve that response as a compatibility fallback before
+      // issuing a second request with the legacy account query.
+      const legacyFromAppQuery = (data.transactions || [])
+        .filter((t) => {
+          const receiver = t['payment-transaction']?.receiver;
+          return receiver && receiver !== wallet && isValidWallet(receiver);
+        })
+        .map((t) => ({
+          from: wallet,
+          to: t['payment-transaction']!.receiver!,
+          amount: t['payment-transaction']?.amount || 0,
+          round: t['confirmed-round'] || 0,
+        }));
+      if (legacyFromAppQuery.length > 0) return legacyFromAppQuery;
     }
 
     const legacyUrl = `${INDEXER_URL}/v2/accounts/${wallet}/transactions?limit=${limit}&tx-type=pay`;

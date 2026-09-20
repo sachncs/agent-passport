@@ -10,10 +10,25 @@ function safeParseInt(value: string | undefined, fallback: number): number {
 function validateConfig() {
   const errors: string[] = [];
 
-  const port = safeParseInt(process.env.PORT, 3000);
-  if (port < 1 || port > 65_535) {
-    errors.push('PORT must be an integer between 1 and 65535');
-  }
+  const validateIntegerEnv = (
+    name: string,
+    options: { min: number; max?: number } = { min: 0 },
+  ) => {
+    const raw = process.env[name];
+    if (raw === undefined || raw === '') return;
+    const parsed = Number(raw);
+    const invalid = !/^[+-]?\d+$/.test(raw.trim())
+      || !Number.isSafeInteger(parsed)
+      || parsed < options.min
+      || (options.max !== undefined && parsed > options.max);
+    if (invalid) {
+      const range = options.max === undefined
+        ? '' : ` between ${options.min} and ${options.max}`;
+      errors.push(`${name} must be an integer${range}`);
+    }
+  };
+
+  validateIntegerEnv('PORT', { min: 1, max: 65_535 });
 
   if (process.env.X402_ENABLED === 'true' && !process.env.X402_PAYMENT_RECIPIENT) {
     errors.push('X402_PAYMENT_RECIPIENT is required when X402_ENABLED=true');
@@ -76,6 +91,9 @@ function validateConfig() {
       errors.push('HMAC_TIMESTAMP_SKEW_MS must be a positive integer');
     }
   }
+
+  validateIntegerEnv('REGISTRY_APP_ID');
+  validateIntegerEnv('REPUTATION_APP_ID');
 
   // Validate URL schemes to prevent SSRF / typo crashes while allowing
   // provider paths and query parameters.

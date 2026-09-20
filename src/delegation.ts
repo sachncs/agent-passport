@@ -22,9 +22,9 @@ interface Delegation {
 
 interface IndexerTransaction {
   sender?: string;
-  tx-type?: string;
+  'tx-type'?: string;
   'application-transaction'?: {
-    application-args?: string[];
+    'application-args'?: string[];
     accounts?: string[];
   };
   'asset-transfer-transaction'?: {
@@ -151,7 +151,9 @@ async function fetchDelegationsFromIndexer(
     appUrl.searchParams.set('address-role', 'accounts');
     const appRes = await fetch(appUrl, { signal: AbortSignal.timeout(10_000) });
     if (appRes.ok) {
-      const appData = (await appRes.json()) as { transactions?: IndexerTransaction[] };
+      const appData = (await appRes.json()) as {
+        transactions?: IndexerTransaction[]
+      };
       const active = new Map<string, Delegation>();
       for (const tx of appData.transactions || []) {
         const app = tx['application-transaction'];
@@ -185,10 +187,19 @@ async function fetchDelegationsFromIndexer(
     }
 
     // Legacy compatibility for pre-registry-transfer deployments.
-    const legacyUrl = `${INDEXER_URL}/v2/accounts/${wallet}/transactions?limit=500&tx-type=axfer`;
-    const legacyRes = await fetch(legacyUrl, { signal: AbortSignal.timeout(10_000) });
+    const legacyUrl = new URL(
+      `${INDEXER_URL}/v2/accounts/${wallet}/transactions`,
+    );
+    legacyUrl.searchParams.set('limit', '500');
+    legacyUrl.searchParams.set('tx-type', 'axfer');
+    const legacyRes = await fetch(
+      legacyUrl,
+      { signal: AbortSignal.timeout(10_000) },
+    );
     if (!legacyRes.ok) return [];
-    const data = (await legacyRes.json()) as { transactions?: IndexerTransaction[] };
+    const data = (await legacyRes.json()) as {
+      transactions?: IndexerTransaction[]
+    };
     return (data.transactions || [])
       .map((t) => ({
         delegator: wallet,
