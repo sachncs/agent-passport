@@ -188,7 +188,8 @@ CTAs are no longer mounted by `src/pages/index.astro`.
 `npm run check --prefix site` and `npm run build --prefix site` pass after this
 composition pass. Playwright verification now covers the built static preview at
 390px and 1440px widths: the base-path docs links resolve to `/agent-passport/docs/`,
-the trust-profile anchor is present, and the Python code tab updates its response
-and `aria-selected` state. Desktop and mobile screenshots were captured during
-the check. The preview is served over IPv6 because local IPv4 binding is blocked
-in this environment.
+the trust-profile anchor is present, the demo wallet input refreshes the displayed
+identity and status, and the Python code tab updates its response and
+`aria-selected` state. Responsive checks also cover 768px and 1024px widths.
+Desktop and mobile screenshots were captured during the check. The preview is
+served over IPv6 because local IPv4 binding is blocked in this environment.
