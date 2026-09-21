@@ -1,77 +1,33 @@
 ---
 import Container from "../layout/Container.astro";
 import Button from "../ui/Button.astro";
-import ScoreCard from "../mockups/ScoreCard.astro";
+
+const wallet = "GD64YIY3…BHU5A";
+const factors = [
+  ["Longevity", "82", "Established history"],
+  ["Activity", "74", "Consistent use"],
+  ["Velocity", "86", "No burst pattern"],
+  ["Network", "69", "Limited delegation"],
+];
 ---
 
 <section class="hero relative overflow-hidden bg-stage">
-  <div class="bg-grain absolute inset-0"></div>
-  <div class="bg-grid absolute inset-0 opacity-60"></div>
-  <div class="hero-orbit absolute left-1/2 top-[-20rem] h-[48rem] w-[48rem] -translate-x-1/2 rounded-full border border-accent/10"></div>
-  <div class="hero-orbit hero-orbit--inner absolute left-1/2 top-[-10rem] h-[28rem] w-[28rem] -translate-x-1/2 rounded-full border border-accent/10"></div>
-
+  <div class="bg-grid absolute inset-0 opacity-50"></div>
   <Container class="relative pb-20 pt-16 md:pb-28 md:pt-24 lg:pt-28">
-    <div class="grid items-center gap-14 lg:grid-cols-[0.92fr_1.08fr] lg:gap-20">
-      <div class="relative z-10">
-        <div class="inline-flex items-center gap-2 rounded-full border border-accent/25 bg-accent/[0.08] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-accent">
-          <span class="relative flex h-1.5 w-1.5"><span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-60"></span><span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent"></span></span>
-          Trust infrastructure for AI agents
-        </div>
-
-        <h1 class="mt-7 max-w-[720px] text-balance text-[48px] font-semibold leading-[0.96] tracking-[-0.055em] text-ink-1 sm:text-[66px] md:text-[78px] lg:text-[86px]">
-          Make every<br />
-          <span class="font-serif-italic font-normal text-accent">agent legible.</span>
-        </h1>
-
-        <p class="mt-7 max-w-xl text-pretty text-[17px] leading-[1.6] text-ink-2 md:text-[19px]">
-          Agent Passport turns an Algorand wallet into an explainable trust decision—so marketplaces, lenders, and autonomous systems can transact with confidence.
-        </p>
-
-        <div class="mt-9 flex flex-wrap items-center gap-3">
-          <Button href="https://github.com/sachncs/agent-passport/blob/master/docs/api.md" external size="lg" variant="primary">
-            Start with the API
-            <span aria-hidden="true">→</span>
-          </Button>
-          <Button href="#product" size="lg" variant="secondary">
-            See the verdict
-            <span aria-hidden="true">↓</span>
-          </Button>
-        </div>
-
-        <div class="mt-9 flex flex-wrap items-center gap-x-6 gap-y-3 text-[11px] text-ink-3">
-          <span class="inline-flex items-center gap-2"><span class="h-1.5 w-1.5 rounded-full bg-accent"></span>Open source · MIT</span>
-          <span class="inline-flex items-center gap-2"><span class="h-1.5 w-1.5 rounded-full bg-accent"></span>On-chain verifiable</span>
-          <span class="inline-flex items-center gap-2"><span class="h-1.5 w-1.5 rounded-full bg-accent"></span>x402 ready</span>
-        </div>
+    <div class="grid items-center gap-14 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
+      <div class="relative z-10 max-w-xl">
+        <div class="inline-flex items-center gap-2 text-[12px] font-medium text-ink-2"><span class="h-2 w-2 rounded-full bg-accent"></span>Trust infrastructure for autonomous agents</div>
+        <h1 class="mt-7 text-balance text-[52px] font-semibold leading-[0.94] tracking-[-0.06em] text-ink-1 sm:text-[68px] lg:text-[82px]">Know which<br /><span class="font-serif-italic font-normal text-accent">agents to trust.</span></h1>
+        <p class="mt-7 max-w-lg text-pretty text-[17px] leading-[1.55] text-ink-2 md:text-[19px]">Turn verifiable behavior into explainable trust scores and risk signals your systems can use.</p>
+        <div class="mt-9 flex flex-wrap items-center gap-3"><Button href="#check-agent" size="lg" variant="primary">Check an agent <span aria-hidden="true">→</span></Button><Button href={`${import.meta.env.BASE_URL}docs/`} size="lg" variant="secondary">Read the docs <span aria-hidden="true">↗</span></Button></div>
+        <div class="mt-8 flex flex-wrap gap-x-5 gap-y-2 text-[12px] text-ink-3"><span>Open source</span><span>Explainable</span><span>Deterministic</span><span>Algorand-verifiable</span></div>
       </div>
 
-      <div class="relative mx-auto w-full max-w-[610px] lg:pt-8">
-        <div class="absolute -inset-10 rounded-full bg-accent/[0.07] blur-3xl"></div>
-        <div class="relative rounded-[30px] border border-line bg-surface-1/70 p-2 shadow-card backdrop-blur-sm">
-          <div class="flex items-center justify-between border-b border-line px-4 py-3">
-            <div class="flex items-center gap-2"><span class="h-2 w-2 rounded-full bg-accent"></span><span class="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-3">Live decision surface</span></div>
-            <span class="font-mono text-[10px] text-accent">GET /score · example response</span>
-          </div>
-          <div class="p-2 pt-4 sm:p-4 sm:pt-5"><ScoreCard /></div>
-          <div class="flex flex-wrap items-center justify-between gap-3 border-t border-line px-4 py-3 text-[10px] text-ink-3 sm:px-5">
-            <span class="font-mono">EXAMPLE WALLET · DEMO DATA</span>
-            <span class="inline-flex items-center gap-1.5 text-accent"><span class="h-1.5 w-1.5 rounded-full bg-accent"></span>EXPLAINABLE OUTPUT</span>
-          </div>
-        </div>
-        <div class="absolute -right-5 top-4 hidden rounded-xl border border-accent/20 bg-surface-1/90 px-4 py-3 shadow-card backdrop-blur sm:block">
-          <div class="font-mono text-[9px] uppercase tracking-[0.14em] text-ink-3">Risk verdict</div>
-          <div class="mt-1 flex items-center gap-2 text-sm font-medium text-accent"><span class="h-2 w-2 rounded-full bg-accent"></span>Low risk</div>
-        </div>
-      </div>
+      <div id="check-agent" class="relative mx-auto w-full max-w-[600px] scroll-mt-28"><div class="absolute -inset-8 rounded-full bg-accent/[0.07] blur-3xl"></div><div class="relative overflow-hidden rounded-[28px] border border-line bg-surface-1 shadow-card">
+        <div class="flex items-center justify-between border-b border-line px-5 py-4"><div><div class="text-[11px] font-semibold text-ink-1">Agent trust profile</div><div class="mt-1 font-mono text-[10px] text-ink-3">Illustrative response · demo data</div></div><span class="rounded-full border border-accent/25 bg-accent/10 px-2.5 py-1 text-[10px] font-medium text-accent">GET /score</span></div>
+        <div class="grid gap-8 p-6 sm:grid-cols-[0.85fr_1.15fr] sm:p-8"><div><div class="text-[11px] text-ink-3">Agent identity</div><div class="mt-2 font-mono text-[12px] text-ink-1">{wallet}</div><div class="mt-7 flex items-end gap-2"><span class="font-serif-italic text-[76px] leading-none text-ink-1">78</span><span class="pb-2 text-sm text-ink-3">/ 100</span></div><div class="mt-3 inline-flex items-center gap-2 rounded-full border border-accent/25 bg-accent/10 px-3 py-1.5 text-[12px] font-medium text-accent"><span class="h-1.5 w-1.5 rounded-full bg-accent"></span>Low risk</div></div><div><div class="flex items-center justify-between"><span class="text-[11px] font-medium text-ink-2">Why this score?</span><span class="font-mono text-[10px] text-ink-3">5 inputs</span></div><div class="mt-4 space-y-4">{factors.map(([label, value, reason]) => <div><div class="flex items-center justify-between text-[11px]"><span class="text-ink-2">{label}</span><span class="font-mono text-ink-3">{value}</span></div><div class="mt-1.5 h-1.5 rounded-full bg-surface-3"><div class="h-full rounded-full bg-accent" style={`width:${value}%;`}></div></div><div class="mt-1 text-[10px] text-ink-3">{reason}</div></div>)}</div></div></div>
+        <div class="flex flex-wrap items-center justify-between gap-3 border-t border-line bg-surface-2/40 px-6 py-4 text-[10px] text-ink-3 sm:px-8"><span class="font-mono">riskLevel: low</span><span class="font-mono">checksum: sha256…</span><span class="text-accent">Inspectable output</span></div>
+      </div></div>
     </div>
   </Container>
-
-  <div class="relative border-t border-line bg-surface-1/30">
-    <Container class="grid grid-cols-2 divide-x divide-line sm:grid-cols-4">
-      <div class="px-4 py-5 sm:px-6"><div class="font-serif-italic text-2xl text-ink-1">0–100</div><div class="mt-1 text-[10px] uppercase tracking-[0.14em] text-ink-3">Explainable score</div></div>
-      <div class="px-4 py-5 sm:px-6"><div class="font-serif-italic text-2xl text-ink-1">60<span class="font-sans text-sm text-ink-3">s</span></div><div class="mt-1 text-[10px] uppercase tracking-[0.14em] text-ink-3">Response cache window</div></div>
-      <div class="px-4 py-5 sm:px-6"><div class="font-serif-italic text-2xl text-ink-1">26</div><div class="mt-1 text-[10px] uppercase tracking-[0.14em] text-ink-3">Declared HTTP handlers</div></div>
-      <div class="px-4 py-5 sm:px-6"><div class="font-serif-italic text-2xl text-ink-1">MIT</div><div class="mt-1 text-[10px] uppercase tracking-[0.14em] text-ink-3">Open-source license</div></div>
-    </Container>
-  </div>
 </section>

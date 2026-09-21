@@ -1,76 +1,16 @@
 ---
 import Container from "../layout/Container.astro";
 import Eyebrow from "../ui/Eyebrow.astro";
-
-const props = [
-  {
-    title: "Score",
-    outcome: "Composite trust in a single number",
-    body: "Five weighted sub-scores (age, activity, volume, velocity, compliance) collapsed into one explainable 0–100 verdict with risk level.",
-    metric: "0–100",
-    metricLabel: "composite trust",
-  },
-  {
-    title: "Delegate",
-    outcome: "Trust propagates through relationships",
-    body: "Walk the delegation graph from any wallet, attenuating per hop, weighted by sponsor quality. Know if the counterparty is one degree from an anchor.",
-    metric: "≤10",
-    metricLabel: "branching factor",
-  },
-  {
-    title: "Underwrite",
-    outcome: "Approve, deny, or limit in one call",
-    body: "Credit capacity estimation feeds a four-factor decision. Approved limits are bounded by global and per-wallet exposure safeguards.",
-    metric: "$100k",
-    metricLabel: "system cap",
-  },
-];
 ---
-
-<section id="value" class="py-24 md:py-32">
+<section id="product" class="py-24 md:py-32">
   <Container>
-    
-      <Eyebrow icon>Three primitives. One surface.</Eyebrow>
-      <h2
-        class="mt-4 text-balance text-[36px] font-semibold leading-[1.1] tracking-[-0.025em] text-ink-1 md:text-[48px]"
-      >
-        Score, delegate, and underwrite — <span class="font-serif-italic font-normal">without a database.</span>
-      </h2>
-      <p class="mt-5 max-w-xl text-pretty text-base leading-relaxed text-ink-2 md:text-lg">
-        Every call hits Algorand directly, caches for 60 seconds, and returns
-        a single inspectable verdict. Read paths derive evidence from Algorand
-        and use a 60-second in-memory response cache; operational state remains explicit.
-      </p>
-    
-
-    <div class="mt-16 grid gap-px overflow-hidden rounded-2xl border border-line bg-line md:grid-cols-3">
-      {
-        props.map((p, i) => (
-          
-            <div class="flex items-baseline justify-between">
-              <span class="text-[10px] font-medium uppercase tracking-[0.18em] text-ink-3">
-                {String(i + 1).padStart(2, "0")} / {p.title}
-              </span>
-              <span class="font-mono text-[10px] text-ink-3">v2</span>
-            </div>
-            <h3 class="mt-6 text-balance text-2xl font-semibold tracking-tight text-ink-1 md:text-[26px]">
-              {p.outcome}
-            </h3>
-            <p class="mt-4 text-pretty text-[14px] leading-relaxed text-ink-2">
-              {p.body}
-            </p>
-            <div class="mt-10 flex items-end justify-between border-t border-line pt-6">
-              <span class="text-[10px] font-medium uppercase tracking-[0.16em] text-ink-3">
-                {p.metricLabel}
-              </span>
-              <span class="font-serif-italic text-3xl tracking-tight text-ink-1 tabular">
-                {p.metric}
-              </span>
-            </div>
-            <span class="absolute right-6 top-6 inline-block h-1.5 w-1.5 rounded-full bg-accent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-          
-        ))
-      }
+    <div class="max-w-2xl"><Eyebrow icon>From unknown to understood</Eyebrow><h2 class="mt-4 text-balance text-[38px] font-semibold leading-[1.04] tracking-[-0.04em] text-ink-1 md:text-[54px]">Identity is a starting point.<br /><span class="font-serif-italic font-normal">Evidence makes it useful.</span></h2><p class="mt-5 max-w-xl text-pretty text-[16px] leading-relaxed text-ink-2">Autonomous systems need more than an address before they delegate work, pay, or extend a limit.</p></div>
+    <div class="mt-14 grid items-center gap-6 md:grid-cols-[1fr_auto_1fr_auto_1fr]">
+      <div class="py-5 md:py-0"><div class="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-3">01 · unknown agent</div><div class="mt-3 font-mono text-sm text-ink-1">GD64YIY3…BHU5A</div><div class="mt-2 text-[13px] text-ink-3">An identifier without context</div></div>
+      <div class="hidden text-2xl text-accent md:block">→</div>
+      <div class="border-y border-line py-5 md:border-y-0 md:py-0"><div class="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-3">02 · observable evidence</div><div class="mt-3 flex flex-wrap gap-2"><span class="rounded-full bg-surface-2 px-2.5 py-1 text-[11px] text-ink-2">History</span><span class="rounded-full bg-surface-2 px-2.5 py-1 text-[11px] text-ink-2">Relationships</span><span class="rounded-full bg-surface-2 px-2.5 py-1 text-[11px] text-ink-2">Reputation</span></div><div class="mt-2 text-[13px] text-ink-3">Signals your application can inspect</div></div>
+      <div class="hidden text-2xl text-accent md:block">→</div>
+      <div class="py-5 md:py-0"><div class="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-3">03 · explainable decision</div><div class="mt-3 text-2xl font-semibold tracking-tight text-ink-1">Trust 78 <span class="ml-2 text-sm font-normal text-accent">Low risk</span></div><div class="mt-2 text-[13px] text-ink-3">A verdict with reasons attached</div></div>
     </div>
   </Container>
 </section>
