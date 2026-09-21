@@ -8,39 +8,39 @@ const groups = [
   {
     title: "Start here",
     items: [
-      ["Overview", "Understand the wallet → evidence → decision model."],
-      ["Quickstart", "Run the Node service locally and make a first request."],
-      ["Configuration", "Algorand, security, caching, exposure, and observability settings."],
+      ["Overview", "Understand the wallet → evidence → decision model.", "overview"],
+      ["Quickstart", "Run the Node service locally and make a first request.", "overview"],
+      ["Configuration", "Algorand, security, caching, exposure, and observability settings.", "operations"],
     ],
   },
   {
     title: "Decision model",
     items: [
-      ["Trust scoring", "Five weighted sub-scores, inactivity adjustment, risk bands, and fresh-wallet behavior."],
-      ["Delegation", "Depth, sponsor quality, amount scoring, bounded traversal, and registry boxes."],
-      ["Sybil indicators", "Eleven weighted wallet-history and graph inputs with heuristic limits."],
-      ["Credit & underwriting", "Capacity estimation, four underwriting factors, approval gates, and exposure safeguards."],
-      ["Passport document", "Schema fields, data sources, and what the SHA-256 checksum covers."],
+      ["Trust scoring", "Five weighted sub-scores, inactivity adjustment, risk bands, and fresh-wallet behavior.", "concepts"],
+      ["Delegation", "Depth, sponsor quality, amount scoring, bounded traversal, and registry boxes.", "concepts"],
+      ["Sybil indicators", "Eleven weighted wallet-history and graph inputs with heuristic limits.", "concepts"],
+      ["Credit & underwriting", "Capacity estimation, four underwriting factors, approval gates, and exposure safeguards.", "concepts"],
+      ["Passport document", "Schema fields, data sources, and what the SHA-256 checksum covers.", "concepts"],
     ],
   },
   {
     title: "API and SDKs",
     items: [
-      ["Endpoint reference", "Methods, paths, inputs, response semantics, and operational side effects."],
-      ["Authentication", "Conditional HMAC signing, timestamp window, and canonical request fields."],
-      ["Idempotency", "Required mutating-request header and process-local 24-hour records."],
-      ["x402", "Optional facilitator-backed payment requirements and verification flow."],
-      ["TypeScript and Python", "Typed clients, retries, errors, and callback surfaces."],
+      ["Endpoint reference", "Methods, paths, inputs, response semantics, and operational side effects.", "api"],
+      ["Authentication", "Conditional HMAC signing, timestamp window, and canonical request fields.", "api"],
+      ["Idempotency", "Required mutating-request header and process-local 24-hour records.", "api"],
+      ["x402", "Optional facilitator-backed payment requirements and verification flow.", "api"],
+      ["TypeScript and Python", "Typed clients, retries, errors, and callback surfaces.", "api"],
     ],
   },
   {
     title: "Operate it",
     items: [
-      ["Architecture", "Read lifecycle, mutation lifecycle, Algorand boundaries, and caches."],
-      ["Deployment", "Node, Docker, testnet/mainnet configuration, and readiness behavior."],
-      ["Scaling", "Which stores are local and what must move to shared storage for replicas."],
-      ["Observability", "Prometheus metrics, active alert rules, Grafana panels, and SLO profiles."],
-      ["Security limits", "What observable wallet signals can and cannot establish."],
+      ["Architecture", "Read lifecycle, mutation lifecycle, Algorand boundaries, and caches.", "architecture"],
+      ["Deployment", "Node, Docker, testnet/mainnet configuration, and readiness behavior.", "operations"],
+      ["Scaling", "Which stores are local and what must move to shared storage for replicas.", "architecture"],
+      ["Observability", "Prometheus metrics, active alert rules, Grafana panels, and SLO profiles.", "operations"],
+      ["Security limits", "What observable wallet signals can and cannot establish.", "security"],
     ],
   },
 ];
@@ -58,8 +58,8 @@ const groups = [
         <h1 class="mt-5 text-balance text-[48px] font-semibold leading-[0.98] tracking-[-0.055em] text-ink-1 md:text-[76px]">Make a wallet<br /><span class="font-serif-italic font-normal text-accent">legible.</span></h1>
         <p class="mt-7 max-w-2xl text-pretty text-[17px] leading-[1.65] text-ink-2 md:text-[19px]">Agent Passport evaluates observable Algorand activity and relationships, then returns deterministic application-facing signals. These docs explain the implementation and its boundaries.</p>
         <div class="mt-8 flex flex-wrap gap-3">
-          <a class="rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-accent-fg transition hover:opacity-90" href="https://github.com/sachncs/agent-passport/blob/master/README.md" target="_blank" rel="noopener noreferrer">Read the repository ↗</a>
-          <a class="rounded-lg border border-line bg-surface-1 px-4 py-2.5 text-sm font-medium text-ink-1 transition hover:border-line-strong" href="https://github.com/sachncs/agent-passport/blob/master/docs/api/openapi.yaml" target="_blank" rel="noopener noreferrer">OpenAPI spec ↗</a>
+          <a class="rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-accent-fg transition hover:opacity-90" href={`${import.meta.env.BASE_URL.replace(/\/$/, "")}/docs/overview/`}>Read the overview →</a>
+          <a class="rounded-lg border border-line bg-surface-1 px-4 py-2.5 text-sm font-medium text-ink-1 transition hover:border-line-strong" href={`${import.meta.env.BASE_URL.replace(/\/$/, "")}/docs/openapi/`}>OpenAPI spec →</a>
         </div>
       </div>
 
@@ -68,10 +68,10 @@ const groups = [
           <section class="rounded-2xl border border-line bg-surface-1 p-6 md:p-8">
             <h2 class="text-xl font-semibold tracking-tight text-ink-1">{group.title}</h2>
             <ul class="mt-6 divide-y divide-line">
-              {group.items.map(([title, description]) => (
+              {group.items.map(([title, description, slug]) => (
                 <li class="py-4 first:pt-0 last:pb-0">
-                  <a href={title === "Endpoint reference" ? "https://github.com/sachncs/agent-passport/blob/master/docs/api.md" : "https://github.com/sachncs/agent-passport/tree/master/docs"} target="_blank" rel="noopener noreferrer" class="group block">
-                    <div class="flex items-center justify-between gap-4"><span class="font-medium text-ink-1 group-hover:text-accent">{title}</span><span class="font-mono text-[10px] text-ink-3">↗</span></div>
+                  <a href={`${import.meta.env.BASE_URL.replace(/\/$/, "")}/docs/${slug}/`} class="group block">
+                    <div class="flex items-center justify-between gap-4"><span class="font-medium text-ink-1 group-hover:text-accent">{title}</span><span class="font-mono text-[10px] text-ink-3">→</span></div>
                     <p class="mt-1.5 text-[13px] leading-relaxed text-ink-2">{description}</p>
                   </a>
                 </li>

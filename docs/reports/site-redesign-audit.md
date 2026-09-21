@@ -148,7 +148,10 @@ Sources: `src/app.ts`, `src/lib/hmac-auth.ts`, `src/lib/idempotency.ts`,
   and endpoint-count claims. Demonstration values are labeled as illustrative.
 - Added a base-path-safe `/agent-passport/docs/` documentation index with source
   links and a limitation boundary, plus `robots.txt`. The Astro deployment
-  remains static and separate from the Next.js console.
+  remains static and separate from the Next.js console. The docs surface now
+  renders first-party static pages for the overview, concepts, API, architecture,
+  operations, security, and OpenAPI contract; the index and footer no longer
+  send documentation readers to the repository as the primary destination.
 - `npm run check --prefix site` and `npm run build --prefix site` pass. The build
   emits the home page and docs page under Astro's `/agent-passport` base and
   includes sitemap output.

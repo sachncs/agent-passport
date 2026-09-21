@@ -1,0 +1,59 @@
+---
+import { readFileSync } from "node:fs";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Header from "../../components/layout/Header.astro";
+import Footer from "../../components/layout/Footer.astro";
+import Container from "../../components/layout/Container.astro";
+import { renderMarkdown } from "../../lib/markdown";
+import { docsPages } from "../../lib/docs";
+
+export function getStaticPaths() {
+  return docsPages.map((page) => ({ params: { slug: page.slug }, props: { page } }));
+}
+
+const { page } = Astro.props;
+const baseUrl = import.meta.env.BASE_URL.replace(/\/$/, "");
+const source = readFileSync(new URL(`../../../../docs/${page.file}`, import.meta.url), "utf8");
+const content = page.code
+  ? `<pre><code class="language-yaml">${source.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")}</code></pre>`
+  : renderMarkdown(source, baseUrl);
+const currentIndex = docsPages.findIndex((item) => item.slug === page.slug);
+const previous = docsPages[currentIndex - 1];
+const next = docsPages[currentIndex + 1];
+---
+
+<BaseLayout
+  title={`${page.label} · Agent Passport documentation`}
+  description={page.summary}
+>
+  <Header />
+  <main id="main" class="bg-stage">
+    <Container class="pb-24 pt-12 md:pb-32 md:pt-20">
+      <div class="mb-10 flex flex-wrap items-center gap-2 text-[12px] text-ink-3">
+        <a href={`${baseUrl}/docs/`} class="hover:text-ink-1">Docs</a>
+        <span aria-hidden="true">/</span>
+        <span class="text-ink-1">{page.label}</span>
+      </div>
+      <div class="grid gap-12 lg:grid-cols-[minmax(0,1fr)_220px] lg:gap-20">
+        <div>
+          {page.code && <div class="docs-prose"><h1>{page.label}</h1><p>{page.summary}</p></div>}
+          <article class="docs-prose" set:html={content}></article>
+        </div>
+        <aside class="order-first lg:order-none">
+          <div class="sticky top-24 rounded-2xl border border-line bg-surface-1 p-5">
+            <div class="font-mono text-[10px] uppercase tracking-[0.16em] text-accent">On this page</div>
+            <nav class="mt-4 space-y-2 text-[13px]" aria-label="Documentation pages">
+              {docsPages.map((item) => <a href={`${baseUrl}/docs/${item.slug}/`} class={`block rounded-md px-2 py-1.5 ${item.slug === page.slug ? "bg-accent/10 font-medium text-accent" : "text-ink-2 hover:text-ink-1"}`}>{item.label}</a>)}
+            </nav>
+            <a href="https://github.com/sachncs/agent-passport" target="_blank" rel="noopener noreferrer" class="mt-5 block border-t border-line pt-4 text-[12px] text-ink-3 hover:text-ink-1">View source on GitHub ↗</a>
+          </div>
+        </aside>
+      </div>
+      <nav class="mt-16 grid gap-3 border-t border-line pt-6 sm:grid-cols-2" aria-label="Previous and next documentation pages">
+        {previous ? <a href={`${baseUrl}/docs/${previous.slug}/`} class="rounded-xl border border-line bg-surface-1 p-5 hover:border-line-strong"><span class="font-mono text-[10px] text-ink-3">← Previous</span><span class="mt-2 block font-medium text-ink-1">{previous.label}</span></a> : <span></span>}
+        {next ? <a href={`${baseUrl}/docs/${next.slug}/`} class="rounded-xl border border-line bg-surface-1 p-5 text-right hover:border-line-strong"><span class="font-mono text-[10px] text-ink-3">Next →</span><span class="mt-2 block font-medium text-ink-1">{next.label}</span></a> : <span></span>}
+      </nav>
+    </Container>
+  </main>
+  <Footer />
+</BaseLayout>

@@ -40,6 +40,14 @@ jobs:
         working-directory: site
         run: |
           test -f dist/index.html
+          test -f dist/docs/index.html
+          test -f dist/docs/overview/index.html
+          test -f dist/docs/concepts/index.html
+          test -f dist/docs/api/index.html
+          test -f dist/docs/architecture/index.html
+          test -f dist/docs/operations/index.html
+          test -f dist/docs/security/index.html
+          test -f dist/docs/openapi/index.html
           test -f dist/favicon.svg
           pages=$(find dist -name "*.html" | wc -l)
           echo "Built $pages HTML pages from Astro static output"
