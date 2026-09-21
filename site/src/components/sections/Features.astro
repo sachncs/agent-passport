@@ -11,27 +11,27 @@ const features = [
   },
   {
     title: "Delegation Graph",
-    body: "BFS walk with 0.85-per-hop attenuation, cycle detection, quality-weighted sponsor counts.",
+    body: "Bounded graph traversal with depth scoring, sponsor quality, cycle-aware registry operations, and trust caps.",
     doc: "/delegation",
   },
   {
     title: "Sybil Detection",
-    body: "Twelve signals including clustering, timing fingerprint, funding correlation, and burst patterns.",
+    body: "Weighted wallet-history and graph indicators: clustering, timing, balances, funding, circular activity, and neighborhood structure.",
     doc: "/sybil-check",
   },
   {
     title: "Underwriting",
-    body: "Credit capacity estimation with default propagation and a system exposure cap.",
+    body: "Credit capacity plus four underwriting factors, sanctions-provider outcome, and software exposure safeguards.",
     doc: "/underwrite",
   },
   {
     title: "Reputation Log",
-    body: "Append-only on-chain event record. Endorse, revoke, replay any agent's history.",
+    body: "Typed payment, purchase, dispute, refund, endorsement, and service events with on-chain contract storage.",
     doc: "/reputation",
   },
   {
     title: "Passport Document",
-    body: "Self-contained verification document — claims, signatures, and on-chain proof in one payload.",
+    body: "Machine-readable aggregation of scores, graph context, data sources, capabilities, and a deterministic SHA-256 checksum.",
     doc: "/passport",
   },
   {
@@ -41,7 +41,7 @@ const features = [
   },
   {
     title: "Discovery / Bazaar",
-    body: "Search the registry. Find agents by reputation tier, capability, or trust anchor proximity.",
+    body: "Search the configured Bazaar metadata catalog. This is a discovery API, not a hosted marketplace.",
     doc: "/discovery/search",
   },
   {
@@ -65,14 +65,15 @@ const features = [
         <h2
           class="mt-4 text-balance text-[36px] font-semibold leading-[1.1] tracking-[-0.025em] text-ink-1 md:text-[44px]"
         >
-          Nine endpoints.<br />
-          <span class="font-serif-italic font-normal">One verdict surface.</span>
+          Signals become<br />
+          <span class="font-serif-italic font-normal">decisions you can inspect.</span>
         </h2>
         <p
           class="mt-5 max-w-sm text-pretty text-[15px] leading-relaxed text-ink-2"
         >
-          Every capability is a single HTTP call. Every response is JSON.
-          Every verdict carries the explanation block by default.
+          Read paths derive evidence from Algorand and return JSON designed for
+          application decisions. Mutations, payment metering, and operational
+          state are explicit parts of the contract.
         </p>
         <div class="mt-8">
           <PassportDoc class="mx-auto max-w-[260px]" />

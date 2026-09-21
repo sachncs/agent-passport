@@ -12,25 +12,25 @@ interface Props {
 
 const { class: className = "" } = Astro.props;
 
-// Composite score sample (drawn from docs/concepts.md: 5 weighted sub-scores)
-const composite = 87;
+// Illustrative payload only. Values are intentionally labeled as demo data.
+const composite = 78;
 const riskLabel = "Low risk";
 const wallet = "GD64YIY3TWGDMCNPP553DZPPR6LDUSFQOIJVFDPPXWEG3FVOJCCDBBHU5A";
 const walletShort = `${wallet.slice(0, 6)}…${wallet.slice(-4)}`;
 
 const subScores: SubScore[] = [
-  { label: "Age", value: 92 },
-  { label: "Activity", value: 78 },
-  { label: "Volume", value: 88 },
-  { label: "Velocity", value: 81 },
-  { label: "Compliance", value: 95 },
+  { label: "Age", value: 82 },
+  { label: "Activity", value: 74 },
+  { label: "Volume", value: 69 },
+  { label: "Velocity", value: 86 },
+  { label: "Compliance", value: 91 },
 ];
 
 const explanation = [
-  "Wallet age 412 days · strongly established",
-  "Median 18.2 txns/month · consistent activity",
-  "Balance 12,480 ALGO · diversified holdings",
-  "No sanctions or counterparty flags (24h)",
+  "Established wallet age contributes to the score",
+  "Consistent activity without a high-velocity penalty",
+  "Balance and transaction history shape volume",
+  "Illustrative response — provider signals are deployment-dependent",
 ];
 ---
 
@@ -58,7 +58,7 @@ const explanation = [
         GET /score?wallet={walletShort}
       </div>
       <div class="text-[10px] font-medium tracking-tight text-accent">
-        200 OK · 87ms
+        200 OK · demo response
       </div>
     </div>
 
@@ -82,7 +82,7 @@ const explanation = [
             <span class="h-1.5 w-1.5 rounded-full bg-accent"></span>
             {riskLabel}
           </span>
-          <span class="text-[11px] text-ink-3">verified on-chain</span>
+          <span class="text-[11px] text-ink-3">illustrative output</span>
         </div>
       </div>
 

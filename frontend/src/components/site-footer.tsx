@@ -22,7 +22,7 @@ export function SiteFooter() {
             Agent Passport — trust &amp; underwriting for AI agents on Algorand.
           </span>
           <span className="text-muted-fg">
-            v0.1 · {network ?? "—"} · Stateless · 60 s cache
+            v0.1 · {network ?? "—"} · Read-oriented · 60 s cache
           </span>
         </div>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1">

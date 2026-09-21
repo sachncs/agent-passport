@@ -14,13 +14,13 @@ const props = [
     title: "Delegate",
     outcome: "Trust propagates through relationships",
     body: "Walk the delegation graph from any wallet, attenuating per hop, weighted by sponsor quality. Know if the counterparty is one degree from an anchor.",
-    metric: "×0.85",
-    metricLabel: "per-hop decay",
+    metric: "≤10",
+    metricLabel: "branching factor",
   },
   {
     title: "Underwrite",
     outcome: "Approve, deny, or limit in one call",
-    body: "Credit capacity estimation with default propagation and a system-wide exposure cap. No state to manage. Every call is a fresh decision.",
+    body: "Credit capacity estimation feeds a four-factor decision. Approved limits are bounded by global and per-wallet exposure safeguards.",
     metric: "$100k",
     metricLabel: "system cap",
   },
@@ -38,8 +38,8 @@ const props = [
       </h2>
       <p class="mt-5 max-w-xl text-pretty text-base leading-relaxed text-ink-2 md:text-lg">
         Every call hits Algorand directly, caches for 60 seconds, and returns
-        a single self-explanatory verdict. There is no signup, no API key
-        required to try, and no state to keep warm.
+        a single inspectable verdict. Read paths derive evidence from Algorand
+        and use a 60-second in-memory response cache; operational state remains explicit.
       </p>
     
 

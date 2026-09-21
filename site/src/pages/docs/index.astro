@@ -1,0 +1,93 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Header from "../../components/layout/Header.astro";
+import Footer from "../../components/layout/Footer.astro";
+import Container from "../../components/layout/Container.astro";
+
+const groups = [
+  {
+    title: "Start here",
+    items: [
+      ["Overview", "Understand the wallet → evidence → decision model."],
+      ["Quickstart", "Run the Node service locally and make a first request."],
+      ["Configuration", "Algorand, security, caching, exposure, and observability settings."],
+    ],
+  },
+  {
+    title: "Decision model",
+    items: [
+      ["Trust scoring", "Five weighted sub-scores, inactivity adjustment, risk bands, and fresh-wallet behavior."],
+      ["Delegation", "Depth, sponsor quality, amount scoring, bounded traversal, and registry boxes."],
+      ["Sybil indicators", "Eleven weighted wallet-history and graph inputs with heuristic limits."],
+      ["Credit & underwriting", "Capacity estimation, four underwriting factors, approval gates, and exposure safeguards."],
+      ["Passport document", "Schema fields, data sources, and what the SHA-256 checksum covers."],
+    ],
+  },
+  {
+    title: "API and SDKs",
+    items: [
+      ["Endpoint reference", "Methods, paths, inputs, response semantics, and operational side effects."],
+      ["Authentication", "Conditional HMAC signing, timestamp window, and canonical request fields."],
+      ["Idempotency", "Required mutating-request header and process-local 24-hour records."],
+      ["x402", "Optional facilitator-backed payment requirements and verification flow."],
+      ["TypeScript and Python", "Typed clients, retries, errors, and callback surfaces."],
+    ],
+  },
+  {
+    title: "Operate it",
+    items: [
+      ["Architecture", "Read lifecycle, mutation lifecycle, Algorand boundaries, and caches."],
+      ["Deployment", "Node, Docker, testnet/mainnet configuration, and readiness behavior."],
+      ["Scaling", "Which stores are local and what must move to shared storage for replicas."],
+      ["Observability", "Prometheus metrics, active alert rules, Grafana panels, and SLO profiles."],
+      ["Security limits", "What observable wallet signals can and cannot establish."],
+    ],
+  },
+];
+---
+
+<BaseLayout
+  title="Agent Passport documentation — trust and risk infrastructure"
+  description="Source-backed documentation for Agent Passport: trust scoring, delegation, sybil indicators, underwriting, APIs, SDKs, security, and operations."
+>
+  <Header />
+  <main id="main" class="bg-stage">
+    <Container class="pb-24 pt-16 md:pb-32 md:pt-24">
+      <div class="max-w-3xl">
+        <div class="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-accent">Documentation · v0.1.0 preview</div>
+        <h1 class="mt-5 text-balance text-[48px] font-semibold leading-[0.98] tracking-[-0.055em] text-ink-1 md:text-[76px]">Make a wallet<br /><span class="font-serif-italic font-normal text-accent">legible.</span></h1>
+        <p class="mt-7 max-w-2xl text-pretty text-[17px] leading-[1.65] text-ink-2 md:text-[19px]">Agent Passport evaluates observable Algorand activity and relationships, then returns deterministic application-facing signals. These docs explain the implementation and its boundaries.</p>
+        <div class="mt-8 flex flex-wrap gap-3">
+          <a class="rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-accent-fg transition hover:opacity-90" href="https://github.com/sachncs/agent-passport/blob/master/README.md" target="_blank" rel="noopener noreferrer">Read the repository ↗</a>
+          <a class="rounded-lg border border-line bg-surface-1 px-4 py-2.5 text-sm font-medium text-ink-1 transition hover:border-line-strong" href="https://github.com/sachncs/agent-passport/blob/master/docs/api/openapi.yaml" target="_blank" rel="noopener noreferrer">OpenAPI spec ↗</a>
+        </div>
+      </div>
+
+      <div class="mt-16 grid gap-3 lg:grid-cols-2">
+        {groups.map((group) => (
+          <section class="rounded-2xl border border-line bg-surface-1 p-6 md:p-8">
+            <h2 class="text-xl font-semibold tracking-tight text-ink-1">{group.title}</h2>
+            <ul class="mt-6 divide-y divide-line">
+              {group.items.map(([title, description]) => (
+                <li class="py-4 first:pt-0 last:pb-0">
+                  <a href={title === "Endpoint reference" ? "https://github.com/sachncs/agent-passport/blob/master/docs/api.md" : "https://github.com/sachncs/agent-passport/tree/master/docs"} target="_blank" rel="noopener noreferrer" class="group block">
+                    <div class="flex items-center justify-between gap-4"><span class="font-medium text-ink-1 group-hover:text-accent">{title}</span><span class="font-mono text-[10px] text-ink-3">↗</span></div>
+                    <p class="mt-1.5 text-[13px] leading-relaxed text-ink-2">{description}</p>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
+      </div>
+
+      <section class="mt-3 rounded-2xl border border-accent/20 bg-accent/[0.06] p-6 md:p-8">
+        <div class="grid gap-8 md:grid-cols-[1fr_1.6fr] md:items-center">
+          <div><div class="font-mono text-[10px] uppercase tracking-[0.18em] text-accent">Important boundary</div><h2 class="mt-3 text-2xl font-semibold tracking-tight text-ink-1">Signals are evidence, not identity.</h2></div>
+          <p class="text-[14px] leading-relaxed text-ink-2">A trust score does not prove a human identity, replace KYC/AML obligations, guarantee repayment, or make a counterparty safe. Sybil analysis is heuristic. New wallets, stale activity, Algorand availability, provider configuration, and local operational state all affect the result.</p>
+        </div>
+      </section>
+    </Container>
+  </main>
+  <Footer />
+</BaseLayout>

@@ -50,17 +50,13 @@ import ScoreCard from "../mockups/ScoreCard.astro";
         <div class="relative rounded-[30px] border border-line bg-surface-1/70 p-2 shadow-card backdrop-blur-sm">
           <div class="flex items-center justify-between border-b border-line px-4 py-3">
             <div class="flex items-center gap-2"><span class="h-2 w-2 rounded-full bg-accent"></span><span class="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-3">Live decision surface</span></div>
-            <span class="font-mono text-[10px] text-accent">POST /score</span>
+            <span class="font-mono text-[10px] text-accent">GET /score · example response</span>
           </div>
           <div class="p-2 pt-4 sm:p-4 sm:pt-5"><ScoreCard /></div>
           <div class="flex flex-wrap items-center justify-between gap-3 border-t border-line px-4 py-3 text-[10px] text-ink-3 sm:px-5">
-            <span class="font-mono">REQUEST_ID 8c3d…b41</span>
-            <span class="inline-flex items-center gap-1.5 text-accent"><span class="h-1.5 w-1.5 rounded-full bg-accent"></span>VERIFIED ON-CHAIN</span>
+            <span class="font-mono">EXAMPLE WALLET · DEMO DATA</span>
+            <span class="inline-flex items-center gap-1.5 text-accent"><span class="h-1.5 w-1.5 rounded-full bg-accent"></span>EXPLAINABLE OUTPUT</span>
           </div>
-        </div>
-        <div class="absolute -bottom-5 -left-5 hidden rounded-xl border border-line bg-surface-2/90 px-4 py-3 shadow-card backdrop-blur sm:block">
-          <div class="font-mono text-[9px] uppercase tracking-[0.14em] text-ink-3">Decision latency</div>
-          <div class="mt-1 font-serif-italic text-2xl text-ink-1">87<span class="ml-1 text-xs font-sans not-italic text-ink-3">ms</span></div>
         </div>
         <div class="absolute -right-5 top-4 hidden rounded-xl border border-accent/20 bg-surface-1/90 px-4 py-3 shadow-card backdrop-blur sm:block">
           <div class="font-mono text-[9px] uppercase tracking-[0.14em] text-ink-3">Risk verdict</div>
@@ -73,9 +69,9 @@ import ScoreCard from "../mockups/ScoreCard.astro";
   <div class="relative border-t border-line bg-surface-1/30">
     <Container class="grid grid-cols-2 divide-x divide-line sm:grid-cols-4">
       <div class="px-4 py-5 sm:px-6"><div class="font-serif-italic text-2xl text-ink-1">0–100</div><div class="mt-1 text-[10px] uppercase tracking-[0.14em] text-ink-3">Explainable score</div></div>
-      <div class="px-4 py-5 sm:px-6"><div class="font-serif-italic text-2xl text-ink-1">&lt;100<span class="font-sans text-sm text-ink-3">ms</span></div><div class="mt-1 text-[10px] uppercase tracking-[0.14em] text-ink-3">Cached response</div></div>
-      <div class="px-4 py-5 sm:px-6"><div class="font-serif-italic text-2xl text-ink-1">09</div><div class="mt-1 text-[10px] uppercase tracking-[0.14em] text-ink-3">Product endpoints</div></div>
-      <div class="px-4 py-5 sm:px-6"><div class="font-serif-italic text-2xl text-ink-1">∞</div><div class="mt-1 text-[10px] uppercase tracking-[0.14em] text-ink-3">Replayable decisions</div></div>
+      <div class="px-4 py-5 sm:px-6"><div class="font-serif-italic text-2xl text-ink-1">60<span class="font-sans text-sm text-ink-3">s</span></div><div class="mt-1 text-[10px] uppercase tracking-[0.14em] text-ink-3">Response cache window</div></div>
+      <div class="px-4 py-5 sm:px-6"><div class="font-serif-italic text-2xl text-ink-1">26</div><div class="mt-1 text-[10px] uppercase tracking-[0.14em] text-ink-3">Declared HTTP handlers</div></div>
+      <div class="px-4 py-5 sm:px-6"><div class="font-serif-italic text-2xl text-ink-1">MIT</div><div class="mt-1 text-[10px] uppercase tracking-[0.14em] text-ink-3">Open-source license</div></div>
     </Container>
   </div>
 </section>

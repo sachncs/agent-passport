@@ -21,9 +21,9 @@ import DelegationGraph from "../mockups/DelegationGraph.astro";
         <p
           class="mt-5 max-w-md text-pretty text-[15px] leading-relaxed text-ink-2"
         >
-          A BFS walk of the delegation graph, attenuated by 0.85 per hop and
-          weighted by sponsor quality. Cycle detection runs on every query —
-          sybil rings collapse to zero.
+          A bounded BFS walk scores depth, sponsor quality, sponsor count, and
+          delegated amount. Registry mutations reject self-delegation; graph
+          traversal tracks visited wallets and limits branching.
         </p>
 
         <div class="mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-line bg-line">
@@ -32,7 +32,7 @@ import DelegationGraph from "../mockups/DelegationGraph.astro";
               Max depth
             </div>
             <div class="mt-1 font-serif-italic text-2xl tabular text-ink-1">
-              6
+              10
             </div>
           </div>
           <div class="bg-surface-1 p-4">

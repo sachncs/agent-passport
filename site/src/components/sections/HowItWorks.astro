@@ -12,14 +12,14 @@ const steps = [
   {
     n: "02",
     title: "Composite the verdict",
-    body: "Five weighted sub-scores, four sybil signals, three delegation fields collapse into a single explainable response. Cached at the edge for 60s.",
+    body: "Five weighted sub-scores and repository-defined risk signals become a structured response. Responses may be served from a 60-second process-local cache.",
     code: "{ trustScore: 87, riskLevel: 'low' }",
   },
   {
     n: "03",
     title: "Verify on-chain",
-    body: "Every verdict is reproducible from Algorand state. The Passport endpoint signs the claims and stores the signature on TEAL contracts.",
-    code: "x402 → tx confirmed",
+    body: "Passport output includes a deterministic SHA-256 checksum over selected fields. It is tamper-evidence metadata, not an identity signature.",
+    code: "checksum → compare canonical fields",
   },
 ];
 ---
@@ -31,11 +31,12 @@ const steps = [
       <h2
         class="mt-4 text-balance text-[36px] font-semibold leading-[1.1] tracking-[-0.025em] text-ink-1 md:text-[48px]"
       >
-        Three calls from cold to <span class="font-serif-italic font-normal">verdict.</span>
+        From wallet evidence to <span class="font-serif-italic font-normal">decision.</span>
       </h2>
       <p class="mt-5 max-w-xl text-pretty text-base leading-relaxed text-ink-2 md:text-lg">
-        No boot. No warmup. No "contact us for an API key." Paste a wallet into
-        any endpoint and the verdict returns in the same shape every time.
+        The service composes wallet history, relationships, risk indicators, and
+        reputation into application-facing JSON. Mutating routes add authentication,
+        idempotency, and contract submission concerns.
       </p>
     </div>
 

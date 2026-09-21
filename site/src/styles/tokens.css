@@ -42,6 +42,13 @@
   --color-risk-med: oklch(0.78 0.14 75);
   --color-risk-high: oklch(0.7 0.18 30);
   --color-risk-crit: oklch(0.62 0.22 18);
+  --color-trust-high: var(--color-risk-low);
+  --color-trust-medium: oklch(0.72 0.13 200);
+  --color-trust-low: var(--color-risk-high);
+  --color-verified: var(--color-accent);
+  --color-unknown: oklch(0.62 0.01 250);
+  --color-warning: var(--color-risk-med);
+  --color-error: var(--color-risk-crit);
 
   --color-line: var(--color-border-1);
   --color-line-strong: var(--color-border-2);

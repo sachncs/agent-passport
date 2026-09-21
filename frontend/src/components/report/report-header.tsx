@@ -98,7 +98,7 @@ export function ReportHeader({
           </>
         )}
         <span aria-hidden>·</span>
-        <span>60 s cache · stateless</span>
+        <span>60 s process-local cache · checksum metadata</span>
       </div>
     </div>
   )

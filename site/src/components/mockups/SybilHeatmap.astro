@@ -11,20 +11,19 @@ interface Props {
 
 const { class: className = "" } = Astro.props;
 
-// 12 sybil signals per docs/concepts.md
+// Active weighted inputs in src/sybil.ts. Values below are illustrative.
 const signals: Signal[] = [
-  { label: "Clustering coefficient", weight: 0.92, flagged: true },
-  { label: "Timing fingerprint", weight: 0.86, flagged: true },
-  { label: "Amount fingerprint", weight: 0.71, flagged: true },
-  { label: "Funding correlation", weight: 0.94, flagged: true },
-  { label: "Balance similarity", weight: 0.58, flagged: false },
+  { label: "Creation clustering", weight: 0.70, flagged: true },
   { label: "Interaction density", weight: 0.42, flagged: false },
+  { label: "Balance similarity", weight: 0.58, flagged: false },
   { label: "Circular activity", weight: 0.81, flagged: true },
-  { label: "Hop-distance variance", weight: 0.36, flagged: false },
-  { label: "Coinbase overlap", weight: 0.27, flagged: false },
-  { label: "Asset overlap", weight: 0.49, flagged: false },
-  { label: "Timezone heuristic", weight: 0.18, flagged: false },
-  { label: "Burst signature", weight: 0.66, flagged: true },
+  { label: "Timing regularity", weight: 0.66, flagged: true },
+  { label: "Amount fingerprint", weight: 0.51, flagged: false },
+  { label: "Funding correlation", weight: 0.74, flagged: true },
+  { label: "Neighborhood clustering", weight: 0.36, flagged: false },
+  { label: "Hub score", weight: 0.27, flagged: false },
+  { label: "Intermediate density", weight: 0.49, flagged: false },
+  { label: "Temporal correlation", weight: 0.61, flagged: true },
 ];
 
 const flaggedCount = signals.filter((s) => s.flagged).length;
@@ -51,7 +50,7 @@ const flaggedCount = signals.filter((s) => s.flagged).length;
         GET /sybil-check?wallet=GD64…
       </div>
       <div class="text-[10px] font-medium tracking-tight text-accent">
-        12 signals evaluated
+        11 weighted inputs · illustrative
       </div>
     </div>
 

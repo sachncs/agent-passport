@@ -6,19 +6,19 @@ interface Props {
 const { class: className = "" } = Astro.props;
 
 const fields = [
-  { label: "Issuer", value: "Algorand MainNet" },
+  { label: "Network", value: "Configured network" },
   { label: "Subject", value: "GD64…BHU5A" },
-  { label: "Issued", value: "2026-09-14" },
-  { label: "Algorithm", value: "v2 · composite" },
+  { label: "Issued", value: "Example timestamp" },
+  { label: "Schema", value: "v1 · checksum" },
 ];
 
 const claims = [
-  { k: "trustScore", v: "87 / 100" },
+  { k: "trustScore", v: "78 / 100" },
   { k: "riskLevel", v: "low" },
-  { k: "delegation.depth", v: "3" },
-  { k: "delegation.sponsors", v: "11" },
-  { k: "sybil.probability", v: "0.04" },
-  { k: "credit.capacity", v: "$12,400" },
+  { k: "delegation.depth", v: "2" },
+  { k: "delegation.sponsors", v: "3" },
+  { k: "sybilRisk", v: "0.12" },
+  { k: "creditLimit", v: "$420" },
 ];
 ---
 
@@ -81,7 +81,7 @@ const claims = [
         </svg>
         <div class="absolute inset-0 flex flex-col items-center justify-center">
           <span class="font-serif-italic text-3xl tracking-tight text-ink-1 tabular"
-            >87</span
+            >78</span
           >
           <span class="text-[9px] uppercase tracking-[0.18em] text-ink-3"
             >trust</span
@@ -122,7 +122,7 @@ const claims = [
     <div class="mt-5 flex items-center gap-2">
       <span class="inline-block h-1.5 w-1.5 rounded-full bg-accent"></span>
       <span class="text-[9px] uppercase tracking-[0.18em] text-ink-3"
-        >verified on-chain</span
+        >demo document · checksum field</span
       >
     </div>
   </div>

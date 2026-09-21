@@ -9,7 +9,7 @@ const { class: className = "" } = Astro.props;
 <!--
   Custom SVG delegation graph.
   Anchor (root) at left, with depth attenuation through sponsors.
-  Line opacity attenuates with depth — a real production behavior described in docs/concepts.md.
+  Demo graph showing bounded traversal and weaker visual emphasis at deeper hops.
 -->
 <div class={`relative ${className}`}>
   <div
@@ -115,7 +115,7 @@ const { class: className = "" } = Astro.props;
         <!-- Depth legend -->
         <g transform="translate(20, 270)">
           <text x="0" y="0" font-family="ui-sans-serif, system-ui, sans-serif" font-size="9" fill="oklch(0.6 0.006 250)" letter-spacing="0.6">
-            Depth attenuation × 0.85 per level
+            Demo view · depth score decreases by 20 points per hop after root
           </text>
         </g>
       </svg>

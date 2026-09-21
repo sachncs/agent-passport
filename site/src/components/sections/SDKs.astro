@@ -11,7 +11,7 @@ const sdks = [
     code: `import { AgentPassportClient } from "@agent-passport/sdk";
 
 const client = new AgentPassportClient({
-  baseUrl: "https://api.agentpassport.ai",
+  baseUrl: "http://localhost:3000",
 });
 
 const score = await client.getScore(
@@ -34,7 +34,7 @@ if (score.riskLevel === "low") {
 code: `from agent_passport import AgentPassportClient
 from agent_passport.types import EndorsementRequest
 
-client = AgentPassportClient(base_url="https://api.agentpassport.ai")
+client = AgentPassportClient(base_url="http://localhost:3000")
 
 score = client.get_score(
     "GD64YI…DBBHU5A"
@@ -60,9 +60,8 @@ if score.risk_level == "low":
         Typed errors. <span class="font-serif-italic font-normal">Idempotency. x402.</span>
       </h2>
       <p class="mt-5 max-w-xl text-pretty text-base leading-relaxed text-ink-2 md:text-lg">
-        Both SDKs ship with a typed error model, an idempotency helper for
-        mutating routes, and an x402 payment callback that retries with the
-        on-chain proof attached.
+        Both SDKs ship with typed errors and retry helpers. Configure the base
+        URL for your own service; x402 callbacks are available when metering is enabled.
       </p>
     
 

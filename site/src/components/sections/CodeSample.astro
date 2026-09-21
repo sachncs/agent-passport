@@ -2,37 +2,32 @@
 import Container from "../layout/Container.astro";
 import Eyebrow from "../ui/Eyebrow.astro";
 
-const request = `curl https://api.agentpassport.ai/score \\
-  -H "X-Request-ID: 8c3d…b41" \\
-  -H "Accept: application/json" \\
-  --data-urlencode "wallet=GD64YIY3TWGDMCNPP553DZPPR6LDUSFQOIJVFDPPXWEG3FVOJCCDBBHU5A"`;
+const request = `WALLET=GD64YIY3... # replace with a 58-character Algorand address
+curl "http://localhost:3000/score?wallet=$WALLET" \\
+  -H "Accept: application/json"`;
 
 const response = `{
-  "trustScore": 87,
+  "wallet": "GD64…BHU5A",
+  "trustScore": 78,
   "riskLevel": "low",
   "breakdown": {
-    "age": 92,
-    "activity": 78,
-    "volume": 88,
-    "velocity": 81,
-    "compliance": 95
+    "ageScore": 82,
+    "activityScore": 74,
+    "volumeScore": 69,
+    "velocityScore": 86,
+    "complianceScore": 91
   },
   "onChain": {
-    "address": "GD64…BHU5A",
-    "balanceAlgo": 12480.42,
-    "assetsHeld": 14,
-    "firstSeenBlock": 19283746,
-    "lastSeenBlock": 40291847
+    "balanceAlgo": 512.34,
+    "totalTxns": 287,
+    "assetCount": 4,
+    "accountAgeDays": 412
   },
   "explanation": [
-    "Wallet age 412 days · strongly established",
-    "Median 18.2 txns/month · consistent activity",
-    "Balance 12,480 ALGO · diversified holdings",
-    "No sanctions or counterparty flags (24h)"
-  ],
-  "requestId": "8c3d…b41",
-  "cached": false,
-  "latencyMs": 87
+    "412-day wallet history",
+    "287 transactions — active history",
+    "Illustrative response; provider data varies"
+  ]
 }`;
 ---
 
@@ -61,7 +56,7 @@ const response = `{
         >
           <div class="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.16em] text-ink-3">
             <span class="h-1.5 w-1.5 rounded-full bg-accent"></span>
-            Live example · GET /score
+            Illustrative example · GET /score
           </div>
           <div class="flex items-center gap-1.5">
             <span class="h-2.5 w-2.5 rounded-full bg-[oklch(0.65_0.18_15)] opacity-50"></span>
@@ -92,7 +87,7 @@ const response = `{
               >
                 Response · 200 OK
               </span>
-              <span class="font-mono text-[10px] text-ink-3">87ms</span>
+              <span class="font-mono text-[10px] text-ink-3">demo data</span>
             </div>
             <pre
               class="overflow-x-auto font-mono text-[12px] leading-relaxed text-ink-1"

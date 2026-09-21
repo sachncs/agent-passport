@@ -14,7 +14,7 @@ const CAPABILITIES = [
   },
   {
     audience: "For protocol teams",
-    text: "Stateless API, sub-50 ms cached responses, OpenAPI and metrics exposed.",
+    text: "Read-oriented service, process-local response cache, OpenAPI and Prometheus metrics.",
   },
 ] as const
 
@@ -59,12 +59,12 @@ export default function HomePage() {
             Wire format
           </h2>
           <span className="text-xs text-muted-fg">
-            Stateless · 60 s cache · on-chain verified
+            Read-oriented · 60 s process-local cache · illustrative request
           </span>
         </div>
         <CodeBlock
           language="http"
-          code={`curl https://api.agentpassport.ai/passport?wallet=$WALLET`}
+          code={`curl "http://localhost:3000/passport?wallet=$WALLET"`}
         />
       </section>
     </div>

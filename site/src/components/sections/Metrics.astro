@@ -3,12 +3,12 @@ import Container from "../layout/Container.astro";
 import Eyebrow from "../ui/Eyebrow.astro";
 
 const metrics = [
-  { value: "<100", unit: "ms", label: "p50 cached latency" },
+  { value: "—", unit: "", label: "latency claim omitted without benchmark context" },
   { value: "5", unit: "", label: "sub-scores per verdict" },
-  { value: "12", unit: "", label: "sybil signals" },
-  { value: "60", unit: "s", label: "edge cache TTL" },
+  { value: "11", unit: "", label: "weighted sybil inputs" },
+  { value: "60", unit: "s", label: "process-local response cache" },
   { value: "600", unit: "/min", label: "rate limit per IP" },
-  { value: "$100k", unit: "", label: "system exposure cap" },
+  { value: "$100k", unit: "", label: "software exposure ceiling" },
 ];
 ---
 
@@ -22,8 +22,9 @@ const metrics = [
         SLO-instrumented. <span class="font-serif-italic font-normal">Alerted. Runbooked.</span>
       </h2>
       <p class="mt-5 max-w-xl text-pretty text-base leading-relaxed text-ink-2 md:text-lg">
-        Prometheus metrics on every route, two SLO profiles (strict + relaxed),
-        19 alert rules with runbooks, and a 17-panel Grafana dashboard.
+        Prometheus metrics, strict and relaxed SLO configuration, active alert
+        rules with runbooks, and a Grafana dashboard are shipped in the repository.
+        Counts are generated from the current files rather than presented as adoption claims.
       </p>
     
 

@@ -15,7 +15,7 @@ const columns = [
   {
     heading: "Developers",
     links: [
-      { label: "Documentation", href: "https://github.com/sachncs/agent-passport/blob/master/docs/README.md" },
+      { label: "Documentation", href: `${import.meta.env.BASE_URL}docs/` },
       { label: "API Reference", href: "https://github.com/sachncs/agent-passport/blob/master/docs/api.md" },
       { label: "Concepts", href: "https://github.com/sachncs/agent-passport/blob/master/docs/concepts.md" },
       { label: "OpenAPI Spec", href: "https://github.com/sachncs/agent-passport/blob/master/docs/api/openapi.yaml" },
@@ -41,12 +41,12 @@ const year = new Date().getFullYear();
       <div>
         <Logo size={26} />
         <p class="mt-5 max-w-xs text-[13px] leading-relaxed text-ink-3">
-          Stateless trust scoring, underwriting, and reputation infrastructure for AI agents on Algorand.
+          Open-source trust and risk infrastructure for AI agents on Algorand.
         </p>
         <div class="mt-6 flex items-center gap-2">
           <span class="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface-1 px-2.5 py-1 text-[11px] font-medium text-ink-2">
             <span class="h-1.5 w-1.5 rounded-full bg-accent"></span>
-            Operational
+            Developer preview
           </span>
           <span class="text-[11px] text-ink-3">v0.1.0 preview</span>
         </div>

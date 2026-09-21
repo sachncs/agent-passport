@@ -1,5 +1,4 @@
 import type { Metadata } from "next"
-import { Inter, JetBrains_Mono } from "next/font/google"
 
 import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
@@ -11,23 +10,11 @@ import { ThemeProvider } from "@/components/theme-provider"
 
 import "./globals.css"
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-sans",
-  display: "swap",
-})
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  variable: "--font-geist-mono",
-  display: "swap",
-})
-
 export const metadata: Metadata = {
   title: "Agent Passport — Trust & Underwriting for AI Agents on Algorand",
   description:
-    "Stateless trust scoring, delegation, credit, sybil, reputation, " +
-    "and underwriting for AI agents on Algorand.",
+    "Open-source trust scoring, delegation, credit, sybil, reputation, " +
+    "and underwriting signals for AI agents on Algorand.",
 }
 
 export default function RootLayout({
@@ -39,7 +26,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${inter.variable} ${jetbrainsMono.variable}`}
+      className="font-sans"
     >
       <body className="min-h-screen bg-background text-foreground antialiased">
         <ThemeProvider

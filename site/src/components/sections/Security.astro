@@ -6,10 +6,10 @@ const layers = [
   { name: "Helmet headers", detail: "CSP, HSTS, frameguard, referrer-policy" },
   { name: "Rate limiting", detail: "600 req/min/IP · sliding window" },
   { name: "HMAC auth", detail: "Signed requests for mutating routes" },
-  { name: "Idempotency-Key", detail: "Every POST accepted · 24h replay window" },
+  { name: "Idempotency-Key", detail: "Required on non-GET requests · 24h process-local records" },
   { name: "Body limit", detail: "100 KB request body cap" },
   { name: "30s timeout", detail: "Request-level hard cutoff" },
-  { name: "x402 verification", detail: "On-chain payment proof replay-protected" },
+  { name: "x402 verification", detail: "Optional facilitator-backed payment verification" },
   { name: "Audit logging", detail: "Every request · X-Request-ID traced" },
 ];
 ---
@@ -27,9 +27,9 @@ const layers = [
         <p
           class="mt-5 max-w-md text-pretty text-[15px] leading-relaxed text-ink-2"
         >
-          Eight layers of controls, a documented threat model, and a security
-          disclosure policy you can actually find. The full architecture
-          lives in the docs.
+          Helmet, CORS, bounded bodies and timeouts, request IDs, rate limits,
+          conditional HMAC, idempotency, and optional x402 verification. Read
+          the threat model for provider and multi-replica boundaries.
         </p>
         <div class="mt-8 flex flex-col gap-2">
           <a
