@@ -1,6 +1,29 @@
 ---
 import Container from "../layout/Container.astro";
 import Eyebrow from "../ui/Eyebrow.astro";
-const code = `const result = await client.getScore(wallet)\n\n// { trustScore: 78, riskLevel: "low", ... }`;
+const examples = {
+  TypeScript: `const result = await client.getScore(wallet)\n\n// { trustScore: 78, riskLevel: "low", ... }`,
+  Python: `result = client.get_score(wallet)\n\n# { trust_score: 78, risk_level: "low", ... }`,
+  cURL: `curl "http://localhost:3000/score?wallet=$WALLET"\n\n# → { "trustScore": 78, "riskLevel": "low" }`,
+};
 ---
-<section id="developers" class="py-24 md:py-32"><Container><div class="grid items-center gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-24"><div><Eyebrow icon>For developers</Eyebrow><h2 class="mt-4 text-[38px] font-semibold leading-[1.04] tracking-[-0.04em] text-ink-1 md:text-[54px]">From agent ID to trust verdict in one request.</h2><p class="mt-5 max-w-md text-[16px] leading-relaxed text-ink-2">Use HTTP, TypeScript, or Python. Start locally, inspect the response, and keep the decision in your own system.</p><a href={`${import.meta.env.BASE_URL}docs/`} class="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-accent hover:text-ink-1">Read the docs <span aria-hidden="true">→</span></a></div><div class="overflow-hidden rounded-[24px] border border-line bg-surface-1 shadow-card"><div class="flex items-center gap-5 border-b border-line px-5 py-3"><span class="border-b-2 border-accent pb-3 pt-1 text-[12px] font-medium text-ink-1">TypeScript</span><span class="text-[12px] text-ink-3">Python</span><span class="text-[12px] text-ink-3">cURL</span></div><div class="grid gap-6 p-6 md:grid-cols-[1fr_auto_1fr] md:items-center md:p-8"><pre class="overflow-x-auto font-mono text-[12px] leading-relaxed text-ink-1"><code>{code}</code></pre><div class="text-center text-2xl text-accent">→</div><div class="rounded-xl border border-line bg-surface-2 p-4"><div class="font-mono text-[10px] text-ink-3">structured response</div><div class="mt-4 flex items-end justify-between"><span class="font-serif-italic text-4xl text-ink-1">78</span><span class="rounded-full bg-accent/10 px-2 py-1 text-[10px] text-accent">low risk</span></div><div class="mt-4 space-y-2 font-mono text-[10px] text-ink-3"><div class="flex justify-between"><span>explanation</span><span class="text-ink-1">attached</span></div><div class="flex justify-between"><span>checksum</span><span class="text-ink-1">sha256…</span></div></div></div></div></div></div></Container></section>
+<section id="developers" class="py-24 md:py-32"><Container><div class="grid items-center gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-24"><div><Eyebrow icon>For developers</Eyebrow><h2 class="mt-4 text-[38px] font-semibold leading-[1.04] tracking-[-0.04em] text-ink-1 md:text-[54px]">From agent ID to trust verdict in one request.</h2><p class="mt-5 max-w-md text-[16px] leading-relaxed text-ink-2">Use HTTP, TypeScript, or Python. Start locally, inspect the response, and keep the decision in your own system.</p><a href={`${import.meta.env.BASE_URL}docs/`} class="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-accent hover:text-ink-1">Read the docs <span aria-hidden="true">→</span></a></div><div class="overflow-hidden rounded-[24px] border border-line bg-surface-1 shadow-card"><div class="flex gap-5 border-b border-line px-5 pt-3" role="tablist" aria-label="Code examples">{Object.keys(examples).map((name, index) => <button type="button" role="tab" aria-selected={index === 0 ? "true" : "false"} data-code-tab={name} class={`border-b-2 pb-3 pt-1 text-[12px] font-medium ${index === 0 ? "border-accent text-ink-1" : "border-transparent text-ink-3"}`}>{name}</button>)}</div><div class="grid gap-6 p-6 md:grid-cols-[1fr_auto_1fr] md:items-center md:p-8"><pre class="overflow-x-auto font-mono text-[12px] leading-relaxed text-ink-1"><code id="code-example">{examples.TypeScript}</code></pre><div class="text-center text-2xl text-accent">→</div><div class="rounded-xl border border-line bg-surface-2 p-4"><div class="font-mono text-[10px] text-ink-3">structured response</div><div class="mt-4 flex items-end justify-between"><span class="font-serif-italic text-4xl text-ink-1">78</span><span class="rounded-full bg-accent/10 px-2 py-1 text-[10px] text-accent">low risk</span></div><div class="mt-4 space-y-2 font-mono text-[10px] text-ink-3"><div class="flex justify-between"><span>explanation</span><span class="text-ink-1">attached</span></div><div class="flex justify-between"><span>checksum</span><span class="text-ink-1">sha256…</span></div></div></div></div></div></div></Container></section>
+
+<script is:inline define:vars={{ examples }}>
+  const output = document.querySelector("#code-example");
+  document.querySelectorAll<HTMLElement>("[data-code-tab]").forEach((tab) => {
+    tab.addEventListener("click", () => {
+      const key = tab.dataset.codeTab;
+      if (!output || !key) return;
+      output.textContent = examples[key] || examples.TypeScript;
+      document.querySelectorAll<HTMLElement>("[data-code-tab]").forEach((item) => {
+        const active = item === tab;
+        item.setAttribute("aria-selected", String(active));
+        item.classList.toggle("border-accent", active);
+        item.classList.toggle("text-ink-1", active);
+        item.classList.toggle("border-transparent", !active);
+        item.classList.toggle("text-ink-3", !active);
+      });
+    });
+  });
+</script>
