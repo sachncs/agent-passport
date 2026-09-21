@@ -173,3 +173,18 @@ keyboard/reduced-motion/contrast audits, copy-button and interaction checks,
 the complete 41-item claim audit, root/frontend typechecks, relevant tests, and
 production preview inspection remain outstanding. Do not mark the redesign goal
 complete until those checks and any resulting fixes are performed.
+
+## Second product-composition pass
+
+The landing page was subsequently rebuilt around the narrower product brief in
+commit `fa0d7dd`: the hero now leads with “Know which agents to trust,” uses a
+single agent trust profile as the primary visual metaphor, and keeps Algorand
+below the product promise. The homepage now contains a compact proof strip,
+unknown → evidence → decision transformation, three differentiated capability
+visuals, a four-step workflow, one developer example, security evidence, and one
+final conversion moment. The old repeated feature grids and competing plan/API
+CTAs are no longer mounted by `src/pages/index.astro`.
+
+`npm run check --prefix site` and `npm run build --prefix site` pass after this
+composition pass. A browser automation package is not installed in the current
+workspace, so visual viewport verification remains a separate follow-up.
