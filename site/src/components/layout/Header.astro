@@ -3,14 +3,15 @@ import Container from "./Container.astro";
 import Logo from "../brand/Logo.astro";
 import Button from "../ui/Button.astro";
 
+const base = import.meta.env.BASE_URL;
+const docsHref = `${base.replace(/\/$/, "")}/docs/`;
+
 const navLinks = [
   { label: "Product", href: "#product" },
   { label: "Developers", href: "#developers" },
   { label: "Security", href: "#security" },
-  { label: "Docs", href: `${import.meta.env.BASE_URL}docs/` },
+  { label: "Docs", href: docsHref },
 ];
-
-const base = import.meta.env.BASE_URL;
 ---
 
 <header

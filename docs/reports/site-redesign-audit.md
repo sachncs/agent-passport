@@ -186,5 +186,9 @@ final conversion moment. The old repeated feature grids and competing plan/API
 CTAs are no longer mounted by `src/pages/index.astro`.
 
 `npm run check --prefix site` and `npm run build --prefix site` pass after this
-composition pass. A browser automation package is not installed in the current
-workspace, so visual viewport verification remains a separate follow-up.
+composition pass. Playwright verification now covers the built static preview at
+390px and 1440px widths: the base-path docs links resolve to `/agent-passport/docs/`,
+the trust-profile anchor is present, and the Python code tab updates its response
+and `aria-selected` state. Desktop and mobile screenshots were captured during
+the check. The preview is served over IPv6 because local IPv4 binding is blocked
+in this environment.
