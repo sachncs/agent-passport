@@ -19,6 +19,28 @@ servers:
     description: Local development
 
 paths:
+  /:
+    get:
+      summary: Service metadata and operational links
+      operationId: serviceMetadata
+      tags: [System]
+      responses:
+        '200':
+          description: Service metadata
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [service, version, docs, dashboard, health, ready, metrics]
+                properties:
+                  service: { type: string, example: Agent Passport }
+                  version: { type: string, example: 1.0.0 }
+                  docs: { type: string, example: /openapi.json }
+                  dashboard: { type: string, example: /dashboard }
+                  health: { type: string, example: /health }
+                  ready: { type: string, example: /ready }
+                  metrics: { type: string, example: /metrics }
+
   /health:
     get:
       summary: Health check with Algorand connectivity probe

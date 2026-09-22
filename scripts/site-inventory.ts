@@ -35,6 +35,21 @@ for (const line of read('docs/api/openapi.yaml').split('\n')) {
   if (method && yamlPath) yamlOperations.add(`${method[1].toUpperCase()} ${yamlPath}`);
 }
 if (!yamlOperations.size) throw new Error('Static OpenAPI inventory could not be parsed');
+const postman = JSON.parse(read('docs/api/postman-collection.json')) as {
+  item?: Array<{ name?: string; item?: Array<unknown> }>;
+};
+const postmanOperations = new Set<string>();
+function collectPostman(items: Array<{ name?: string; item?: Array<unknown> }>): void {
+  for (const item of items) {
+    const operation = /^(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\s+(\/\S*)$/.exec(item.name ?? '');
+    if (operation) {
+      postmanOperations.add(`${operation[1]} ${operation[2].replace(/\/:id$/, '/{id}')}`);
+    }
+    if (item.item) collectPostman(item.item as Array<{ name?: string; item?: Array<unknown> }>);
+  }
+}
+collectPostman(postman.item ?? []);
+if (!postmanOperations.size) throw new Error('Postman collection could not be parsed');
 const operationKey = (route: { method: string; path: string }) =>
   `${route.method} ${route.path.replace(/:([A-Za-z0-9_]+)/g, '{$1}')}`;
 const registered = new Set(routes.map(operationKey));
@@ -76,6 +91,7 @@ const inventory = {
       : route.path.startsWith('/reputation/subscribe') && route.method !== 'GET' ? 'Changes local webhook subscriptions'
       : 'No business mutation; operational caches, metrics, and rate limits may change',
     checkedInOpenApi: yamlOperations.has(operationKey(route)),
+    checkedInPostman: postmanOperations.has(operationKey(route)),
   })),
   unregisteredCheckedInOperations: [...yamlOperations].filter(op => !registered.has(op)),
   environmentReferences: Object.fromEntries(Object.entries(envReferences).sort(([a], [b]) => a.localeCompare(b))),
@@ -88,6 +104,8 @@ const inventory = {
 };
 mkdirSync(join(root, 'docs/reports'), { recursive: true });
 writeFileSync(join(root, 'docs/reports/site-inventory.json'), JSON.stringify(inventory, null, 2) + '\n');
-console.log(`${routes.length} declared routes; ${yamlOperations.size} checked-in OpenAPI operations`);
+const missingPostman = routes.filter(route => !postmanOperations.has(operationKey(route)));
+if (missingPostman.length) throw new Error(`Postman route parity failed: ${missingPostman.map(operationKey).join(', ')}`);
+console.log(`${routes.length} declared routes; ${yamlOperations.size} checked-in OpenAPI operations; ${postmanOperations.size} Postman operations`);
 console.log(`${alertRules.length} active alerts; ${panels.length} Grafana panels; ${consoleRoutes.length} console routes`);
 console.log('Wrote docs/reports/site-inventory.json');

@@ -6,8 +6,8 @@
     {
       "method": "GET",
       "path": "/score",
-      "line": 151,
-      "source": "src/app.ts:151",
+      "line": 126,
+      "source": "src/app.ts:126",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": {
@@ -15,13 +15,14 @@
         "currency": "configured x402 network"
       },
       "sideEffect": "No business mutation; operational caches, metrics, and rate limits may change",
-      "checkedInOpenApi": true
+      "checkedInOpenApi": true,
+      "checkedInPostman": true
     },
     {
       "method": "GET",
       "path": "/delegation",
-      "line": 177,
-      "source": "src/app.ts:177",
+      "line": 152,
+      "source": "src/app.ts:152",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": {
@@ -29,13 +30,14 @@
         "currency": "configured x402 network"
       },
       "sideEffect": "No business mutation; operational caches, metrics, and rate limits may change",
-      "checkedInOpenApi": true
+      "checkedInOpenApi": true,
+      "checkedInPostman": true
     },
     {
       "method": "POST",
       "path": "/counterparty-check",
-      "line": 192,
-      "source": "src/app.ts:192",
+      "line": 167,
+      "source": "src/app.ts:167",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": true,
       "optionalPayment": {
@@ -43,13 +45,14 @@
         "currency": "configured x402 network"
       },
       "sideEffect": "No business mutation; operational caches, metrics, and rate limits may change",
-      "checkedInOpenApi": true
+      "checkedInOpenApi": true,
+      "checkedInPostman": true
     },
     {
       "method": "POST",
       "path": "/credit-estimate",
-      "line": 215,
-      "source": "src/app.ts:215",
+      "line": 190,
+      "source": "src/app.ts:190",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": true,
       "optionalPayment": {
@@ -57,13 +60,14 @@
         "currency": "configured x402 network"
       },
       "sideEffect": "No business mutation; operational caches, metrics, and rate limits may change",
-      "checkedInOpenApi": true
+      "checkedInOpenApi": true,
+      "checkedInPostman": true
     },
     {
       "method": "GET",
       "path": "/sybil-check",
-      "line": 241,
-      "source": "src/app.ts:241",
+      "line": 216,
+      "source": "src/app.ts:216",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": {
@@ -71,13 +75,14 @@
         "currency": "configured x402 network"
       },
       "sideEffect": "No business mutation; operational caches, metrics, and rate limits may change",
-      "checkedInOpenApi": true
+      "checkedInOpenApi": true,
+      "checkedInPostman": true
     },
     {
       "method": "GET",
       "path": "/reputation",
-      "line": 256,
-      "source": "src/app.ts:256",
+      "line": 231,
+      "source": "src/app.ts:231",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": {
@@ -85,13 +90,14 @@
         "currency": "configured x402 network"
       },
       "sideEffect": "No business mutation; operational caches, metrics, and rate limits may change",
-      "checkedInOpenApi": true
+      "checkedInOpenApi": true,
+      "checkedInPostman": true
     },
     {
       "method": "POST",
       "path": "/reputation/record",
-      "line": 270,
-      "source": "src/app.ts:270",
+      "line": 245,
+      "source": "src/app.ts:245",
       "hmacWhenConfigured": true,
       "idempotencyHeaderRequired": true,
       "optionalPayment": {
@@ -99,13 +105,14 @@
         "currency": "configured x402 network"
       },
       "sideEffect": "Submits contract operation",
-      "checkedInOpenApi": true
+      "checkedInOpenApi": true,
+      "checkedInPostman": true
     },
     {
       "method": "GET",
       "path": "/underwrite",
-      "line": 340,
-      "source": "src/app.ts:340",
+      "line": 315,
+      "source": "src/app.ts:315",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": {
@@ -113,13 +120,14 @@
         "currency": "configured x402 network"
       },
       "sideEffect": "May reserve local exposure",
-      "checkedInOpenApi": true
+      "checkedInOpenApi": true,
+      "checkedInPostman": true
     },
     {
       "method": "GET",
       "path": "/trust-graph",
-      "line": 356,
-      "source": "src/app.ts:356",
+      "line": 331,
+      "source": "src/app.ts:331",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": {
@@ -127,46 +135,50 @@
         "currency": "configured x402 network"
       },
       "sideEffect": "No business mutation; operational caches, metrics, and rate limits may change",
-      "checkedInOpenApi": true
+      "checkedInOpenApi": true,
+      "checkedInPostman": true
     },
     {
       "method": "POST",
       "path": "/delegate",
-      "line": 383,
-      "source": "src/app.ts:383",
+      "line": 358,
+      "source": "src/app.ts:358",
       "hmacWhenConfigured": true,
       "idempotencyHeaderRequired": true,
       "optionalPayment": null,
       "sideEffect": "Submits contract operation",
-      "checkedInOpenApi": true
+      "checkedInOpenApi": true,
+      "checkedInPostman": true
     },
     {
       "method": "POST",
       "path": "/revoke",
-      "line": 417,
-      "source": "src/app.ts:417",
+      "line": 392,
+      "source": "src/app.ts:392",
       "hmacWhenConfigured": true,
       "idempotencyHeaderRequired": true,
       "optionalPayment": null,
       "sideEffect": "Submits contract operation",
-      "checkedInOpenApi": true
+      "checkedInOpenApi": true,
+      "checkedInPostman": true
     },
     {
       "method": "GET",
       "path": "/registry/status",
-      "line": 448,
-      "source": "src/app.ts:448",
+      "line": 423,
+      "source": "src/app.ts:423",
       "hmacWhenConfigured": true,
       "idempotencyHeaderRequired": false,
       "optionalPayment": null,
       "sideEffect": "No business mutation; operational caches, metrics, and rate limits may change",
-      "checkedInOpenApi": true
+      "checkedInOpenApi": true,
+      "checkedInPostman": true
     },
     {
       "method": "GET",
       "path": "/passport",
-      "line": 453,
-      "source": "src/app.ts:453",
+      "line": 428,
+      "source": "src/app.ts:428",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": {
@@ -174,174 +186,188 @@
         "currency": "configured x402 network"
       },
       "sideEffect": "No business mutation; operational caches, metrics, and rate limits may change",
-      "checkedInOpenApi": true
+      "checkedInOpenApi": true,
+      "checkedInPostman": true
     },
     {
       "method": "GET",
       "path": "/verify",
-      "line": 484,
-      "source": "src/app.ts:484",
+      "line": 459,
+      "source": "src/app.ts:459",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": null,
       "sideEffect": "No business mutation; operational caches, metrics, and rate limits may change",
-      "checkedInOpenApi": true
+      "checkedInOpenApi": true,
+      "checkedInPostman": true
     },
     {
       "method": "GET",
       "path": "/discovery/search",
-      "line": 609,
-      "source": "src/app.ts:609",
+      "line": 584,
+      "source": "src/app.ts:584",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": null,
       "sideEffect": "No business mutation; operational caches, metrics, and rate limits may change",
-      "checkedInOpenApi": true
+      "checkedInOpenApi": true,
+      "checkedInPostman": true
     },
     {
       "method": "GET",
       "path": "/metrics",
-      "line": 632,
-      "source": "src/app.ts:632",
+      "line": 607,
+      "source": "src/app.ts:607",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": null,
       "sideEffect": "No business mutation; operational caches, metrics, and rate limits may change",
-      "checkedInOpenApi": true
+      "checkedInOpenApi": true,
+      "checkedInPostman": true
     },
     {
       "method": "GET",
       "path": "/version",
-      "line": 635,
-      "source": "src/app.ts:635",
+      "line": 610,
+      "source": "src/app.ts:610",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": null,
       "sideEffect": "No business mutation; operational caches, metrics, and rate limits may change",
-      "checkedInOpenApi": true
+      "checkedInOpenApi": true,
+      "checkedInPostman": true
     },
     {
       "method": "GET",
       "path": "/openapi.json",
-      "line": 650,
-      "source": "src/app.ts:650",
+      "line": 625,
+      "source": "src/app.ts:625",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": null,
       "sideEffect": "No business mutation; operational caches, metrics, and rate limits may change",
-      "checkedInOpenApi": true
+      "checkedInOpenApi": true,
+      "checkedInPostman": true
     },
     {
       "method": "POST",
       "path": "/reputation/subscribe",
-      "line": 655,
-      "source": "src/app.ts:655",
+      "line": 630,
+      "source": "src/app.ts:630",
       "hmacWhenConfigured": true,
       "idempotencyHeaderRequired": true,
       "optionalPayment": null,
       "sideEffect": "Changes local webhook subscriptions",
-      "checkedInOpenApi": true
+      "checkedInOpenApi": true,
+      "checkedInPostman": true
     },
     {
       "method": "DELETE",
       "path": "/reputation/subscribe/:id",
-      "line": 684,
-      "source": "src/app.ts:684",
+      "line": 659,
+      "source": "src/app.ts:659",
       "hmacWhenConfigured": true,
       "idempotencyHeaderRequired": true,
       "optionalPayment": null,
       "sideEffect": "Changes local webhook subscriptions",
-      "checkedInOpenApi": true
+      "checkedInOpenApi": true,
+      "checkedInPostman": true
     },
     {
       "method": "GET",
       "path": "/reputation/subscribers",
-      "line": 689,
-      "source": "src/app.ts:689",
+      "line": 664,
+      "source": "src/app.ts:664",
       "hmacWhenConfigured": true,
       "idempotencyHeaderRequired": false,
       "optionalPayment": null,
       "sideEffect": "No business mutation; operational caches, metrics, and rate limits may change",
-      "checkedInOpenApi": true
+      "checkedInOpenApi": true,
+      "checkedInPostman": true
     },
     {
       "method": "GET",
       "path": "/dashboard",
-      "line": 697,
-      "source": "src/app.ts:697",
+      "line": 672,
+      "source": "src/app.ts:672",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": null,
       "sideEffect": "No business mutation; operational caches, metrics, and rate limits may change",
-      "checkedInOpenApi": true
+      "checkedInOpenApi": true,
+      "checkedInPostman": true
     },
     {
       "method": "GET",
       "path": "/",
-      "line": 701,
-      "source": "src/app.ts:701",
+      "line": 676,
+      "source": "src/app.ts:676",
       "hmacWhenConfigured": true,
       "idempotencyHeaderRequired": false,
       "optionalPayment": null,
       "sideEffect": "No business mutation; operational caches, metrics, and rate limits may change",
-      "checkedInOpenApi": false
+      "checkedInOpenApi": true,
+      "checkedInPostman": true
     },
     {
       "method": "GET",
       "path": "/health",
-      "line": 714,
-      "source": "src/app.ts:714",
+      "line": 689,
+      "source": "src/app.ts:689",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": null,
       "sideEffect": "No business mutation; operational caches, metrics, and rate limits may change",
-      "checkedInOpenApi": true
+      "checkedInOpenApi": true,
+      "checkedInPostman": true
     },
     {
       "method": "GET",
       "path": "/ready",
-      "line": 726,
-      "source": "src/app.ts:726",
+      "line": 701,
+      "source": "src/app.ts:701",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": null,
       "sideEffect": "No business mutation; operational caches, metrics, and rate limits may change",
-      "checkedInOpenApi": true
+      "checkedInOpenApi": true,
+      "checkedInPostman": true
     },
     {
       "method": "GET",
       "path": "/health/deep",
-      "line": 768,
-      "source": "src/app.ts:768",
+      "line": 743,
+      "source": "src/app.ts:743",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": null,
       "sideEffect": "No business mutation; operational caches, metrics, and rate limits may change",
-      "checkedInOpenApi": true
+      "checkedInOpenApi": true,
+      "checkedInPostman": true
     }
   ],
   "unregisteredCheckedInOperations": [],
   "environmentReferences": {
     "ALGO_NETWORK": [
-      "src/config.ts:68",
-      "src/config.ts:69",
-      "src/config.ts:141",
+      "src/config.ts:70",
+      "src/config.ts:71",
+      "src/config.ts:143",
       "src/lib/metrics.ts:117"
     ],
     "ALGOD_TOKEN": [
-      "src/config.ts:137",
+      "src/config.ts:139",
       "scripts/deploy-registry.ts:9",
       "scripts/deploy-reputation.ts:9"
     ],
     "ALGOD_URL": [
-      "src/config.ts:110",
-      "src/config.ts:136",
+      "src/config.ts:112",
+      "src/config.ts:138",
       "scripts/deploy-registry.ts:8",
       "scripts/deploy-reputation.ts:8"
     ],
     "CORS_ALLOWED_ORIGINS": [
-      "src/config.ts:101",
-      "src/config.ts:150"
+      "src/config.ts:103",
+      "src/config.ts:152"
     ],
     "DEPLOYER_MNEMONIC": [
       "scripts/deploy-registry.ts:12",
@@ -351,47 +377,47 @@
       "src/lib/system-exposure.ts:30"
     ],
     "GIT_COMMIT": [
-      "src/config.ts:160"
+      "src/config.ts:162"
     ],
     "HMAC_SECRET": [
-      "src/config.ts:52",
-      "src/config.ts:53",
-      "src/config.ts:57",
-      "src/config.ts:155",
+      "src/config.ts:54",
+      "src/config.ts:55",
+      "src/config.ts:59",
+      "src/config.ts:157",
       "src/lib/hmac-auth.ts:179"
     ],
     "HMAC_TIMESTAMP_SKEW_MS": [
-      "src/config.ts:88",
-      "src/config.ts:89",
-      "src/config.ts:156"
+      "src/config.ts:90",
+      "src/config.ts:91",
+      "src/config.ts:158"
     ],
     "INDEXER_TOKEN": [
-      "src/config.ts:139"
+      "src/config.ts:141"
     ],
     "INDEXER_URL": [
-      "src/config.ts:111",
-      "src/config.ts:138"
+      "src/config.ts:113",
+      "src/config.ts:140"
     ],
     "LOAD_TEST_MODE": [
       "src/lib/security.ts:140"
     ],
     "LOG_ERROR_FILE": [
-      "src/config.ts:169"
+      "src/config.ts:171"
     ],
     "LOG_FILE": [
-      "src/config.ts:168"
+      "src/config.ts:170"
     ],
     "LOG_FORMAT": [
-      "src/config.ts:44",
-      "src/config.ts:45",
+      "src/config.ts:46",
       "src/config.ts:47",
-      "src/config.ts:164"
+      "src/config.ts:49",
+      "src/config.ts:166"
     ],
     "LOG_LEVEL": [
-      "src/config.ts:37",
-      "src/config.ts:38",
+      "src/config.ts:39",
       "src/config.ts:40",
-      "src/config.ts:162"
+      "src/config.ts:42",
+      "src/config.ts:164"
     ],
     "LOG_STDOUT": [
       "src/lib/logger.ts:33"
@@ -402,9 +428,9 @@
       "frontend/src/test-setup.ts:5"
     ],
     "NODE_ENV": [
-      "src/config.ts:57",
-      "src/config.ts:100",
-      "src/config.ts:133",
+      "src/config.ts:59",
+      "src/config.ts:102",
+      "src/config.ts:135",
       "src/lib/webhooks.ts:31",
       "src/lib/webhooks.ts:128"
     ],
@@ -412,13 +438,13 @@
       "src/lib/operator-wallet.ts:30"
     ],
     "PORT": [
-      "src/config.ts:134"
+      "src/config.ts:136"
     ],
     "RATE_LIMIT_MAX": [
       "src/lib/security.ts:131"
     ],
     "RATE_LIMIT_OVERRIDES": [
-      "src/config.ts:153"
+      "src/config.ts:155"
     ],
     "RATE_LIMIT_PERSISTENCE_PATH": [
       "src/lib/security.ts:21"
@@ -427,45 +453,45 @@
       "src/lib/security.ts:141"
     ],
     "REGISTRY_APP_ID": [
-      "src/config.ts:142"
+      "src/config.ts:144"
     ],
     "REPLICA_COUNT": [
-      "src/config.ts:151",
+      "src/config.ts:153",
       "src/lib/security.ts:59"
     ],
     "REPUTATION_APP_ID": [
-      "src/config.ts:143"
+      "src/config.ts:145"
     ],
     "REQUEST_TIMEOUT_MS": [
-      "src/config.ts:61",
-      "src/config.ts:62",
-      "src/config.ts:158"
+      "src/config.ts:63",
+      "src/config.ts:64",
+      "src/config.ts:160"
     ],
     "SANCTIONS_EXTRA_DENY": [
       "src/lib/sanctions.ts:43"
     ],
     "TRUST_PROXY_HOPS": [
-      "src/config.ts:152"
+      "src/config.ts:154"
     ],
     "WEBHOOKS_PERSISTENCE_PATH": [
       "src/lib/webhooks.ts:29"
     ],
     "X402_ENABLED": [
-      "src/config.ts:33",
-      "src/config.ts:145"
+      "src/config.ts:35",
+      "src/config.ts:147"
     ],
     "X402_FACILITATOR_URL": [
-      "src/config.ts:112",
-      "src/config.ts:146"
-    ],
-    "X402_NETWORK": [
-      "src/config.ts:76",
-      "src/config.ts:81",
+      "src/config.ts:114",
       "src/config.ts:148"
     ],
+    "X402_NETWORK": [
+      "src/config.ts:78",
+      "src/config.ts:83",
+      "src/config.ts:150"
+    ],
     "X402_PAYMENT_RECIPIENT": [
-      "src/config.ts:33",
-      "src/config.ts:147"
+      "src/config.ts:35",
+      "src/config.ts:149"
     ]
   },
   "environmentScope": "Literal process.env references in service, CLI scripts, and console. Dynamic lookups and Python/load-test configuration require separate review.",

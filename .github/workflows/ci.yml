@@ -25,6 +25,8 @@ jobs:
       - run: npm run brand:check
       - name: Check markdown links
         run: node scripts/ci/check-md-links.mjs
+      - name: Verify route, OpenAPI, Postman, and environment inventory
+        run: npm run site:inventory
       - name: Test + coverage (thresholds enforced in vitest.config.ts)
         run: npx vitest run --coverage
       - name: README test-count drift check
