@@ -29,17 +29,17 @@ reference, algorithms, operations, security boundaries, and contributing.
 
 - **Composite trust score (0–100)** — explainable sub-scores (age, activity,
   volume, velocity, compliance). See
-  [docs/concepts.md#1-trust-scoring](docs/concepts.md#1-trust-scoring).
+  [docs/concepts.md#1-trust-score](docs/concepts.md#1-trust-score).
 - **Delegated trust graph** — cycle detection, depth attenuation, and
   quality-weighted sponsor counts. See
   [docs/concepts.md#2-delegation-trust](docs/concepts.md#2-delegation-trust).
 - **Underwriting decisions** — credit capacity estimation, default
   propagation, $100k system exposure cap. See
-  [docs/concepts.md#5-credit-underwriting](docs/concepts.md#5-credit-underwriting).
+  [docs/concepts.md#5-credit-and-underwriting](docs/concepts.md#5-credit-and-underwriting).
 - **Sybil detection** — 11 weighted signals (clustering, timing, amount
   fingerprint, funding correlation, balance similarity, interaction density,
   circular activity, and graph signals). See
-  [docs/concepts.md#3-sybil-detection](docs/concepts.md#3-sybil-detection).
+  [docs/concepts.md#3-sybil-indicators](docs/concepts.md#3-sybil-indicators).
 - **On-chain reputation events** — `registry.teal` and `reputation.teal`
   Algorand contracts. See
   [docs/architecture.md#4-smart-contracts](docs/architecture.md#4-smart-contracts).
