@@ -22,6 +22,7 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
+      - run: npm run brand:check
       - name: Check markdown links
         run: node scripts/ci/check-md-links.mjs
       - name: Test + coverage (thresholds enforced in vitest.config.ts)

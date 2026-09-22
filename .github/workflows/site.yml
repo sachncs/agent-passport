@@ -55,6 +55,9 @@ jobs:
           test -f dist/social-preview.svg
           pages=$(find dist -name "*.html" | wc -l)
           echo "Built $pages HTML pages from Astro static output"
+      - name: Verify release content and metadata
+        working-directory: .
+        run: node scripts/ci/check-site-content.mjs site/dist
 
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5

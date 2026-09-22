@@ -13,6 +13,16 @@ an official passport document.
 
 ## Usage
 
+The canonical files in this directory are the source of truth. Derived favicons
+and the inline mark implementations in `site/` and `frontend/` are checked for
+drift with:
+
+```bash
+npm run brand:check
+```
+
+The same check runs in CI and as part of `npm run release:check`.
+
 - Use `assets/mark.svg` on dark or light surfaces where the accent signal is
   visible.
 - Use `assets/mark-mono.svg` for monochrome contexts, documents, and embossing.
