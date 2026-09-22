@@ -66,6 +66,44 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+  container:
+    runs-on: ubuntu-latest
+    needs: build
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build production image
+        run: docker build --build-arg GIT_COMMIT=${{ github.sha }} -t agent-passport:ci .
+      - name: Run and verify production container
+        env:
+          HMAC_SECRET: ci-only-secret-with-at-least-32-characters
+        run: |
+          set -euo pipefail
+          docker run -d --name agent-passport-ci -p 3000:3000 \
+            --read-only --tmpfs /tmp \
+            -e NODE_ENV=production \
+            -e HMAC_SECRET="$HMAC_SECRET" \
+            -e CORS_ALLOWED_ORIGINS=http://localhost:3001 \
+            agent-passport:ci
+          cleanup() {
+            docker logs agent-passport-ci || true
+            docker rm -f agent-passport-ci || true
+          }
+          trap cleanup EXIT
+
+          code=000
+          for i in {1..60}; do
+            code=$(curl -sS -o /tmp/health.json -w "%{http_code}" http://127.0.0.1:3000/health || true)
+            if [ "$code" = "200" ]; then
+              break
+            fi
+            sleep 1
+          done
+          test "$code" = "200"
+          grep -q '"status":"ok"' /tmp/health.json
+          test "$(docker inspect -f '{{.Config.User}}' agent-passport-ci)" = "appuser"
+          test "$(docker inspect -f '{{.State.Health.Status}}' agent-passport-ci)" = "healthy"
+
   frontend:
     runs-on: ubuntu-latest
     timeout-minutes: 15

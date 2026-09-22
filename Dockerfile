@@ -33,7 +33,7 @@ USER appuser
 EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ready || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
 
 # tini reaps zombies and forwards signals to node — required for graceful
 # shutdown under PID 1 (H8). --max-old-space-size is the heap canary (H10).

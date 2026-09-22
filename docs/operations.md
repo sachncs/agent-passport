@@ -339,8 +339,11 @@ docker build -t agent-passport:0.1.0 .
 docker run --rm -p 3000:3000 --env-file .env agent-passport:0.1.0
 ```
 
-The Dockerfile is multi-stage, runs as non-root, includes a
-healthcheck, and uses tini as PID 1 for proper signal forwarding.
+The Dockerfile is multi-stage, runs as non-root, includes a liveness
+healthcheck at `/health`, and uses tini as PID 1 for proper signal
+forwarding. `/ready` remains the dependency-aware readiness probe and
+should be used for load balancer or orchestrator traffic gating. CI builds
+and starts this image with production settings as a release gate.
 
 #### 6. Kubernetes probe example
 
