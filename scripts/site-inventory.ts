@@ -16,11 +16,14 @@ const paidPaths: Record<string, number> = {
   '/reputation/record': 0.005, '/underwrite': 0.01, '/trust-graph': 0.005,
   '/passport': 0.005,
 };
-const appText = read('src/app.ts');
-const routes: Array<{ method: string; path: string; line: number }> = [];
-for (const match of appText.matchAll(/app\.(get|post|put|patch|delete|head|options)\(\s*['"]([^'"]+)['"]/g)) {
-  routes.push({ method: match[1].toUpperCase(), path: match[2],
-    line: appText.slice(0, match.index ?? 0).split('\n').length });
+const routeSources = ['src/app.ts', 'src/http/routes/system.ts'];
+const routes: Array<{ method: string; path: string; line: number; sourceFile: string }> = [];
+for (const sourceFile of routeSources) {
+  const sourceText = read(sourceFile);
+  for (const match of sourceText.matchAll(/app\.(get|post|put|patch|delete|head|options)\(\s*['"]([^'"]+)['"]/g)) {
+    routes.push({ method: match[1].toUpperCase(), path: match[2],
+      line: sourceText.slice(0, match.index ?? 0).split('\n').length, sourceFile });
+  }
 }
 if (!routes.length) throw new Error('No Express route declarations found');
 
@@ -82,7 +85,11 @@ const inventory = {
   version: JSON.parse(read('package.json')).version,
   scope: 'Declared routes and source references. Not a runtime security certification.',
   routeCount: routes.length,
-  routes: routes.map(route => ({ ...route, source: `src/app.ts:${route.line}`,
+  routes: routes.map(route => ({
+    method: route.method,
+    path: route.path,
+    line: route.line,
+    source: `${route.sourceFile}:${route.line}`,
     hmacWhenConfigured: !hmacBypass.some(pattern => pattern.test(route.path)),
     idempotencyHeaderRequired: !['GET', 'HEAD', 'OPTIONS'].includes(route.method),
     optionalPayment: paidPaths[route.path] === undefined ? null : { price: paidPaths[route.path], currency: 'configured x402 network' },

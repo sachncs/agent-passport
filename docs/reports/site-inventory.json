@@ -6,8 +6,8 @@
     {
       "method": "GET",
       "path": "/score",
-      "line": 126,
-      "source": "src/app.ts:126",
+      "line": 123,
+      "source": "src/app.ts:123",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": {
@@ -21,8 +21,8 @@
     {
       "method": "GET",
       "path": "/delegation",
-      "line": 152,
-      "source": "src/app.ts:152",
+      "line": 149,
+      "source": "src/app.ts:149",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": {
@@ -36,8 +36,8 @@
     {
       "method": "POST",
       "path": "/counterparty-check",
-      "line": 167,
-      "source": "src/app.ts:167",
+      "line": 164,
+      "source": "src/app.ts:164",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": true,
       "optionalPayment": {
@@ -51,8 +51,8 @@
     {
       "method": "POST",
       "path": "/credit-estimate",
-      "line": 190,
-      "source": "src/app.ts:190",
+      "line": 187,
+      "source": "src/app.ts:187",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": true,
       "optionalPayment": {
@@ -66,8 +66,8 @@
     {
       "method": "GET",
       "path": "/sybil-check",
-      "line": 216,
-      "source": "src/app.ts:216",
+      "line": 213,
+      "source": "src/app.ts:213",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": {
@@ -81,8 +81,8 @@
     {
       "method": "GET",
       "path": "/reputation",
-      "line": 231,
-      "source": "src/app.ts:231",
+      "line": 228,
+      "source": "src/app.ts:228",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": {
@@ -96,8 +96,8 @@
     {
       "method": "POST",
       "path": "/reputation/record",
-      "line": 245,
-      "source": "src/app.ts:245",
+      "line": 242,
+      "source": "src/app.ts:242",
       "hmacWhenConfigured": true,
       "idempotencyHeaderRequired": true,
       "optionalPayment": {
@@ -111,8 +111,8 @@
     {
       "method": "GET",
       "path": "/underwrite",
-      "line": 315,
-      "source": "src/app.ts:315",
+      "line": 312,
+      "source": "src/app.ts:312",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": {
@@ -126,8 +126,8 @@
     {
       "method": "GET",
       "path": "/trust-graph",
-      "line": 331,
-      "source": "src/app.ts:331",
+      "line": 328,
+      "source": "src/app.ts:328",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": {
@@ -141,8 +141,8 @@
     {
       "method": "POST",
       "path": "/delegate",
-      "line": 358,
-      "source": "src/app.ts:358",
+      "line": 355,
+      "source": "src/app.ts:355",
       "hmacWhenConfigured": true,
       "idempotencyHeaderRequired": true,
       "optionalPayment": null,
@@ -153,8 +153,8 @@
     {
       "method": "POST",
       "path": "/revoke",
-      "line": 392,
-      "source": "src/app.ts:392",
+      "line": 389,
+      "source": "src/app.ts:389",
       "hmacWhenConfigured": true,
       "idempotencyHeaderRequired": true,
       "optionalPayment": null,
@@ -164,21 +164,9 @@
     },
     {
       "method": "GET",
-      "path": "/registry/status",
-      "line": 423,
-      "source": "src/app.ts:423",
-      "hmacWhenConfigured": true,
-      "idempotencyHeaderRequired": false,
-      "optionalPayment": null,
-      "sideEffect": "No business mutation; operational caches, metrics, and rate limits may change",
-      "checkedInOpenApi": true,
-      "checkedInPostman": true
-    },
-    {
-      "method": "GET",
       "path": "/passport",
-      "line": 428,
-      "source": "src/app.ts:428",
+      "line": 420,
+      "source": "src/app.ts:420",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": {
@@ -192,8 +180,8 @@
     {
       "method": "GET",
       "path": "/verify",
-      "line": 459,
-      "source": "src/app.ts:459",
+      "line": 451,
+      "source": "src/app.ts:451",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": null,
@@ -204,44 +192,8 @@
     {
       "method": "GET",
       "path": "/discovery/search",
-      "line": 584,
-      "source": "src/app.ts:584",
-      "hmacWhenConfigured": false,
-      "idempotencyHeaderRequired": false,
-      "optionalPayment": null,
-      "sideEffect": "No business mutation; operational caches, metrics, and rate limits may change",
-      "checkedInOpenApi": true,
-      "checkedInPostman": true
-    },
-    {
-      "method": "GET",
-      "path": "/metrics",
-      "line": 607,
-      "source": "src/app.ts:607",
-      "hmacWhenConfigured": false,
-      "idempotencyHeaderRequired": false,
-      "optionalPayment": null,
-      "sideEffect": "No business mutation; operational caches, metrics, and rate limits may change",
-      "checkedInOpenApi": true,
-      "checkedInPostman": true
-    },
-    {
-      "method": "GET",
-      "path": "/version",
-      "line": 610,
-      "source": "src/app.ts:610",
-      "hmacWhenConfigured": false,
-      "idempotencyHeaderRequired": false,
-      "optionalPayment": null,
-      "sideEffect": "No business mutation; operational caches, metrics, and rate limits may change",
-      "checkedInOpenApi": true,
-      "checkedInPostman": true
-    },
-    {
-      "method": "GET",
-      "path": "/openapi.json",
-      "line": 625,
-      "source": "src/app.ts:625",
+      "line": 576,
+      "source": "src/app.ts:576",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": null,
@@ -252,8 +204,8 @@
     {
       "method": "POST",
       "path": "/reputation/subscribe",
-      "line": 630,
-      "source": "src/app.ts:630",
+      "line": 599,
+      "source": "src/app.ts:599",
       "hmacWhenConfigured": true,
       "idempotencyHeaderRequired": true,
       "optionalPayment": null,
@@ -264,8 +216,8 @@
     {
       "method": "DELETE",
       "path": "/reputation/subscribe/:id",
-      "line": 659,
-      "source": "src/app.ts:659",
+      "line": 628,
+      "source": "src/app.ts:628",
       "hmacWhenConfigured": true,
       "idempotencyHeaderRequired": true,
       "optionalPayment": null,
@@ -276,8 +228,8 @@
     {
       "method": "GET",
       "path": "/reputation/subscribers",
-      "line": 664,
-      "source": "src/app.ts:664",
+      "line": 633,
+      "source": "src/app.ts:633",
       "hmacWhenConfigured": true,
       "idempotencyHeaderRequired": false,
       "optionalPayment": null,
@@ -287,9 +239,57 @@
     },
     {
       "method": "GET",
+      "path": "/registry/status",
+      "line": 21,
+      "source": "src/http/routes/system.ts:21",
+      "hmacWhenConfigured": true,
+      "idempotencyHeaderRequired": false,
+      "optionalPayment": null,
+      "sideEffect": "No business mutation; operational caches, metrics, and rate limits may change",
+      "checkedInOpenApi": true,
+      "checkedInPostman": true
+    },
+    {
+      "method": "GET",
+      "path": "/metrics",
+      "line": 28,
+      "source": "src/http/routes/system.ts:28",
+      "hmacWhenConfigured": false,
+      "idempotencyHeaderRequired": false,
+      "optionalPayment": null,
+      "sideEffect": "No business mutation; operational caches, metrics, and rate limits may change",
+      "checkedInOpenApi": true,
+      "checkedInPostman": true
+    },
+    {
+      "method": "GET",
+      "path": "/version",
+      "line": 30,
+      "source": "src/http/routes/system.ts:30",
+      "hmacWhenConfigured": false,
+      "idempotencyHeaderRequired": false,
+      "optionalPayment": null,
+      "sideEffect": "No business mutation; operational caches, metrics, and rate limits may change",
+      "checkedInOpenApi": true,
+      "checkedInPostman": true
+    },
+    {
+      "method": "GET",
+      "path": "/openapi.json",
+      "line": 44,
+      "source": "src/http/routes/system.ts:44",
+      "hmacWhenConfigured": false,
+      "idempotencyHeaderRequired": false,
+      "optionalPayment": null,
+      "sideEffect": "No business mutation; operational caches, metrics, and rate limits may change",
+      "checkedInOpenApi": true,
+      "checkedInPostman": true
+    },
+    {
+      "method": "GET",
       "path": "/dashboard",
-      "line": 672,
-      "source": "src/app.ts:672",
+      "line": 49,
+      "source": "src/http/routes/system.ts:49",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": null,
@@ -300,8 +300,8 @@
     {
       "method": "GET",
       "path": "/",
-      "line": 676,
-      "source": "src/app.ts:676",
+      "line": 53,
+      "source": "src/http/routes/system.ts:53",
       "hmacWhenConfigured": true,
       "idempotencyHeaderRequired": false,
       "optionalPayment": null,
@@ -312,8 +312,8 @@
     {
       "method": "GET",
       "path": "/health",
-      "line": 689,
-      "source": "src/app.ts:689",
+      "line": 65,
+      "source": "src/http/routes/system.ts:65",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": null,
@@ -324,8 +324,8 @@
     {
       "method": "GET",
       "path": "/ready",
-      "line": 701,
-      "source": "src/app.ts:701",
+      "line": 76,
+      "source": "src/http/routes/system.ts:76",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": null,
@@ -336,8 +336,8 @@
     {
       "method": "GET",
       "path": "/health/deep",
-      "line": 743,
-      "source": "src/app.ts:743",
+      "line": 106,
+      "source": "src/http/routes/system.ts:106",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": null,

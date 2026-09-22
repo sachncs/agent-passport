@@ -51,7 +51,10 @@ at this boundary, call a domain function, and then map its result to HTTP.
 ## 2. Request lifecycle
 
 A request flows through twelve ordered middlewares plus the route
-handler. Each middleware is registered in `src/app.ts`.
+handler. Middleware and domain capability handlers are composed in
+`src/app.ts`; framework-facing operational routes are registered through
+`src/http/routes/system.ts` so probes, metadata, and static delivery remain
+isolated from business logic.
 
 | # | Middleware | Purpose | Headers added |
 |---|------------|---------|---------------|

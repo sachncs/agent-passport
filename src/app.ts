@@ -6,7 +6,7 @@ import { config } from './config';
 import { checkCounterparty } from './counterparty';
 import { estimateCredit } from './credit';
 import { generatePassport } from './passport';
-import { delegate as delegateOnChain, isRegistryConfigured, RegistryNotConfiguredError, RegistryValidationError, revoke as revokeOnChain } from './registry';
+import { delegate as delegateOnChain, RegistryNotConfiguredError, RegistryValidationError, revoke as revokeOnChain } from './registry';
 import { computeReputation, EVENT_TYPES, recordEvent } from './reputation';
 import { detectSybil } from './sybil';
 import { scoreDelegation } from './delegation';
@@ -17,13 +17,9 @@ import { isValidWallet } from './lib/constants';
 import { TTLCache } from './lib/cache';
 import { idempotencyMiddleware } from './lib/idempotency';
 import { logger } from './lib/logger';
-import { recordCacheHit, recordCacheMiss, recordCounterpartyCheck, recordDiscoverySearch, recordUnderwritingDecision, recordVerifyCheck, metricsEndpoint, metricsMiddleware } from './lib/metrics';
+import { recordCacheHit, recordCacheMiss, recordCounterpartyCheck, recordDiscoverySearch, recordUnderwritingDecision, recordVerifyCheck, metricsMiddleware } from './lib/metrics';
 import { startMetricsCollectors } from './lib/metrics-collectors';
-import { isOperatorInitialized } from './lib/operator-wallet';
 import { rateLimiter, corsMiddleware, requestIdMiddleware, requestLoggingMiddleware } from './lib/security';
-import { getSanctionsProvider } from './lib/sanctions';
-import { buildInfo, packageVersion } from './lib/build-info';
-import { openApiSpec } from './lib/openapi';
 import { addSubscriber, fireWebhook, listSubscribers, removeSubscriber, validateWebhookUrl } from './lib/webhooks';
 import { existsSync, readFileSync } from 'fs';
 import { x402Middleware, settlementVerificationMiddleware } from './lib/x402';
@@ -35,6 +31,7 @@ import { hmacAuth, HMAC_BYPASS_PATHS, isHmacAuthEnabled } from './lib/hmac-auth'
 import { setRateLimitOverrides } from './lib/security';
 import { requestDeadlineMiddleware } from './lib/request-deadline';
 import { validateAmount, validateWallet } from './http/validation';
+import { registerSystemRoutes } from './http/routes/system';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -419,11 +416,6 @@ app.post('/revoke', async (req, res) => {
   }
 });
 
-// ── Registry status endpoint (used by E2E) ────────────────────
-app.get('/registry/status', (_req, res) => {
-  res.json({ configured: isRegistryConfigured(), appId: config.registryAppId });
-});
-
 // ── Capability #9: Agent Passport Document ────────────────────
 app.get('/passport', async (req, res) => {
   const wallet = requireWallet(req, res);
@@ -603,29 +595,6 @@ app.get('/discovery/search', async (req, res) => {
   });
 });
 
-// ── Prometheus Metrics ────────────────────────────────────────
-app.get('/metrics', metricsEndpoint);
-
-// ── Build metadata ────────────────────────────────────────────
-app.get('/version', (_req, res) => {
-  res.json({
-    service: 'Agent Passport',
-    version: packageVersion,
-    commit: config.gitCommit,
-    node: process.version,
-    startedAt: buildInfo.startedAt,
-    network: config.algoNetwork,
-    x402: config.x402Enabled,
-    sanctionsProvider: getSanctionsProvider().name,
-    uptime: Math.floor(process.uptime()),
-  });
-});
-
-// ── OpenAPI self-describe ─────────────────────────────────────
-app.get('/openapi.json', (_req, res) => {
-  res.json(openApiSpec);
-});
-
 // ── Reputation webhook subscribe/unsubscribe ──────────────────
 app.post('/reputation/subscribe', (req, res) => {
   const { wallet, url } = req.body || {};
@@ -666,106 +635,10 @@ app.get('/reputation/subscribers', (req, res) => {
   res.json({ subscribers: listSubscribers(wallet) });
 });
 
-// ── Dashboard static (no auth, public HTML) ──────────────────
+// Operational routes are kept in a separate adapter so this module remains
+// the composition root for middleware and domain capability handlers.
 const PUBLIC_DIR = join(__dirname, '..', '..', 'public');
-app.use('/static', express.static(PUBLIC_DIR));
-app.get('/dashboard', (_req, res) => {
-  res.sendFile(join(PUBLIC_DIR, 'dashboard.html'));
-});
-
-app.get('/', (_req, res) => {
-  res.json({
-    service: 'Agent Passport',
-    version: packageVersion,
-    docs: '/openapi.json',
-    dashboard: '/dashboard',
-    health: '/health',
-    ready: '/ready',
-    metrics: '/metrics',
-  });
-});
-
-// ── Health (liveness) ─────────────────────────────────────────
-app.get('/health', (_req, res) => {
-  res.json({
-    status: 'ok',
-    service: 'Agent Passport',
-    version: packageVersion,
-    network: config.algoNetwork,
-    x402: config.x402Enabled,
-    timestamp: new Date().toISOString(),
-  });
-});
-
-// ── Readiness (deep probe — checks Algorand + operator wallet) ─
-app.get('/ready', async (_req, res) => {
-  const health: Record<string, unknown> = {
-    status: 'ok',
-    service: 'Agent Passport',
-    network: config.algoNetwork,
-    timestamp: new Date().toISOString(),
-  };
-
-  try {
-    const status = await algod.status().do();
-    health.algorand = {
-      connected: true,
-      round: Number(status.lastRound || 0),
-    };
-  } catch (e) {
-    health.status = 'degraded';
-    health.algorand = {
-      connected: false,
-      error: String(e),
-    };
-  }
-
-  health.operator = {
-    initialized: isOperatorInitialized(),
-    registryConfigured: isRegistryConfigured(),
-  };
-
-  // An uninitialized operator means /delegate, /revoke, /reputation/record
-  // are no-ops. Surface this in readiness so k8s probes can hold traffic.
-  const contractsConfigured =
-    config.registryAppId > 0 || config.reputationAppId > 0;
-  if (!isOperatorInitialized() && contractsConfigured) {
-    health.status = 'degraded';
-  }
-
-  const statusCode = health.status === 'ok' ? 200 : 503;
-  res.status(statusCode).json(health);
-});
-
-// ── Deep health check — used by load tests + ops dashboards ──
-// Returns 503 when Algorand is unreachable (matches /ready semantics so
-// callers don't have to special-case which probe to use).
-app.get('/health/deep', async (_req, res) => {
-  const health: Record<string, unknown> = {
-    status: 'ok',
-    service: 'Agent Passport',
-    version: packageVersion,
-    network: config.algoNetwork,
-    x402: config.x402Enabled,
-    timestamp: new Date().toISOString(),
-  };
-
-  try {
-    const status = await algod.status().do();
-    health.algorand = {
-      connected: true,
-      round: Number(status.lastRound || 0),
-    };
-  } catch (e) {
-    health.status = 'degraded';
-    health.algorand = {
-      connected: false,
-      error: String(e),
-    };
-  }
-
-  res.status(health.status === 'ok' ? 200 : 503).json(health);
-});
+registerSystemRoutes(app, { publicDir: PUBLIC_DIR });
 
 // ── Background Workers ────────────────────────────────────────
 // Start metrics collectors at module load. SIGTERM/SIGINT handlers in index.ts
