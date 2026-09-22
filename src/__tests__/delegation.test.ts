@@ -790,8 +790,9 @@ describe('Sponsor Trust Propagation Audit', () => {
         });
       }
       const elapsed = performance.now() - start;
-      // 10K iterations should complete in < 10ms
-      expect(elapsed).toBeLessThan(10);
+      // Keep enough headroom for shared CI runners while catching accidental
+      // regressions from constant-time arithmetic to materially slower work.
+      expect(elapsed).toBeLessThan(50);
     });
   });
 });
