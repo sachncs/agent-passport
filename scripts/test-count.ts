@@ -1,4 +1,7 @@
 import { spawnSync } from 'child_process';
+import { mkdtempSync, readFileSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
 
 interface VitestJsonReport {
   numTotalTests: number;
@@ -11,9 +14,10 @@ export interface TestCount {
 }
 
 export function readTestCount(): TestCount {
+  const reportPath = join(mkdtempSync(join(tmpdir(), 'agent-passport-tests-')), 'report.json');
   const result = spawnSync(
     'npm',
-    ['exec', '--', 'vitest', 'run', '--reporter=json'],
+    ['exec', '--', 'vitest', 'run', '--reporter=json', '--outputFile', reportPath],
     { encoding: 'utf8', cwd: process.cwd() },
   );
   if (result.status !== 0) {
@@ -21,34 +25,33 @@ export function readTestCount(): TestCount {
       `vitest run --reporter=json failed: ${result.stderr.slice(0, 500)}`,
     );
   }
-  // Vitest 4 writes a final JSON line; Vitest 5 may emit the same report as
-  // one multi-line JSON document after runner diagnostics. Support both
-  // formats so this source-derived release check remains stable across the
-  // supported dependency range.
-  const output = result.stdout.trim();
   let report: VitestJsonReport | undefined;
   try {
-    const parsed = JSON.parse(output) as VitestJsonReport;
+    const parsed = JSON.parse(readFileSync(reportPath, 'utf8')) as VitestJsonReport;
     if (typeof parsed.numTotalTests === 'number') report = parsed;
   } catch {
-    // Fall through to line and embedded-document parsing below.
+    // Fall through to stdout parsing for older Vitest reporters.
   }
 
-  // Split on newlines and pick the line that parses cleanly.
-  const lines = result.stdout.split(/\r?\n/);
-  for (const line of lines.reverse()) {
-    try {
-      const parsed = JSON.parse(line) as VitestJsonReport;
-      if (typeof parsed.numTotalTests === 'number') {
-        report = parsed;
-        break;
+  if (!report) {
+    // Vitest 4 writes a final JSON line; older runners may not support
+    // --outputFile. Split on newlines and pick the line that parses cleanly.
+    const lines = result.stdout.split(/\r?\n/);
+    for (const line of lines.reverse()) {
+      try {
+        const parsed = JSON.parse(line) as VitestJsonReport;
+        if (typeof parsed.numTotalTests === 'number') {
+          report = parsed;
+          break;
+        }
+      } catch {
+        // not JSON; keep looking
       }
-    } catch {
-      // not JSON; keep looking
     }
   }
 
   if (!report) {
+    const output = result.stdout.trim();
     const start = output.indexOf('{"numTotalTestSuites"');
     const end = output.lastIndexOf('}');
     if (start >= 0 && end > start) {
