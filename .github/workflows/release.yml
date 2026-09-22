@@ -29,6 +29,9 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
       - run: npm ci
       - name: Verify release versions
         env:
@@ -47,7 +50,16 @@ jobs:
       - run: npm run test:coverage
       - run: npm run build
       - run: npm run build --workspace=@agent-passport/sdk
+      - run: npm test --workspace=@agent-passport/web
+      - run: npm run build --workspace=@agent-passport/web
+      - run: npm run check --prefix site
+      - run: npm run build --prefix site
+      - run: node scripts/ci/check-site-content.mjs site/dist
       - run: npm run site:inventory
+      - run: python -m pip install -e ".[dev]"
+        working-directory: sdk/python
+      - run: python -m pytest
+        working-directory: sdk/python
 
   publish-npm:
     needs: verify
