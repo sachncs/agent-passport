@@ -51,8 +51,8 @@ reference, algorithms, operations, security boundaries, and contributing.
   system-exposure, webhook subscribers) are per-process; see
   [docs/architecture.md](docs/architecture.md) for the multi-replica
   requirements and the boot-time warning that surfaces them.
-- **Production-targeted observability** — Prometheus metrics, 19
-  alert rules, 17-panel Grafana dashboard, runbooks per alert, two
+- **Production-targeted observability** — Prometheus metrics, 18
+  alert rules, 16-panel Grafana dashboard, runbooks per alert, two
   SLO profiles. See
   [docs/operations.md#5-observability](docs/operations.md#5-observability).
 - **First-class SDKs** — TypeScript (`@agent-passport/sdk`) and Python
@@ -346,7 +346,7 @@ print(f"Trust: {score.trust_score} ({score.risk_level})")
 ```
 agent-passport/
 ├── src/                    # Service source (Express + lib/)
-│   ├── app.ts              # Express app, all 19 routes, middleware order
+│   ├── app.ts              # Composition root, middleware, capability routes
 │   ├── index.ts            # Bootstrap and graceful shutdown
 │   ├── config.ts           # Env-var parsing and validation
 │   ├── trust-score.ts      # Composite trust score (5 sub-scores)

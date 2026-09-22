@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Agent Passport",
-    "description": "Stateless trust scoring, delegation, credit, sybil, reputation, and underwriting for AI agents on Algorand. No authentication required.",
+    "description": "Stateless trust scoring, delegation, credit, sybil, reputation, and underwriting for AI agents on Algorand. Read routes are public by default; enable HMAC for state-changing routes.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [

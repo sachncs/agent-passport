@@ -44,7 +44,7 @@ export default function HomePage() {
             <p className="text-[0.7rem] font-medium uppercase tracking-[0.16em] text-verified">A decision surface</p>
             <h2 className="mt-2 text-xl font-semibold tracking-tight text-foreground">Unknown agent → evidence → action</h2>
           </div>
-          <span className="text-xs text-muted-fg">Live console · no account required</span>
+          <span className="text-xs text-muted-fg">Self-hosted console · no account required</span>
         </div>
         <ul className="mx-auto max-w-3xl divide-y divide-border/60">
           {CAPABILITIES.map((c) => (
