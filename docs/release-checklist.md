@@ -35,5 +35,7 @@ coverage is run separately against a configured Algorand environment.
 - [ ] README and site no longer use preview or unfinished-work language.
 - [ ] Fresh-clone setup succeeds using documented commands.
 - [ ] `npm run release:check` passes.
+- [ ] Package publishing and artifact verification are configured for npm
+      provenance and PyPI trusted publishing.
 - [ ] GitHub Actions, package metadata, license, and contributor guidance are
       reviewed before tagging.

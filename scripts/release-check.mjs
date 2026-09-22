@@ -9,6 +9,7 @@ const required = [
   "SECURITY.md", "LICENSE", "docs/README.md", "docs/release-checklist.md",
   "docs/known-limitations.md", "brand/README.md", "brand/assets/mark.svg",
   "brand/assets/favicon.svg",
+  ".github/workflows/release.yml",
   "site/public/social-preview.svg",
 ];
 const missing = required.filter((file) => !existsSync(join(root, file)));

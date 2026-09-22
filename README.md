@@ -16,7 +16,7 @@
 
 A stateless trust-scoring API at `http://localhost:3000`, pointed at the
 public Algorand testnet. No database, no wallet, no signup —
-`npm install && cp .env.example .env && npm start` and you have
+`npm ci && cp .env.example .env && npm start` and you have
 trust scoring, delegation, credit, sybil detection, reputation,
 underwriting, and passport generation for any Algorand wallet.
 
@@ -90,7 +90,7 @@ npm install @agent-passport/api
 ```bash
 git clone https://github.com/sachncs/agent-passport.git
 cd agent-passport
-npm install
+npm ci
 cp .env.example .env
 npm start
 ```
@@ -359,7 +359,7 @@ agent-passport/
 │   ├── trust-graph.ts      # Trust graph analytics, exposure, what-ifs
 │   ├── counterparty.ts     # Merchant counterparty check
 │   ├── registry.ts         # On-chain delegate + revoke
-│   ├── __tests__/          # 44 unit test files (1 589 tests passing at HEAD)
+│   ├── __tests__/          # 46 unit test files (1 596 tests passing at HEAD)
 │   └── lib/                # 13 helper modules (cache, idempotency, x402, …)
 ├── sdk/                    # TypeScript + Python SDKs
 │   ├── src/                # TypeScript SDK
@@ -400,7 +400,7 @@ agent-passport/
 npm run dev              # Start with hot reload
 npm run build            # Build TypeScript
 npm run typecheck        # Type checking
-npm test                 # All unit tests (1 589 passing at HEAD — see scripts/test-count.ts)
+npm test                 # All unit tests (1 596 passing at HEAD — see scripts/test-count.ts)
 npm run test:integration # Live testnet integration suite
 npm run lint             # ESLint
 ```
@@ -409,7 +409,7 @@ npm run lint             # ESLint
 
 ```bash
 cd sdk
-npm install
+npm ci
 npm test
 npm run build
 ```
@@ -487,7 +487,7 @@ chore: bump @x402/core to 2.18.0
 ## Testing
 
 ```bash
-npm test                       # 44 test files (1 589 tests at HEAD — see scripts/test-count.ts)
+npm test                       # 46 test files (1 596 tests at HEAD — see scripts/test-count.ts)
 npm run test:integration       # Live Algorand testnet integration
 npm run test:coverage          # Unit tests with coverage
 ```
@@ -515,7 +515,9 @@ npm run build --workspaces   # All workspace packages
 1. Bump version in `package.json`
 2. Update `CHANGELOG.md`
 3. Commit with a `version:X.Y.Z` message
-4. Tag and push — CI publishes to npm
+4. Tag and push — the release workflow verifies and publishes the API and
+   TypeScript package to npm and the Python SDK to PyPI using trusted publishing
+   (configure the npm token and PyPI trusted publisher before the first release)
 
 ---
 
