@@ -20,7 +20,7 @@ describe("Logo", () => {
     render(<Logo variant="full" />)
     expect(screen.getByText("Agent Passport")).toBeInTheDocument()
     expect(
-      screen.getByText(/trust & underwriting for ai agents/i),
+      screen.getByText(/evidence-led trust infrastructure for ai agents/i),
     ).toBeInTheDocument()
   })
 })

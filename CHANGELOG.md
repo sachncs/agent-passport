@@ -2,14 +2,17 @@
 
 All notable changes to **Agent Passport** are documented in this file.
 
-> **Latest**: the v0.1.0 release was **not** production-ready. The
-> `[Unreleased]` section below ships the production-readiness fix set
-> (HMAC auth, mandatory Idempotency-Key, single-application of the
-> sybil penalty, race-free persistence, web dashboard x402 fix,
-> dependency cleanup) plus a complete frontend redesign using the
-> official [shadcn/ui](https://ui.shadcn.com/docs/components) recipe.
-> Treat the v0.1.0 tag as a dev preview.
+> **Latest**: the v1.0.0 release candidate consolidates the production
+> readiness fix set and the branded developer/operations experience. The
+> `[Unreleased]` section below records the implementation history for that
+> release set.
 >
+> Historical note: v0.1.0 was a development release and should not be used
+> as the compatibility or deployment reference.
+>
+The historical `[Unreleased]` notes below are retained for auditability and
+describe the production-readiness fix set that led to this release candidate.
+
 > **Most recent** ([unreleased](#unreleased)) also adds: a
 > real persisted dark/light theme via `next-themes`, the
 > full Next.js 16 file convention set (loading.tsx, error.tsx,

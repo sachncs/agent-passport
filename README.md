@@ -10,11 +10,9 @@
   </p>
 </p>
 
-> **Status:** v0.1.0 dev preview — see [CHANGELOG](CHANGELOG.md).
-> Production-readiness targets (HMAC auth, mandatory Idempotency-Key,
-> shared-state adapters, webhook secret redaction, on-chain round
-> confirmation) are landing in `[Unreleased]`. Treat the v0.1.0 tag
-> as a developer preview.
+> **Status:** v1.0 release candidate — open-source infrastructure for local
+> and self-hosted deployments. See [known limitations](docs/known-limitations.md)
+> and [support policy](docs/support-policy.md) before deploying.
 
 A stateless trust-scoring API at `http://localhost:3000`, pointed at the
 public Algorand testnet. No database, no wallet, no signup —
@@ -22,8 +20,8 @@ public Algorand testnet. No database, no wallet, no signup —
 trust scoring, delegation, credit, sybil detection, reputation,
 underwriting, and passport generation for any Algorand wallet.
 
-Full documentation: **[docs/README.md](docs/README.md)** — single source of
-truth for architecture, algorithms, operations, and contributing.
+Full documentation: **[docs/README.md](docs/README.md)** — task paths, API
+reference, algorithms, operations, security boundaries, and contributing.
 
 ---
 
@@ -62,12 +60,12 @@ truth for architecture, algorithms, operations, and contributing.
   and x402 payment callbacks. See
   [sdk/README.md](sdk/README.md)
   and [sdk/python/README.md](sdk/python/README.md).
-- **Premium dark-first SaaS console** — Next.js 16 + shadcn/ui v4 with
-  a two-tier accent system (emerald for trust/verified, cyan for
+- **Developer and operations console** — Next.js 16 + shadcn/ui v4 with
+  a shared evidence-led identity (emerald for trust/verified, cyan for
   operational/data), verdict-first `/dashboard` report, custom
-  geometric brand mark, persisted `next-themes` theme, live
-  operational status pill in the header, dedicated developer-surface
-  treatment for `/endorse`, `/counterparty`, `/monitor`, and
+  evidence-frame brand mark, persisted `next-themes` theme, live
+  operational status pill in the header, and dedicated developer and
+  operations surfaces for `/endorse`, `/counterparty`, `/monitor`, and
   `/discovery`.
 - **Defence-in-depth security** — Helmet headers, 600 req/min/IP rate
   limit, CORS, 100 KB body limit, 30 s request timeout, per-request
@@ -176,9 +174,7 @@ curl -s "http://localhost:3000/underwrite?wallet=GD64YIY3TWGDMCNPP553DZPPR6LDUSF
 The Next.js 16 + shadcn/ui v4 console in `frontend/` renders the
 same data as a verdict-first `/dashboard` (emerald = verified,
 cyan = operational). See
-[frontend/README.md](frontend/README.md) for the local dev
-loop; binary screenshots will land under `docs/img/` once the
-demo is hosted (sister issue with GitHub Pages configuration).
+[frontend/README.md](frontend/README.md) for the local development loop.
 
 A 5-minute walkthrough is in
 [README.md](README.md#installation).
@@ -519,8 +515,9 @@ npm run build --workspaces   # All workspace packages
 
 ## Deployment
 
-The service targets production readiness but is currently in
-pre-release — see [CHANGELOG.md](CHANGELOG.md). The
+The service is prepared as a v1.0 release candidate; review the
+[known limitations](docs/known-limitations.md) and
+[CHANGELOG.md](CHANGELOG.md). The
 deployment checklist, environment variables, and per-environment
 notes are at
 [docs/operations.md#4-deployment](docs/operations.md#4-deployment).

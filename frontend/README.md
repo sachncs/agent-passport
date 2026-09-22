@@ -37,7 +37,7 @@ frontend/
 │   │   ├── sybil/          # Sybil Check
 │   │   ├── reputation/     # Reputation log
 │   │   ├── counterparty/   # Counterparty Check
-│   │   ├── endorse/        # Endorse / Revoke (HMAC preview)
+│   │   ├── endorse/        # Endorse / Revoke (signed-request workflow)
 │   │   ├── discovery/      # Bazaar search
 │   │   └── monitor/        # Service health / version
 │   ├── components/         # App-level React components

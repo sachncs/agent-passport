@@ -6,7 +6,7 @@ interface LogoProps {
   className?: string
 }
 
-const TAGLINE = "Trust & underwriting for AI agents on Algorand"
+const TAGLINE = "Evidence-led trust infrastructure for AI agents"
 
 export function Logo({
   size = 28,
@@ -75,7 +75,7 @@ function Mark({
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
+      viewBox="0 0 64 64"
       width={size}
       height={size}
       fill="none"
@@ -87,10 +87,11 @@ function Mark({
       className={cn("shrink-0 text-foreground", className)}
       {...props}
     >
-      <rect x="3" y="4" width="18" height="16" rx="2.5" />
-      <line x1="7" y1="9" x2="17" y2="9" />
-      <line x1="7" y1="13" x2="13" y2="13" />
-      <circle cx="17" cy="16" r="1.25" />
+      <path d="M18 12h28a6 6 0 0 1 6 6v28a6 6 0 0 1-6 6H18a6 6 0 0 1-6-6V18a6 6 0 0 1 6-6Z" />
+      <path d="M12 28V18a6 6 0 0 1 6-6h10" />
+      <path d="M22 25h14M22 32h9M22 39h18" opacity=".58" />
+      <path d="M41 25v14" />
+      <circle cx="41" cy="43" r="4" fill="currentColor" stroke="none" />
     </svg>
   )
 }

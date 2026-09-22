@@ -14,7 +14,7 @@ describe("HomePage", () => {
     render(<HomePage />)
     expect(
       screen.getByRole("heading", {
-        name: /trust, reputation, and underwriting/i,
+        name: /make every agent legible/i,
       }),
     ).toBeInTheDocument()
   })

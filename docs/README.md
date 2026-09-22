@@ -1,11 +1,21 @@
 # Agent Passport Documentation
 
-Single source of truth for architecture, algorithms, operations, and
-contributing. Six files (plus the OpenAPI spec, Postman collection,
-and Bazaar metadata under `api/`).
+Source-backed documentation for the v1.0 OSS release. Start with a task path,
+then use the reference documents for implementation and operations detail.
 
 > **Just want to run it?** Skip to the root
 > [README.md](../README.md) → "Installation" → "Quick start".
+
+## Start here
+
+| Goal | Read |
+|------|------|
+| Run locally | [Root quick start](../README.md#quick-start) |
+| Call the API | [API reference](api.md), [OpenAPI](api/openapi.yaml) |
+| Understand decisions | [Concepts](concepts.md), [Known limitations](known-limitations.md) |
+| Deploy and operate | [Operations](operations.md), [Architecture](architecture.md) |
+| Review security | [Security](security.md), [Known limitations](known-limitations.md) |
+| Contribute or release | [Contributing](../CONTRIBUTING.md), [Support policy](support-policy.md), [Release checklist](release-checklist.md) |
 
 ## Files
 
@@ -17,6 +27,9 @@ and Bazaar metadata under `api/`).
 | [concepts.md](concepts.md) | Trust scoring, delegation graph, sybil detection, reputation, credit/underwriting, passport document | Reviewing the algorithms; debugging a wrong score; understanding the math |
 | [security.md](security.md) | Threat model, defence-in-depth layers, attack surface, mitigations | Reviewing for a production deployment; threat-modelling a new feature |
 | [operations.md](operations.md) | Environment variables, deployment, observability (metrics/SLOs/alerts), rate limiting, idempotency, system exposure cap, graceful shutdown, load testing | Operating the service in any environment |
+| [known-limitations.md](known-limitations.md) | Public decision, runtime, and hosted-service boundaries | Evaluating the system for production use |
+| [support-policy.md](support-policy.md) | Community support and compatibility expectations | Adopting the project or opening an issue |
+| [release-checklist.md](release-checklist.md) | The v1.0 release gate | Cutting a release |
 
 ## Root-level files
 

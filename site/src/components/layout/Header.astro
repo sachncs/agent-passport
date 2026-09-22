@@ -100,10 +100,10 @@ const navLinks = [
         <Button
           variant="secondary"
           size="sm"
-          href="#check-agent"
+          href={docsHref}
           class="hidden sm:inline-flex"
         >
-          Try Agent Passport
+          Start locally
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
@@ -135,7 +135,7 @@ const navLinks = [
   <div id="mobile-menu" class="hidden border-t border-line bg-canvas/95 px-6 py-5 backdrop-blur-xl sm:hidden">
     <nav class="mx-auto flex max-w-[1240px] flex-col gap-1" aria-label="Mobile navigation">
       {navLinks.map((link) => <a href={link.href} class="rounded-lg px-3 py-3 text-sm font-medium text-ink-2 hover:bg-surface-2 hover:text-ink-1">{link.label}</a>)}
-      <a href="#check-agent" class="mt-2 rounded-lg bg-accent px-3 py-3 text-center text-sm font-semibold text-accent-fg">Try Agent Passport →</a>
+      <a href={docsHref} class="mt-2 rounded-lg bg-accent px-3 py-3 text-center text-sm font-semibold text-accent-fg">Start locally →</a>
     </nav>
   </div>
 </header>

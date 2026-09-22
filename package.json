@@ -66,6 +66,7 @@
     "dashboard": "echo 'Dashboard at http://localhost:3000/dashboard'",
     "benchmark": "vitest run src/__tests__/benchmark.test.ts --reporter=verbose",
     "site:inventory": "node scripts/site-inventory.ts",
+    "release:check": "node scripts/release-check.mjs",
     "codegen:web-types": "npm run codegen --workspace=@agent-passport/web",
     "web:dev": "npm run dev --workspace=@agent-passport/web",
     "web:build": "npm run build --workspace=@agent-passport/web",

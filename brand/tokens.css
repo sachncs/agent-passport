@@ -1,0 +1,15 @@
+:root {
+  --ap-canvas: oklch(0.16 0.005 250);
+  --ap-surface: oklch(0.2 0.006 250);
+  --ap-ink: oklch(0.97 0.003 250);
+  --ap-muted: oklch(0.72 0.006 250);
+  --ap-line: oklch(1 0 0 / 0.1);
+  --ap-accent: oklch(0.78 0.16 162);
+  --ap-info: oklch(0.72 0.13 200);
+  --ap-radius-card: 20px;
+  --ap-radius-control: 10px;
+  --ap-font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --ap-font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
+  --ap-font-editorial: "Instrument Serif", Georgia, serif;
+}
+

@@ -7,8 +7,8 @@ interface Props {
 }
 
 const {
-  title = "Agent Passport — Trust infrastructure for AI agents",
-  description = "Make every agent legible. Agent Passport turns Algorand wallets into explainable trust, risk, and underwriting decisions through one developer-first API.",
+  title = "Agent Passport — Evidence-led trust infrastructure",
+  description = "Make every agent legible. Agent Passport turns observable Algorand behavior into explainable trust, risk, and underwriting decisions.",
 } = Astro.props;
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
@@ -35,11 +35,13 @@ const baseUrl = import.meta.env.BASE_URL.replace(/\/?$/, "/");
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonicalURL} />
     <meta property="og:site_name" content="Agent Passport" />
+    <meta property="og:image" content={`${baseUrl}social-preview.svg`} />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={`${baseUrl}social-preview.svg`} />
 
     <!-- Theme bootstrap (avoid flash) -->
     <script is:inline>
