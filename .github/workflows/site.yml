@@ -32,6 +32,9 @@ jobs:
         working-directory: site
         run: npm ci
 
+      - name: Verify canonical brand assets
+        run: npm run brand:check
+
       - name: Build
         working-directory: site
         run: npm run build

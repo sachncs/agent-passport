@@ -11,10 +11,35 @@ import { ThemeProvider } from "@/components/theme-provider"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "Agent Passport — Trust & Underwriting for AI Agents on Algorand",
+  title: "Agent Passport — Evidence-led trust infrastructure",
   description:
-    "Open-source trust scoring, delegation, credit, sybil, reputation, " +
-    "and underwriting signals for AI agents on Algorand.",
+    "Evidence-led, open-source trust scoring, delegation, credit, Sybil, " +
+    "reputation, and underwriting signals for AI agents on Algorand.",
+  icons: {
+    icon: "/icon.svg",
+  },
+  openGraph: {
+    title: "Agent Passport — Evidence-led trust infrastructure",
+    description:
+      "Evidence-led, open-source trust and risk signals for AI agents on Algorand.",
+    type: "website",
+    siteName: "Agent Passport",
+    images: [
+      {
+        url: "https://sachncs.github.io/agent-passport/social-preview.svg",
+        width: 1200,
+        height: 630,
+        alt: "Agent Passport — evidence-led trust infrastructure for AI agents",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Agent Passport — Evidence-led trust infrastructure",
+    description:
+      "Evidence-led, open-source trust and risk signals for AI agents on Algorand.",
+    images: ["https://sachncs.github.io/agent-passport/social-preview.svg"],
+  },
 }
 
 export default function RootLayout({
