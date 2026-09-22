@@ -106,10 +106,5 @@
   "engines": {
     "node": ">=22.23.1"
   },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild"
-    ]
-  },
-  "packageManager": "pnpm@9.15.0"
+  "packageManager": "npm@10.9.3"
 }

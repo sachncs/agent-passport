@@ -2,10 +2,11 @@
   <rect width="1200" height="630" fill="#101417"/>
   <circle cx="930" cy="110" r="260" fill="#9de8bd" opacity=".08"/>
   <g transform="translate(100 130) scale(2.8)" fill="none" stroke="#eff8f1" stroke-width="3" stroke-linecap="round">
-    <path d="M17 51V13h30v38"/>
-    <path d="M24 43 32 20l8 23M27 35h10"/>
-    <path d="M47 13h7v10" stroke="#9de8bd"/>
-    <circle cx="47" cy="13" r="4.5" fill="#9de8bd" stroke="none"/>
+    <path d="M16 52V12h34v40H16Z"/>
+    <path d="M24 12v40"/>
+    <path d="M31 22h11M31 29h7M31 36h11"/>
+    <path d="M50 12h7v7" stroke="#9de8bd"/>
+    <circle cx="50" cy="12" r="4.5" fill="#9de8bd" stroke="none"/>
   </g>
   <text x="100" y="390" fill="#eff8f1" font-family="Arial, sans-serif" font-size="72" font-weight="700">Agent Passport</text>
   <text x="105" y="455" fill="#9de8bd" font-family="Arial, sans-serif" font-size="30">Evidence-led trust infrastructure for AI agents</text>

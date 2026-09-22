@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 180" role="img" aria-label="Agent Passport — Evidence-led trust infrastructure for AI agents">
-  <g transform="translate(0 22) scale(2.1)" fill="none" stroke="#101417" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M17 51V13h30v38"/><path d="M24 43 32 20l8 23M27 35h10"/><path d="M47 13h7v10"/><circle cx="47" cy="13" r="4.5" fill="#228b57" stroke="none"/></g>
+  <g transform="translate(0 22) scale(2.1)" fill="none" stroke="#101417" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M16 52V12h34v40H16Z"/><path d="M24 12v40"/><path d="M31 22h11M31 29h7M31 36h11"/><path d="M50 12h7v7"/><circle cx="50" cy="12" r="4.5" fill="#228b57" stroke="none"/></g>
   <text x="150" y="92" fill="#101417" font-family="Inter, Arial, sans-serif" font-size="58" font-weight="650" letter-spacing="-2">Agent Passport</text>
   <text x="153" y="132" fill="#228b57" font-family="Inter, Arial, sans-serif" font-size="19" letter-spacing="1.4">EVIDENCE-LED TRUST INFRASTRUCTURE FOR AI AGENTS</text>
 </svg>

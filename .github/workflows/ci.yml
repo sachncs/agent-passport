@@ -31,8 +31,8 @@ jobs:
         run: npx vitest run --coverage
       - name: README test-count drift check
         env:
-          EXPECTED_TESTS: '1593'
-          EXPECTED_FILES: '45'
+          EXPECTED_TESTS: '1596'
+          EXPECTED_FILES: '46'
           DRIFT_TOLERANCE: '5'
         run: |
           set -euo pipefail

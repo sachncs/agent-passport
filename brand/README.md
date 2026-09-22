@@ -6,8 +6,8 @@ the Astro site, the Next.js console, package documentation, and release assets.
 ## Direction
 
 Agent Passport is editorial infrastructure: a calm, evidence-led layer that
-turns observable agent behavior into decisions. The identity uses an open
-frame, a deliberate evidence bar, and a single signal point. It should feel
+turns observable agent behavior into decisions. The identity uses an evidence
+folio, a visible record spine, and a single signal point. It should feel
 precise and credible without implying identity proof, a security guarantee, or
 an official passport document.
 

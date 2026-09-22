@@ -44,12 +44,10 @@ frontend/
 │   │   ├── ui/             # shadcn/ui primitives
 │   │   ├── home-page.tsx
 │   │   ├── site-header.tsx     # Brand + theme toggle
-│   │   ├── wallet-hero-input.tsx # Wallet address input with validation
-│   │   ├── risk-badge.tsx   # Color-coded risk level pill
-│   │   ├── stat.tsx         # Label-value card
-│   │   ├── passport-section.tsx # Collapsible card section
-│   │   ├── passport-sections.tsx # Composed dashboard sections
-│   │   ├── page-header.tsx # PageHeader, EmptyState, LoadingBlock, ErrorBlock, WalletRequiredAlert
+│   │   ├── wallet-pill.tsx  # Compact wallet identity display
+│   │   ├── risk-pill.tsx    # Color-coded risk level pill
+│   │   ├── report/          # Verdict, evidence, delegation, sybil, reputation views
+│   │   ├── copy-button.tsx  # Keyboard-accessible copy interaction
 │   │   ├── query-provider.tsx
 │   │   └── theme-provider.tsx
 │   ├── hooks/
@@ -66,21 +64,18 @@ frontend/
 ## Commands
 
 ```bash
-pnpm install
-pnpm dev           # http://localhost:3000 (proxies API to backend on :3000)
-pnpm build
-pnpm start
-pnpm lint
-pnpm typecheck
-pnpm test          # 51 tests across 10 files
-pnpm test:watch
-pnpm test:ui
-pnpm test:coverage
+npm run dev --workspace=@agent-passport/web   # http://localhost:3001
+npm run build --workspace=@agent-passport/web
+npm run start --workspace=@agent-passport/web
+npm run lint --workspace=@agent-passport/web
+npm run typecheck --workspace=@agent-passport/web
+npm test --workspace=@agent-passport/web      # 62 tests across 13 files
+npm run test:watch --workspace=@agent-passport/web
+npm run test:coverage --workspace=@agent-passport/web
 ```
 
-The dev server runs on port **3000** (same as the backend). It uses
-Next.js rewrites to proxy every API call from `localhost:3000/<path>`
-to `localhost:3000/<path>` on the backend — i.e. when you visit
+The dev server runs on port **3001**. It uses Next.js rewrites to proxy
+API calls to the backend at `localhost:3000` — i.e. when you visit
 `/score?wallet=...` in the browser, Next.js fetches it from the
 Express service transparently. No CORS issues, no env vars required.
 
@@ -140,8 +135,8 @@ the rewrites (or accept the double-hop).
 
 2. `src/app/<route>/my-client.tsx` — client component using
    `useSearchParams()` + `useQuery` against `api` in
-   `src/lib/api.ts`. Render loading, error, and empty states via
-   the helpers in `src/components/page-header.tsx`.
+   `src/lib/api.ts`. Render loading, error, and empty states with the
+   shared primitives in `src/components/ui/` and `src/components/report/`.
 
 3. `src/app/<route>/my-client.test.tsx` — Vitest + Testing Library
    covering the four states (loading, error, success, empty).
@@ -152,7 +147,7 @@ the rewrites (or accept the double-hop).
 ## Adding a component
 
 ```bash
-pnpm dlx shadcn@latest add <component-name>
+npx shadcn@latest add <component-name>
 ```
 
 Primitives land in `src/components/ui/<name>.tsx` with their

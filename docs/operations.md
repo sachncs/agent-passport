@@ -266,17 +266,17 @@ key after a server restart will re-execute the request.
 
 ### Multi-replica
 
-For deployments with > 1 replica, back the idempotency store
-with Redis. The `Idempotency-Key` contract guarantees at-most-once
-execution; without a shared store, two replicas can both serve
-the same key and both execute the underlying operation.
+For deployments with > 1 replica, back the idempotency store with shared
+storage such as Redis. Without shared storage, two replicas can both receive
+the same key and execute the underlying operation; the middleware is not a
+globally coordinated exactly-once ledger.
 
 ## 4. Deployment
 
 ### Quick start
 
 ```bash
-npm install
+npm ci
 cp .env.example .env
 npm start
 ```

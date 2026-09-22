@@ -7,10 +7,10 @@ console:
 - `/endorse` developer surface
 - dark/light theme comparison
 
-Regeneration procedure (once a hosted demo is live at
-`https://sachncs.github.io/agent-passport/`):
+Regeneration procedure for a release (the public site is static and the
+console is run locally or self-hosted):
 
-1. Run `pnpm web:dev` in the repo root, then open
+1. Run `npm run dev --workspace=@agent-passport/web`, then open
    `http://localhost:3001/dashboard`, `/endorse`, etc.
 2. Capture the screenshots with `npx playwright screenshot --viewport-size=1280,720
    http://localhost:3001/dashboard docs/img/dashboard-dark.png`.

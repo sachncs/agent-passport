@@ -79,7 +79,7 @@ and describe:
 git clone https://github.com/sachncs/agent-passport.git
 cd agent-passport
 cp .env.example .env
-npm install
+npm ci
 ```
 
 ### Run the Service
@@ -100,7 +100,7 @@ The service listens on `http://localhost:3000` by default. Hit
 
 ```bash
 cd sdk
-npm install
+npm ci
 npm test
 npm run build
 ```
@@ -125,8 +125,8 @@ SKIP_E2E=1 npm test
 
 ### Keep README test counts honest
 
-The README advertises the unit-test count at HEAD (currently `44 test
-files / 1589 tests`). A CI drift check in `.github/workflows/ci.yml`
+The README advertises the unit-test count at HEAD (currently `46 test
+files / 1596 tests`). A CI drift check in `.github/workflows/ci.yml`
 fails the build if the count drifts by more than ±5 from the baseline.
 To update the baseline after intentionally adding or removing tests:
 

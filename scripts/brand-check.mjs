@@ -24,10 +24,11 @@ for (const path of ["frontend/public/favicon.svg", "site/public/favicon.svg"]) {
 for (const path of ["frontend/src/components/brand/logo.tsx", "site/src/components/brand/Mark.astro"]) {
   const source = read(path);
   for (const geometry of [
-    "M17 51V13h30v38",
-    "M24 43 32 20l8 23",
-    "M47 13h7v10",
-    "cx=\"47\" cy=\"13\"",
+    "M16 52V12h34v40H16",
+    "M24 12v40",
+    "M31 22h11",
+    "M50 12h7v7",
+    "cx=\"50\" cy=\"12\"",
   ]) {
     if (!source.includes(geometry)) throw new Error(`${path} is missing canonical mark geometry: ${geometry}`);
   }

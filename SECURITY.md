@@ -6,12 +6,12 @@ The Agent Passport team releases security patches for the following versions:
 
 | Version | Supported          |
 |---------|--------------------|
-| `0.1.x` | :white_check_mark: Yes (current) |
-| `< 0.1` | :x: No             |
+| `1.0.x` | :white_check_mark: Yes (current) |
+| `< 1.0` | :x: No             |
 
-Until the project reaches `1.0.0`, only the latest minor release line receives
-security fixes. Critical CVEs may be back-ported to the previous minor at the
-maintainers' discretion — open an issue to request a back-port.
+Only the latest v1 minor release line receives security fixes. Critical CVEs
+may be back-ported at the maintainers' discretion; open a private report to
+request a back-port assessment.
 
 ## Reporting a Vulnerability
 

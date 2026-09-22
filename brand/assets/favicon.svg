@@ -1,9 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
   <title id="title">Agent Passport</title>
-  <desc id="desc">The Agent Passport evidence mark.</desc>
+  <desc id="desc">The Agent Passport evidence folio mark.</desc>
   <rect width="64" height="64" rx="16" fill="#101417" />
-  <path d="M17 51V13h30v38" fill="none" stroke="#eff8f1" stroke-width="3" stroke-linejoin="round" />
-  <path d="M24 43 32 20l8 23M27 35h10" fill="none" stroke="#eff8f1" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
-  <path d="M47 13h7v10" fill="none" stroke="#9de8bd" stroke-width="3" stroke-linecap="round" />
-  <circle cx="47" cy="13" r="4.5" fill="#9de8bd" />
+  <path d="M16 52V12h34v40H16Z" fill="none" stroke="#eff8f1" stroke-width="3" stroke-linejoin="round" />
+  <path d="M24 12v40" fill="none" stroke="#eff8f1" stroke-width="3" />
+  <path d="M31 22h11M31 29h7M31 36h11" fill="none" stroke="#eff8f1" stroke-width="3" stroke-linecap="round" />
+  <path d="M50 12h7v7" fill="none" stroke="#9de8bd" stroke-width="3" stroke-linecap="round" />
+  <circle cx="50" cy="12" r="4.5" fill="#9de8bd" />
 </svg>

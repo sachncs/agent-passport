@@ -1,4 +1,4 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 64" role="img" aria-label="Agent Passport">
-  <g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M17 51V13h30v38"/><path d="M24 43 32 20l8 23M27 35h10"/><path d="M47 13h7v10"/></g><circle cx="47" cy="13" r="4.5" fill="currentColor"/>
+  <g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M16 52V12h34v40H16Z"/><path d="M24 12v40"/><path d="M31 22h11M31 29h7M31 36h11"/><path d="M50 12h7v7"/></g><circle cx="50" cy="12" r="4.5" fill="currentColor"/>
   <text x="76" y="42" fill="currentColor" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="650" letter-spacing="-1.2">Agent Passport</text>
 </svg>

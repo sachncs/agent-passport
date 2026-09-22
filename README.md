@@ -429,21 +429,17 @@ Express service at `http://localhost:3000` (override with
 `NEXT_PUBLIC_API_BASE_URL`).
 
 ```bash
-cd frontend
-pnpm install
-pnpm dev        # http://localhost:3001
-pnpm build      # production build
-pnpm test       # 62 unit + component tests via Vitest
-pnpm test:watch
-pnpm test:coverage
-pnpm lint
-pnpm typecheck
+npm run dev --workspace=@agent-passport/web        # http://localhost:3001
+npm run build --workspace=@agent-passport/web
+npm test --workspace=@agent-passport/web           # 62 unit + component tests
+npm run lint --workspace=@agent-passport/web
+npm run typecheck --workspace=@agent-passport/web
 ```
 
 Adding a page follows the `page.tsx` (server) + `*-client.tsx`
 (client) split, with the client using `useSearchParams()` and React
 Query against the API client in `src/lib/api.ts`. UI primitives are
-installed via the shadcn CLI (`pnpm dlx shadcn@latest add <name>`)
+installed via the shadcn CLI (`npx shadcn@latest add <name>`)
 and live in `src/components/ui/` — only the 12 that actually have
 callers are scaffolded (`accordion`, `alert`, `badge`, `button`,
 `card`, `input`, `label`, `skeleton`, `sonner`, `spinner`, `tabs`,
@@ -546,7 +542,7 @@ Two SLO profiles:
 - `alerts/slo-prod-relaxed.yml` — default (P95<1.5s, 99% availability)
 - `alerts/slo-prod-strict.yml` — aspirational (P95<500ms, 99.9% availability)
 
-Grafana dashboard JSON in `alerts/grafana-dashboard.json` (17 panels).
+  Grafana dashboard JSON in `alerts/grafana-dashboard.json` (16 panels).
 
 ---
 
@@ -568,7 +564,7 @@ Grafana dashboard JSON in `alerts/grafana-dashboard.json` (17 panels).
 | SDK — TS       | TypeScript 6, native `fetch`, `zod`              |
 | SDK — Python   | Python 3.9+, `requests`, dataclasses, type hints |
 | Contracts      | [TEAL](https://developer.algorand.org/docs/get-details/dapps/avm/teal/) (Algorand v10) |
-| Observability  | Prometheus, Alertmanager, Grafana JSON (17 panels), [k6](https://k6.io) |
+| Observability  | Prometheus, Alertmanager, Grafana JSON (16 panels), [k6](https://k6.io) |
 | Frontend       | [Next.js 16](https://nextjs.org) (App Router), [shadcn/ui v4](https://ui.shadcn.com) (Base UI), [Tailwind v4](https://tailwindcss.com), [TanStack React Query](https://tanstack.com/query) |
 | Frontend tests | [Vitest](https://vitest.dev), [Testing Library](https://testing-library.com), [MSW](https://mswjs.io) |
 
