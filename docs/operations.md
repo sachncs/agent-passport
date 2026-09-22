@@ -521,9 +521,9 @@ public Algorand endpoint because:
 - Premium hosted mainnet provider (Nodely, BCC, AlgoNode paid tier)
 - Geographic co-location with an Algorand relay
 
-The prod-relaxed targets are real, measured, and production-grade.
-Switch to prod-strict only if you need 500ms P95 and are willing to
-operate the infrastructure for it.
+The prod-relaxed figures are measured load-test observations, not an SLA or a
+guarantee for a particular deployment. Switch to prod-strict only if you need
+500ms P95 and are willing to operate and measure the required infrastructure.
 
 ### Per-endpoint latency projections
 

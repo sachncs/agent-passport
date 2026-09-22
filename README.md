@@ -158,7 +158,7 @@ $ curl -s "http://localhost:3000/score?wallet=GD64YIY3TWGDMCNPP553DZPPR6LDUSFQOI
   "explanation": [
     "Wallet is 412 days old — well-aged",
     "287 transactions — active history",
-    "Sanctions screen: clean"
+    "Configured deny-list: no match (memory provider)"
   ]
 }
 ```
