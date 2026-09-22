@@ -6,7 +6,7 @@ info:
 
     Fetches on-chain data from Algorand testnet and computes composite trust scores,
     delegation trust, sybil detection, reputation, credit estimation, and underwriting decisions.
-  version: 0.1.0
+  version: 1.0.0
   contact:
     name: Agent Passport Maintainers
     email: sachncs@gmail.com

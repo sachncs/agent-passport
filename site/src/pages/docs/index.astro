@@ -9,7 +9,8 @@ const groups = [
     title: "Start here",
     items: [
       ["Overview", "Understand the wallet → evidence → decision model.", "overview"],
-      ["Quickstart", "Run the Node service locally and make a first request.", "overview"],
+      ["Quickstart", "Run the Node service locally and make a first request.", "quickstart"],
+      ["SDK installation", "Install the TypeScript or Python client and make a typed request.", "sdk"],
       ["Configuration", "Algorand, security, caching, exposure, and observability settings.", "operations"],
     ],
   },
@@ -37,7 +38,7 @@ const groups = [
     title: "Operate it",
     items: [
       ["Architecture", "Read lifecycle, mutation lifecycle, Algorand boundaries, and caches.", "architecture"],
-      ["Deployment", "Node, Docker, testnet/mainnet configuration, and readiness behavior.", "operations"],
+      ["Deployment", "Node, Docker, testnet/mainnet configuration, and readiness behavior.", "self-hosting"],
       ["Scaling", "Which stores are local and what must move to shared storage for replicas.", "architecture"],
       ["Observability", "Prometheus metrics, active alert rules, Grafana panels, and SLO profiles.", "operations"],
       ["Security limits", "What observable wallet signals can and cannot establish.", "security"],
@@ -54,7 +55,7 @@ const groups = [
   <main id="main" class="bg-stage">
     <Container class="pb-24 pt-16 md:pb-32 md:pt-24">
       <div class="max-w-3xl">
-        <div class="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-accent">Documentation · v1.0 release candidate</div>
+        <div class="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-accent">Documentation · v1.0</div>
         <h1 class="mt-5 text-balance text-[48px] font-semibold leading-[0.98] tracking-[-0.055em] text-ink-1 md:text-[76px]">Make a wallet<br /><span class="font-serif-italic font-normal text-accent">legible.</span></h1>
         <p class="mt-7 max-w-2xl text-pretty text-[17px] leading-[1.65] text-ink-2 md:text-[19px]">Agent Passport evaluates observable Algorand activity and relationships, then returns deterministic application-facing signals. These docs explain the implementation and its boundaries.</p>
         <div class="mt-8 flex flex-wrap gap-3">

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.0 — 2026-09-22
+
+### Supported
+- v1.0.0 supports the documented self-hosted API surface on Python 3.12+.
+- Hosted accounts, managed billing, and managed sanctions integrations remain out of scope.
+
 ## 0.2.0 — 2026-06-25
 
 ### Added

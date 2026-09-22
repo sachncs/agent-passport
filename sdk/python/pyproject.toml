@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agent-passport-sdk"
-version = "0.2.0"
+version = "1.0.0"
 description = "Python SDK for Agent Passport — trust scoring, delegation, credit, sybil, reputation, and underwriting for AI agents on Algorand"
 readme = "README.md"
 license = { text = "MIT" }

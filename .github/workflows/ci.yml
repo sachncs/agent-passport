@@ -170,6 +170,8 @@ jobs:
         working-directory: site
       - run: npm run build
         working-directory: site
+      - name: Verify release content and metadata
+        run: node scripts/ci/check-site-content.mjs site/dist
 
   # Load test smoke — runs on tagged releases only. Full 100/500/1000 VU
   # runs are documented in load-tests/EXECUTION.md and should be executed

@@ -1,6 +1,6 @@
 {
   "name": "@agent-passport/sdk",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "description": "TypeScript SDK for Agent Passport — trust scoring, delegation, credit, sybil, reputation, and underwriting for AI agents on Algorand",
   "license": "MIT",
   "author": {

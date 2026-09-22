@@ -1,5 +1,5 @@
 {
-  "version": "0.1.0",
+  "version": "1.0.0",
   "scope": "Declared routes and source references. Not a runtime security certification.",
   "routeCount": 26,
   "routes": [

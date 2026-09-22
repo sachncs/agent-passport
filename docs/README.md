@@ -11,9 +11,12 @@ then use the reference documents for implementation and operations detail.
 | Goal | Read |
 |------|------|
 | Run locally | [Root quick start](../README.md#quick-start) |
+| Five-minute setup | [Quickstart](quickstart.md) |
 | Call the API | [API reference](api.md), [OpenAPI](api/openapi.yaml) |
+| Install an SDK | [SDK guide](sdk.md), [TypeScript package](../sdk/README.md), [Python package](../sdk/python/README.md) |
 | Understand decisions | [Concepts](concepts.md), [Known limitations](known-limitations.md) |
 | Deploy and operate | [Operations](operations.md), [Architecture](architecture.md) |
+| Self-host it | [Self-hosting](self-hosting.md) |
 | Review security | [Security](security.md), [Known limitations](known-limitations.md) |
 | Contribute or release | [Contributing](../CONTRIBUTING.md), [Support policy](support-policy.md), [Release checklist](release-checklist.md) |
 
@@ -30,6 +33,9 @@ then use the reference documents for implementation and operations detail.
 | [known-limitations.md](known-limitations.md) | Public decision, runtime, and hosted-service boundaries | Evaluating the system for production use |
 | [support-policy.md](support-policy.md) | Community support and compatibility expectations | Adopting the project or opening an issue |
 | [release-checklist.md](release-checklist.md) | The v1.0 release gate | Cutting a release |
+| [quickstart.md](quickstart.md) | Five-minute local setup and first request | Running the project for the first time |
+| [sdk.md](sdk.md) | TypeScript and Python installation and integration guidance | Adding Agent Passport to an application |
+| [self-hosting.md](self-hosting.md) | Production environment, Docker, probes, and replica boundaries | Deploying the service |
 
 ## Root-level files
 

@@ -43,6 +43,11 @@ loss, not against pod fan-out — each replica independently enforces
 its cap and serves its subscriber list. Scale reads by adding pods;
 scale state by adding Redis.
 
+HTTP parsing stays at the application edge. Shared wallet and amount rules
+live in `src/http/validation.ts`, while domain modules remain independent of
+Express request and response objects. New routes should validate and normalize
+at this boundary, call a domain function, and then map its result to HTTP.
+
 ## 2. Request lifecycle
 
 A request flows through twelve ordered middlewares plus the route

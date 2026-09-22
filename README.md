@@ -10,7 +10,7 @@
   </p>
 </p>
 
-> **Status:** v1.0 release candidate — open-source infrastructure for local
+> **Status:** v1.0 — open-source infrastructure for local
 > and self-hosted deployments. See [known limitations](docs/known-limitations.md)
 > and [support policy](docs/support-policy.md) before deploying.
 
@@ -68,7 +68,7 @@ reference, algorithms, operations, security boundaries, and contributing.
   operations surfaces for `/endorse`, `/counterparty`, `/monitor`, and
   `/discovery`.
 - **Defence-in-depth security** — Helmet headers, 600 req/min/IP rate
-  limit, CORS, 100 KB body limit, 30 s request timeout, per-request
+  limit, CORS, 100 KB body limit, 10 s request timeout, per-request
   UUID, `Idempotency-Key` middleware, on-chain payment verification.
   The current threat model and known limitations are documented in
   [docs/security.md](docs/security.md); "hardened" here means the
@@ -107,8 +107,8 @@ npm run dev
 ### From Docker
 
 ```bash
-docker build -t agent-passport-api:0.1.0 .
-docker run --rm -p 3000:3000 --env-file .env agent-passport-api:0.1.0
+docker build -t agent-passport-api:1.0.0 .
+docker run --rm -p 3000:3000 --env-file .env agent-passport-api:1.0.0
 ```
 
 For production deployment, see
@@ -127,7 +127,7 @@ $ curl http://localhost:3000/health
 {
   "status": "ok",
   "service": "Agent Passport",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "network": "testnet",
   "x402": false,
   "timestamp": "2026-09-11T03:00:00.000Z"
@@ -521,7 +521,7 @@ npm run build --workspaces   # All workspace packages
 
 ## Deployment
 
-The service is prepared as a v1.0 release candidate; review the
+The service is released as v1.0; review the
 [known limitations](docs/known-limitations.md) and
 [CHANGELOG.md](CHANGELOG.md). The
 deployment checklist, environment variables, and per-environment
@@ -574,7 +574,7 @@ Grafana dashboard JSON in `alerts/grafana-dashboard.json` (17 panels).
 
 ## Release status and roadmap
 
-- **v0.1.0** (shipped) — stateless trust scoring, TypeScript + Python SDKs,
+- **v1.0.0** (current) — stateless trust scoring, TypeScript + Python SDKs,
   on-chain delegation registry, x402 pay-per-query, Prometheus metrics +
   Alertmanager rules + Grafana dashboard, k6 load tests, production
   deployment guide, idempotency middleware (24 h TTL, body-hash dedup,

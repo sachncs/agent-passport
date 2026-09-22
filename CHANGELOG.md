@@ -2,16 +2,13 @@
 
 All notable changes to **Agent Passport** are documented in this file.
 
-> **Latest**: the v1.0.0 release candidate consolidates the production
-> readiness fix set and the branded developer/operations experience. The
-> `[Unreleased]` section below records the implementation history for that
-> release set.
+> **Latest**: v1.0.0 consolidates the production
+> readiness fix set and the branded developer/operations experience.
 >
 > Historical note: v0.1.0 was a development release and should not be used
 > as the compatibility or deployment reference.
 >
-The historical `[Unreleased]` notes below are retained for auditability and
-describe the production-readiness fix set that led to this release candidate.
+The historical `[Unreleased]` notes below are retained for auditability.
 
 > **Most recent** ([unreleased](#unreleased)) also adds: a
 > real persisted dark/light theme via `next-themes`, the
@@ -39,6 +36,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 >
 > - **TypeScript SDK** — [`sdk/CHANGELOG.md`](sdk/CHANGELOG.md)
 > - **Python SDK** — [`sdk/python/CHANGELOG.md`](sdk/python/CHANGELOG.md)
+
+## [1.0.0] — 2026-09-22
+
+This is the supported v1.0 OSS release. It includes the evidence-led brand
+system, task-based documentation, hardened runtime configuration, production
+container verification, clean-install SDK fixes, and the developer/operations
+console release gate. Hosted accounts, billing, managed sanctions adapters,
+and multi-tenant operations remain explicitly out of scope; see
+[known limitations](docs/known-limitations.md).
 
 ## [Unreleased]
 

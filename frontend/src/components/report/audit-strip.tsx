@@ -11,7 +11,7 @@ interface AuditStripProps {
 }
 
 export function AuditStrip({
-  modelVersion = "v1.0-rc",
+  modelVersion = "v1.0.0",
   cacheTtl = "60 s",
   className,
   children,

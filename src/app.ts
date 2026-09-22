@@ -34,6 +34,7 @@ import { dirname } from 'path';
 import { hmacAuth, HMAC_BYPASS_PATHS, isHmacAuthEnabled } from './lib/hmac-auth';
 import { setRateLimitOverrides } from './lib/security';
 import { requestDeadlineMiddleware } from './lib/request-deadline';
+import { validateAmount, validateWallet } from './http/validation';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -103,20 +104,6 @@ if (isHmacAuthEnabled()) {
   }));
 }
 
-// ── Helpers (extracted for consistency across query/body) ────
-function validateWallet(raw: unknown, location: 'query' | 'body'): string | null {
-  if (typeof raw !== 'string' || !raw) {
-    const msg = location === 'query'
-      ? 'Missing required query parameter: wallet'
-      : 'Missing required field: wallet';
-    return msg;
-  }
-  if (!isValidWallet(raw)) {
-    return 'Invalid wallet address. Must be 58-character base32 (A-Z, 2-7).';
-  }
-  return null;
-}
-
 function requireWallet(
   req: express.Request,
   res: express.Response,
@@ -133,18 +120,6 @@ function requireBodyWallet(
   const err = validateWallet(req.body?.wallet, 'body');
   if (err) { res.status(400).json({ error: err }); return null; }
   return req.body.wallet as string;
-}
-
-// ── Helper: validate numeric amount ───────────────────────────
-function validateAmount(
-  amount: unknown,
-  opts: { allowNegative?: boolean } = {},
-): number | null {
-  if (amount === undefined || amount === null) return 0;
-  if (typeof amount !== 'number' || !Number.isFinite(amount)) return null;
-  if (!opts.allowNegative && amount < 0) return null;
-  if (!opts.allowNegative && amount <= 0) return null;
-  return amount;
 }
 
 // ── Capability #1: Trust Score ────────────────────────────────

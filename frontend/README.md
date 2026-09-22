@@ -55,7 +55,7 @@ frontend/
 │   ├── hooks/
 │   │   └── use-mobile.ts
 │   ├── lib/
-│   │   ├── api.ts          # Typed fetch client (X-Request-ID, Idempotency-Key, 30s timeout)
+│   │   ├── api.ts          # Typed fetch client (X-Request-ID, Idempotency-Key, 10s timeout)
 │   │   ├── api-types.ts    # Response types (mirrors backend OpenAPI shapes)
 │   │   ├── utils.ts        # cn() helper
 │   │   └── wallet.ts       # Algorand address validation

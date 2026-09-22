@@ -10,7 +10,7 @@ const layers = [
   { name: "HMAC auth", detail: "Signed requests for mutating routes" },
   { name: "Idempotency-Key", detail: "Required on non-GET requests · 24h process-local records" },
   { name: "Body limit", detail: "100 KB request body cap" },
-  { name: "30s timeout", detail: "Request-level hard cutoff" },
+  { name: "10s timeout", detail: "Request-level hard cutoff" },
   { name: "x402 verification", detail: "Optional facilitator-backed payment verification" },
   { name: "Audit logging", detail: "Every request · X-Request-ID traced" },
 ];
@@ -89,7 +89,7 @@ const layers = [
             <span class="text-[10px] font-medium uppercase tracking-[0.16em] text-ink-3">
               Hardening layers
             </span>
-            <span class="font-mono text-[10px] text-accent">v1.0 RC</span>
+            <span class="font-mono text-[10px] text-accent">v1.0</span>
           </div>
           <ul class="divide-y divide-line">
             {

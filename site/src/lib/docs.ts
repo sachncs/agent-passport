@@ -1,5 +1,8 @@
 export const docsPages = [
   { slug: "overview", file: "README.md", label: "Overview", summary: "A map of the service, its source of truth, and where to begin.", code: false },
+  { slug: "quickstart", file: "quickstart.md", label: "Quickstart", summary: "Run locally in five minutes and make a first request.", code: false },
+  { slug: "sdk", file: "sdk.md", label: "SDK guide", summary: "Install and integrate the TypeScript and Python clients.", code: false },
+  { slug: "self-hosting", file: "self-hosting.md", label: "Self-hosting", summary: "Deploy the API with production settings, Docker, probes, and replica boundaries.", code: false },
   { slug: "concepts", file: "concepts.md", label: "Concepts", summary: "Trust scoring, delegation, Sybil indicators, reputation, underwriting, and passports.", code: false },
   { slug: "api", file: "api.md", label: "API reference", summary: "Routes, request semantics, responses, errors, and operational endpoints.", code: false },
   { slug: "architecture", file: "architecture.md", label: "Architecture", summary: "The request lifecycle, caches, state boundaries, and scaling model.", code: false },

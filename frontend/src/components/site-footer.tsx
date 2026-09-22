@@ -22,7 +22,7 @@ export function SiteFooter() {
             Agent Passport — evidence-led trust infrastructure for AI agents.
           </span>
           <span className="text-muted-fg">
-            v1.0 RC · {network ?? "—"} · Read-oriented · 60 s cache
+            v1.0.0 · {network ?? "—"} · Read-oriented · 60 s cache
           </span>
         </div>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1">

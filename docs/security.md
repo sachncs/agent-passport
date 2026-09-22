@@ -54,7 +54,7 @@ automatically. This is the **payload-based DoS guard**.
 Every upstream call (`withTimeout` in `src/lib/timeout.ts`) is
 bounded by `REQUEST_TIMEOUT_MS` (default 10 000 ms). Express
 middlewares set the per-request deadline via
-`requestDeadlineMiddleware` so the 30 s budget applies across
+`requestDeadlineMiddleware` so the 10 s budget applies across
 fan-out calls.
 
 ### Idempotency-Key format

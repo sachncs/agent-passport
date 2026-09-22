@@ -335,8 +335,8 @@ remain unauthenticated in development. Production requires HMAC. See
 #### 5. Build the Docker image
 
 ```bash
-docker build -t agent-passport:0.1.0 .
-docker run --rm -p 3000:3000 --env-file .env agent-passport:0.1.0
+docker build -t agent-passport:1.0.0 .
+docker run --rm -p 3000:3000 --env-file .env agent-passport:1.0.0
 ```
 
 The Dockerfile is multi-stage, runs as non-root, includes a liveness
