@@ -103,7 +103,9 @@ describe('AgentPassportClient', () => {
     });
 
     it('maps 500 to ServerError', async () => {
-      const c = new AgentPassportClient({ baseUrl: 'http://x' });
+      // Disable retries here so this error-mapping test does not spend its
+      // budget exercising the retry policy.
+      const c = new AgentPassportClient({ baseUrl: 'http://x', retries: 0 });
       globalThis.fetch = vi.fn(async () =>
         mockFetchResponse(500, { error: 'Internal error' }),
       ) as any;

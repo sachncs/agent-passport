@@ -1,4 +1,6 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 function safeParseInt(value: string | undefined, fallback: number): number {
   if (value === undefined) return fallback;

@@ -88,6 +88,10 @@ def _error_from_response(
     return AgentPassportError(message, status, body, request_id)
 
 
+def _canonical_json(value: Any) -> str:
+    return json.dumps(value, sort_keys=True, separators=(",", ":"))
+
+
 class AgentPassportClient:
     """Client for the Agent Passport stateless API.
 
@@ -268,10 +272,6 @@ class AgentPassportClient:
                 time.sleep(max(0.0, delay))
 
         raise last_error or AgentPassportError("Request failed after retries", 500)
-
-
-def _canonical_json(value: Any) -> str:
-    return json.dumps(value, sort_keys=True, separators=(",", ":"))
 
     # ── Health ────────────────────────────────────────────────────
 
