@@ -5,6 +5,7 @@ COPY package.json package-lock.json ./
 RUN npm ci
 COPY tsconfig.json ./
 COPY src/ ./src/
+COPY scripts/fix-esm-extensions.mjs ./scripts/fix-esm-extensions.mjs
 RUN npm run build
 
 FROM node:22.23.1-alpine
