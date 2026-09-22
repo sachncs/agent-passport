@@ -114,7 +114,7 @@ docker run --rm -p 3000:3000 --env-file .env agent-passport-api:0.1.0
 For production deployment, see
 [docs/operations.md#4-deployment](docs/operations.md#4-deployment).
 
-**Requirements:** Node.js ≥ 20.
+**Requirements:** Node.js 22.23.1 (see `.nvmrc`).
 
 ---
 
@@ -230,9 +230,11 @@ at [docs/operations.md#1-environment-variables](docs/operations.md#1-environment
 |----------------------|--------------------------------------|
 | `PORT`               | HTTP listen port (default `3000`)    |
 | `LOG_LEVEL`          | Pino log level                       |
+| `LOG_FORMAT`         | `json` or `pretty` output            |
 | `LOG_FILE`           | Combined log file path               |
 | `LOG_ERROR_FILE`     | Error-only log file path             |
 | `CORS_ALLOWED_ORIGINS` | Comma-separated CORS allow-list    |
+| `HMAC_SECRET`        | Required production request signature secret |
 
 ### Algorand
 
@@ -270,12 +272,16 @@ at [docs/operations.md#1-environment-variables](docs/operations.md#1-environment
 | `RATE_LIMIT_TRUSTED_IPS`       | Comma-separated bypass list               |
 | `RATE_LIMIT_PERSISTENCE_PATH`  | Persisted rate-limit state file           |
 | `EXPOSURE_PERSISTENCE_PATH`    | Persisted system-exposure ledger          |
+| `RATE_LIMIT_OVERRIDES`         | Per-endpoint JSON rate-limit overrides   |
+| `WEBHOOKS_PERSISTENCE_PATH`    | Persisted webhook subscriptions           |
 
 ### Timeouts & load
 
 | Variable             | Purpose                                   |
 |----------------------|-------------------------------------------|
-| `REQUEST_TIMEOUT_MS` | Per-request timeout (default `30000`)    |
+| `REQUEST_TIMEOUT_MS` | Per-request timeout (default `10000`)    |
+| `TRUST_PROXY_HOPS`   | Trusted reverse-proxy hop count          |
+| `REPLICA_COUNT`      | Planned application replica count        |
 | `LOAD_TEST_MODE`     | Bypass rate limits for load tests         |
 
 ---
@@ -546,7 +552,7 @@ Grafana dashboard JSON in `alerts/grafana-dashboard.json` (17 panels).
 
 | Category       | Technology                                       |
 |----------------|--------------------------------------------------|
-| Runtime        | Node.js ≥ 20                                     |
+| Runtime        | Node.js 22.23.1 (see `.nvmrc`)                  |
 | Language       | TypeScript (strict mode)                         |
 | Framework      | [Express 5](https://expressjs.com)               |
 | Security       | [Helmet](https://helmetjs.github.io), CORS, custom rate limiter with persistent state |

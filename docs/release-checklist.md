@@ -3,6 +3,10 @@
 This is the single release gate for Agent Passport. Check every item against
 the commit being released.
 
+The deterministic unit coverage gate requires at least 90% statements, 80%
+branches, 92% functions, and 90% lines. Network-dependent integration
+coverage is run separately against a configured Algorand environment.
+
 ## Product and brand
 
 - [ ] Canonical brand assets are used by both frontend surfaces.

@@ -66,8 +66,8 @@ and describe:
 
 ### Prerequisites
 
-- **Node.js** ≥ 20.0.0
-- **npm** ≥ 10 (bundled with Node 20)
+- **Node.js** 22.23.1 (see `.nvmrc`)
+- **npm** 10+ (bundled with Node 22)
 - **Python** ≥ 3.9 (only required for Python SDK work)
 - **k6** ≥ 0.50 (only required for load testing)
 - An Algorand endpoint — the public AlgoNode testnet works out of the box

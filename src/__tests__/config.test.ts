@@ -88,6 +88,16 @@ describe('config', () => {
     expect(config.corsAllowedOrigins).toBe('https://app.example.com');
   });
 
+  it('parses operational scaling settings', async () => {
+    process.env.REPLICA_COUNT = '3';
+    process.env.TRUST_PROXY_HOPS = '2';
+    process.env.RATE_LIMIT_OVERRIDES = '{"POST /delegate":{"max":5}}';
+    const { config } = await import('../config');
+    expect(config.replicaCount).toBe(3);
+    expect(config.trustProxyHops).toBe(2);
+    expect(config.rateLimitOverrides).toContain('POST /delegate');
+  });
+
   it('normalizes LOG_LEVEL to lowercase', async () => {
     process.env.LOG_LEVEL = 'DEBUG';
     const { config } = await import('../config');
@@ -189,6 +199,20 @@ describe('validateConfig', () => {
     delete process.env.X402_PAYMENT_RECIPIENT;
     const { config } = await import('../config');
     expect(config.x402Enabled).toBe(false);
+  });
+
+  it('rejects wildcard CORS in production', async () => {
+    process.env.NODE_ENV = 'production';
+    process.env.HMAC_SECRET = 'a'.repeat(32);
+    process.env.CORS_ALLOWED_ORIGINS = '*';
+    await expect(import('../config')).rejects.toThrow(
+      'CORS_ALLOWED_ORIGINS must be an explicit origin list',
+    );
+  });
+
+  it('rejects zero replicas', async () => {
+    process.env.REPLICA_COUNT = '0';
+    await expect(import('../config')).rejects.toThrow('REPLICA_COUNT must be an integer');
   });
 
   it('throws on unknown X402_NETWORK', async () => {

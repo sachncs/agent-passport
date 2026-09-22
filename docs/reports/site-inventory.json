@@ -6,8 +6,8 @@
     {
       "method": "GET",
       "path": "/score",
-      "line": 157,
-      "source": "src/app.ts:157",
+      "line": 151,
+      "source": "src/app.ts:151",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": {
@@ -20,8 +20,8 @@
     {
       "method": "GET",
       "path": "/delegation",
-      "line": 183,
-      "source": "src/app.ts:183",
+      "line": 177,
+      "source": "src/app.ts:177",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": {
@@ -34,8 +34,8 @@
     {
       "method": "POST",
       "path": "/counterparty-check",
-      "line": 198,
-      "source": "src/app.ts:198",
+      "line": 192,
+      "source": "src/app.ts:192",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": true,
       "optionalPayment": {
@@ -48,8 +48,8 @@
     {
       "method": "POST",
       "path": "/credit-estimate",
-      "line": 221,
-      "source": "src/app.ts:221",
+      "line": 215,
+      "source": "src/app.ts:215",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": true,
       "optionalPayment": {
@@ -62,8 +62,8 @@
     {
       "method": "GET",
       "path": "/sybil-check",
-      "line": 247,
-      "source": "src/app.ts:247",
+      "line": 241,
+      "source": "src/app.ts:241",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": {
@@ -76,8 +76,8 @@
     {
       "method": "GET",
       "path": "/reputation",
-      "line": 262,
-      "source": "src/app.ts:262",
+      "line": 256,
+      "source": "src/app.ts:256",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": {
@@ -90,8 +90,8 @@
     {
       "method": "POST",
       "path": "/reputation/record",
-      "line": 276,
-      "source": "src/app.ts:276",
+      "line": 270,
+      "source": "src/app.ts:270",
       "hmacWhenConfigured": true,
       "idempotencyHeaderRequired": true,
       "optionalPayment": {
@@ -104,8 +104,8 @@
     {
       "method": "GET",
       "path": "/underwrite",
-      "line": 346,
-      "source": "src/app.ts:346",
+      "line": 340,
+      "source": "src/app.ts:340",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": {
@@ -118,8 +118,8 @@
     {
       "method": "GET",
       "path": "/trust-graph",
-      "line": 362,
-      "source": "src/app.ts:362",
+      "line": 356,
+      "source": "src/app.ts:356",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": {
@@ -132,8 +132,8 @@
     {
       "method": "POST",
       "path": "/delegate",
-      "line": 389,
-      "source": "src/app.ts:389",
+      "line": 383,
+      "source": "src/app.ts:383",
       "hmacWhenConfigured": true,
       "idempotencyHeaderRequired": true,
       "optionalPayment": null,
@@ -143,8 +143,8 @@
     {
       "method": "POST",
       "path": "/revoke",
-      "line": 423,
-      "source": "src/app.ts:423",
+      "line": 417,
+      "source": "src/app.ts:417",
       "hmacWhenConfigured": true,
       "idempotencyHeaderRequired": true,
       "optionalPayment": null,
@@ -154,8 +154,8 @@
     {
       "method": "GET",
       "path": "/registry/status",
-      "line": 454,
-      "source": "src/app.ts:454",
+      "line": 448,
+      "source": "src/app.ts:448",
       "hmacWhenConfigured": true,
       "idempotencyHeaderRequired": false,
       "optionalPayment": null,
@@ -165,8 +165,8 @@
     {
       "method": "GET",
       "path": "/passport",
-      "line": 459,
-      "source": "src/app.ts:459",
+      "line": 453,
+      "source": "src/app.ts:453",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": {
@@ -179,8 +179,8 @@
     {
       "method": "GET",
       "path": "/verify",
-      "line": 490,
-      "source": "src/app.ts:490",
+      "line": 484,
+      "source": "src/app.ts:484",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": null,
@@ -190,8 +190,8 @@
     {
       "method": "GET",
       "path": "/discovery/search",
-      "line": 615,
-      "source": "src/app.ts:615",
+      "line": 609,
+      "source": "src/app.ts:609",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": null,
@@ -201,8 +201,8 @@
     {
       "method": "GET",
       "path": "/metrics",
-      "line": 638,
-      "source": "src/app.ts:638",
+      "line": 632,
+      "source": "src/app.ts:632",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": null,
@@ -212,8 +212,8 @@
     {
       "method": "GET",
       "path": "/version",
-      "line": 641,
-      "source": "src/app.ts:641",
+      "line": 635,
+      "source": "src/app.ts:635",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": null,
@@ -223,8 +223,8 @@
     {
       "method": "GET",
       "path": "/openapi.json",
-      "line": 656,
-      "source": "src/app.ts:656",
+      "line": 650,
+      "source": "src/app.ts:650",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": null,
@@ -234,8 +234,8 @@
     {
       "method": "POST",
       "path": "/reputation/subscribe",
-      "line": 661,
-      "source": "src/app.ts:661",
+      "line": 655,
+      "source": "src/app.ts:655",
       "hmacWhenConfigured": true,
       "idempotencyHeaderRequired": true,
       "optionalPayment": null,
@@ -245,8 +245,8 @@
     {
       "method": "DELETE",
       "path": "/reputation/subscribe/:id",
-      "line": 690,
-      "source": "src/app.ts:690",
+      "line": 684,
+      "source": "src/app.ts:684",
       "hmacWhenConfigured": true,
       "idempotencyHeaderRequired": true,
       "optionalPayment": null,
@@ -256,8 +256,8 @@
     {
       "method": "GET",
       "path": "/reputation/subscribers",
-      "line": 695,
-      "source": "src/app.ts:695",
+      "line": 689,
+      "source": "src/app.ts:689",
       "hmacWhenConfigured": true,
       "idempotencyHeaderRequired": false,
       "optionalPayment": null,
@@ -267,8 +267,8 @@
     {
       "method": "GET",
       "path": "/dashboard",
-      "line": 703,
-      "source": "src/app.ts:703",
+      "line": 697,
+      "source": "src/app.ts:697",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": null,
@@ -278,8 +278,8 @@
     {
       "method": "GET",
       "path": "/",
-      "line": 707,
-      "source": "src/app.ts:707",
+      "line": 701,
+      "source": "src/app.ts:701",
       "hmacWhenConfigured": true,
       "idempotencyHeaderRequired": false,
       "optionalPayment": null,
@@ -289,8 +289,8 @@
     {
       "method": "GET",
       "path": "/health",
-      "line": 720,
-      "source": "src/app.ts:720",
+      "line": 714,
+      "source": "src/app.ts:714",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": null,
@@ -300,8 +300,8 @@
     {
       "method": "GET",
       "path": "/ready",
-      "line": 732,
-      "source": "src/app.ts:732",
+      "line": 726,
+      "source": "src/app.ts:726",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": null,
@@ -311,8 +311,8 @@
     {
       "method": "GET",
       "path": "/health/deep",
-      "line": 774,
-      "source": "src/app.ts:774",
+      "line": 768,
+      "source": "src/app.ts:768",
       "hmacWhenConfigured": false,
       "idempotencyHeaderRequired": false,
       "optionalPayment": null,
@@ -325,22 +325,23 @@
     "ALGO_NETWORK": [
       "src/config.ts:68",
       "src/config.ts:69",
-      "src/config.ts:131",
+      "src/config.ts:141",
       "src/lib/metrics.ts:117"
     ],
     "ALGOD_TOKEN": [
-      "src/config.ts:127",
+      "src/config.ts:137",
       "scripts/deploy-registry.ts:9",
       "scripts/deploy-reputation.ts:9"
     ],
     "ALGOD_URL": [
-      "src/config.ts:101",
-      "src/config.ts:126",
+      "src/config.ts:110",
+      "src/config.ts:136",
       "scripts/deploy-registry.ts:8",
       "scripts/deploy-reputation.ts:8"
     ],
     "CORS_ALLOWED_ORIGINS": [
-      "src/config.ts:140"
+      "src/config.ts:101",
+      "src/config.ts:150"
     ],
     "DEPLOYER_MNEMONIC": [
       "scripts/deploy-registry.ts:12",
@@ -350,47 +351,47 @@
       "src/lib/system-exposure.ts:30"
     ],
     "GIT_COMMIT": [
-      "src/config.ts:147"
+      "src/config.ts:160"
     ],
     "HMAC_SECRET": [
       "src/config.ts:52",
       "src/config.ts:53",
       "src/config.ts:57",
-      "src/config.ts:142",
+      "src/config.ts:155",
       "src/lib/hmac-auth.ts:179"
     ],
     "HMAC_TIMESTAMP_SKEW_MS": [
       "src/config.ts:88",
       "src/config.ts:89",
-      "src/config.ts:143"
+      "src/config.ts:156"
     ],
     "INDEXER_TOKEN": [
-      "src/config.ts:129"
+      "src/config.ts:139"
     ],
     "INDEXER_URL": [
-      "src/config.ts:102",
-      "src/config.ts:128"
+      "src/config.ts:111",
+      "src/config.ts:138"
     ],
     "LOAD_TEST_MODE": [
       "src/lib/security.ts:140"
     ],
     "LOG_ERROR_FILE": [
-      "src/config.ts:156"
+      "src/config.ts:169"
     ],
     "LOG_FILE": [
-      "src/config.ts:155"
+      "src/config.ts:168"
     ],
     "LOG_FORMAT": [
       "src/config.ts:44",
       "src/config.ts:45",
       "src/config.ts:47",
-      "src/config.ts:151"
+      "src/config.ts:164"
     ],
     "LOG_LEVEL": [
       "src/config.ts:37",
       "src/config.ts:38",
       "src/config.ts:40",
-      "src/config.ts:149"
+      "src/config.ts:162"
     ],
     "LOG_STDOUT": [
       "src/lib/logger.ts:33"
@@ -401,8 +402,9 @@
       "frontend/src/test-setup.ts:5"
     ],
     "NODE_ENV": [
-      "src/app.ts:804",
       "src/config.ts:57",
+      "src/config.ts:100",
+      "src/config.ts:133",
       "src/lib/webhooks.ts:31",
       "src/lib/webhooks.ts:128"
     ],
@@ -410,14 +412,13 @@
       "src/lib/operator-wallet.ts:30"
     ],
     "PORT": [
-      "src/config.ts:124"
+      "src/config.ts:134"
     ],
     "RATE_LIMIT_MAX": [
       "src/lib/security.ts:131"
     ],
     "RATE_LIMIT_OVERRIDES": [
-      "src/app.ts:50",
-      "src/app.ts:52"
+      "src/config.ts:153"
     ],
     "RATE_LIMIT_PERSISTENCE_PATH": [
       "src/lib/security.ts:21"
@@ -426,45 +427,45 @@
       "src/lib/security.ts:141"
     ],
     "REGISTRY_APP_ID": [
-      "src/config.ts:132"
+      "src/config.ts:142"
     ],
     "REPLICA_COUNT": [
+      "src/config.ts:151",
       "src/lib/security.ts:59"
     ],
     "REPUTATION_APP_ID": [
-      "src/config.ts:133"
+      "src/config.ts:143"
     ],
     "REQUEST_TIMEOUT_MS": [
       "src/config.ts:61",
       "src/config.ts:62",
-      "src/config.ts:145",
-      "src/lib/request-deadline.ts:24"
+      "src/config.ts:158"
     ],
     "SANCTIONS_EXTRA_DENY": [
       "src/lib/sanctions.ts:43"
     ],
     "TRUST_PROXY_HOPS": [
-      "src/app.ts:65"
+      "src/config.ts:152"
     ],
     "WEBHOOKS_PERSISTENCE_PATH": [
       "src/lib/webhooks.ts:29"
     ],
     "X402_ENABLED": [
       "src/config.ts:33",
-      "src/config.ts:135"
+      "src/config.ts:145"
     ],
     "X402_FACILITATOR_URL": [
-      "src/config.ts:103",
-      "src/config.ts:136"
+      "src/config.ts:112",
+      "src/config.ts:146"
     ],
     "X402_NETWORK": [
       "src/config.ts:76",
       "src/config.ts:81",
-      "src/config.ts:138"
+      "src/config.ts:148"
     ],
     "X402_PAYMENT_RECIPIENT": [
       "src/config.ts:33",
-      "src/config.ts:137"
+      "src/config.ts:147"
     ]
   },
   "environmentScope": "Literal process.env references in service, CLI scripts, and console. Dynamic lookups and Python/load-test configuration require separate review.",

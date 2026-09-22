@@ -47,9 +47,9 @@ export const responseCache = new TTLCache<unknown>({
 });
 
 // Apply per-endpoint rate-limit overrides from env at module load.
-if (process.env.RATE_LIMIT_OVERRIDES) {
+if (config.rateLimitOverrides) {
   try {
-    setRateLimitOverrides(JSON.parse(process.env.RATE_LIMIT_OVERRIDES));
+    setRateLimitOverrides(JSON.parse(config.rateLimitOverrides));
   } catch (e) {
     logger.warn('Failed to parse RATE_LIMIT_OVERRIDES', { error: String(e) });
   }
@@ -62,13 +62,7 @@ if (process.env.RATE_LIMIT_OVERRIDES) {
 // spoofable X-Forwarded-For header; single-LB deployments should set
 // TRUST_PROXY_HOPS=1 explicitly.
 const TRUST_PROXY_HOPS = (() => {
-  const raw = process.env.TRUST_PROXY_HOPS;
-  if (raw === undefined || raw === '') return 0;
-  const parsed = parseInt(raw, 10);
-  if (!Number.isFinite(parsed) || parsed < 0) {
-    logger.warn('Invalid TRUST_PROXY_HOPS, defaulting to 0', { raw });
-    return 0;
-  }
+  const parsed = config.trustProxyHops;
   if (parsed === 1) {
     logger.warn(
       'TRUST_PROXY_HOPS=1 trusts only the closest proxy. ' +
@@ -801,7 +795,7 @@ app.get('/health/deep', async (_req, res) => {
 // ── Background Workers ────────────────────────────────────────
 // Start metrics collectors at module load. SIGTERM/SIGINT handlers in index.ts
 // own the stop call so ordering with server.close is deterministic.
-if (process.env.NODE_ENV !== 'test') {
+if (config.nodeEnv !== 'test') {
   startMetricsCollectors();
 }
 

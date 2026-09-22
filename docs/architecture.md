@@ -14,7 +14,7 @@ creditworthiness, and exposes two on-chain mutating endpoints
 
 ```
 ┌──────────────┐     ┌────────────────────────────────────────┐     ┌─────────────────────┐
-│              │     │  Express on Node 20+ (port 3000)      │     │                     │
+│              │     │  Express on Node 22+ (port 3000)      │     │                     │
 │  Client /    │────▶│   - Helmet, CORS, requestId           │────▶│  Algorand           │
 │  Agent       │     │   - Rate limit (600/min/IP)           │     │  (algod + indexer)  │
 │              │     │   - Metrics, x402, idempotency        │     │                     │

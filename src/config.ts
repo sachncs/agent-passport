@@ -94,6 +94,15 @@ function validateConfig() {
 
   validateIntegerEnv('REGISTRY_APP_ID');
   validateIntegerEnv('REPUTATION_APP_ID');
+  validateIntegerEnv('REPLICA_COUNT', { min: 1 });
+  validateIntegerEnv('TRUST_PROXY_HOPS', { min: 0 });
+
+  if (process.env.NODE_ENV === 'production'
+    && (!process.env.CORS_ALLOWED_ORIGINS || process.env.CORS_ALLOWED_ORIGINS.trim() === '*')) {
+    errors.push(
+      'CORS_ALLOWED_ORIGINS must be an explicit origin list when NODE_ENV=production',
+    );
+  }
 
   // Validate URL schemes to prevent SSRF / typo crashes while allowing
   // provider paths and query parameters.
@@ -121,6 +130,7 @@ function validateConfig() {
 }
 
 export const config = {
+  nodeEnv: process.env.NODE_ENV || 'development',
   port: safeParseInt(process.env.PORT, 3000),
 
   algodUrl: process.env.ALGOD_URL || 'https://testnet-api.algonode.cloud:443',
@@ -138,6 +148,9 @@ export const config = {
   x402Network: (process.env.X402_NETWORK || 'algorand-testnet') as `${string}:${string}`,
 
   corsAllowedOrigins: process.env.CORS_ALLOWED_ORIGINS || '*',
+  replicaCount: safeParseInt(process.env.REPLICA_COUNT, 1),
+  trustProxyHops: safeParseInt(process.env.TRUST_PROXY_HOPS, 0),
+  rateLimitOverrides: process.env.RATE_LIMIT_OVERRIDES || '',
 
   hmacSecret: process.env.HMAC_SECRET || '',
   hmacSkewMs: safeParseInt(process.env.HMAC_TIMESTAMP_SKEW_MS, 60_000),

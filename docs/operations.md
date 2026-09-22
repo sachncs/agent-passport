@@ -21,12 +21,16 @@ Copy `.env.example` to `.env` and edit. The service calls
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
 | `PORT` | int | `3000` | HTTP listen port |
-| `NODE_ENV` | enum | `development` | Set to `production` to disable metrics collectors in tests |
+| `NODE_ENV` | enum | `development` | Runtime mode; production requires HMAC auth and explicit CORS origins |
 | `LOG_LEVEL` | enum | `info` | `debug` \| `info` \| `warn` \| `error` |
+| `LOG_FORMAT` | enum | auto | `json` or `pretty` |
+| `LOG_STDOUT` | bool | `true` | Disable stdout logging only for controlled file-log deployments |
 | `LOG_FILE` | path | — | JSON log file (optional) |
 | `LOG_ERROR_FILE` | path | — | Error-only log file (optional) |
 | `CORS_ALLOWED_ORIGINS` | string | `*` | Comma-separated origins, or `*` |
 | `REQUEST_TIMEOUT_MS` | int | `10000` | Per-request Algorand/x402 timeout |
+| `REPLICA_COUNT` | int | `1` | Planned application replica count; values above 1 require shared state backends |
+| `TRUST_PROXY_HOPS` | int | `0` | Number of trusted reverse-proxy hops used for client IP resolution |
 
 ### Algorand
 

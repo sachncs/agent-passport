@@ -13,6 +13,7 @@ const PORT = config.port;
 
 let server: ReturnType<typeof express.application.listen> | null = null;
 let forcedShutdownTimer: NodeJS.Timeout | null = null;
+let shuttingDown = false;
 
 function main() {
   if (!initOperatorWallet()) {
@@ -34,15 +35,18 @@ function main() {
 }
 
 function gracefulShutdown(signal: string) {
+  if (shuttingDown) return;
+  shuttingDown = true;
   logger.info(`Received ${signal}, shutting down gracefully`);
   stopMetricsCollectors();
   stopIdempotencySweeper();
   stopDedupCleanup();
   stopRateLimiter();
-  closeLoggerStreams();
   if (server) {
     server.close(() => {
       logger.info('HTTP server closed');
+      if (forcedShutdownTimer) clearTimeout(forcedShutdownTimer);
+      closeLoggerStreams();
       process.exit(0);
     });
     // ponytail: .unref() so this timer doesn't keep the loop alive after a
@@ -53,6 +57,7 @@ function gracefulShutdown(signal: string) {
     }, 10_000);
     forcedShutdownTimer.unref?.();
   } else {
+    closeLoggerStreams();
     process.exit(0);
   }
 }
