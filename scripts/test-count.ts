@@ -21,10 +21,21 @@ export function readTestCount(): TestCount {
       `vitest run --reporter=json failed: ${result.stderr.slice(0, 500)}`,
     );
   }
-  // Vitest writes a final JSON line on stdout. Split on newlines and
-  // pick the line that parses cleanly.
-  const lines = result.stdout.split(/\r?\n/);
+  // Vitest 4 writes a final JSON line; Vitest 5 may emit the same report as
+  // one multi-line JSON document after runner diagnostics. Support both
+  // formats so this source-derived release check remains stable across the
+  // supported dependency range.
+  const output = result.stdout.trim();
   let report: VitestJsonReport | undefined;
+  try {
+    const parsed = JSON.parse(output) as VitestJsonReport;
+    if (typeof parsed.numTotalTests === 'number') report = parsed;
+  } catch {
+    // Fall through to line and embedded-document parsing below.
+  }
+
+  // Split on newlines and pick the line that parses cleanly.
+  const lines = result.stdout.split(/\r?\n/);
   for (const line of lines.reverse()) {
     try {
       const parsed = JSON.parse(line) as VitestJsonReport;
@@ -34,6 +45,19 @@ export function readTestCount(): TestCount {
       }
     } catch {
       // not JSON; keep looking
+    }
+  }
+
+  if (!report) {
+    const start = output.indexOf('{"numTotalTestSuites"');
+    const end = output.lastIndexOf('}');
+    if (start >= 0 && end > start) {
+      try {
+        const parsed = JSON.parse(output.slice(start, end + 1)) as VitestJsonReport;
+        if (typeof parsed.numTotalTests === 'number') report = parsed;
+      } catch {
+        // Keep the actionable error below.
+      }
     }
   }
   if (!report) {
