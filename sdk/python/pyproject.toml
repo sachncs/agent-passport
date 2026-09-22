@@ -40,16 +40,16 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
+dependencies = [
+    "requests>=2.31",
+]
+
 [project.urls]
 Homepage = "https://sachncs.github.io/agent-passport/"
 Repository = "https://github.com/sachncs/agent-passport.git"
 Documentation = "https://sachncs.github.io/agent-passport/"
 Issues = "https://github.com/sachncs/agent-passport/issues"
 Changelog = "https://github.com/sachncs/agent-passport/blob/master/sdk/python/CHANGELOG.md"
-
-dependencies = [
-    "requests>=2.31",
-]
 
 [project.optional-dependencies]
 dev = [
