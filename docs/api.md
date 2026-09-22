@@ -10,12 +10,14 @@ Canonical HTTP reference for the Agent Passport service.
   `src/lib/constants.ts`.
 - Successes are JSON. Errors are JSON with
   `{ error: string, code?: string }`.
-- Every premium endpoint returns `402 Payment Required` when
-  `X402_ENABLED=true`; the body includes the payment spec, and
-  clients retry with a verified `x-payment` header.
-- Mutating endpoints (`/delegate`, `/revoke`, `/reputation/record`)
-  accept the `Idempotency-Key` header. The HMAC auth middleware
-  requires a signed request when `HMAC_SECRET` is set.
+- Configured premium endpoints return `402 Payment Required` when
+  `X402_ENABLED=true`; the body includes the payment spec, and clients retry
+  with a verified `x-payment` header. Verification depends on the configured
+  facilitator; it is not an independent payment ledger.
+- Every non-GET/HEAD/OPTIONS request requires a valid `Idempotency-Key`.
+  Successful JSON responses are cached for 24 hours in a process-local store.
+  HMAC auth additionally protects configured state-changing routes when
+  `HMAC_SECRET` is set.
 - All responses carry `X-Request-ID` (UUID).
 
 ## Endpoint map
@@ -44,6 +46,33 @@ Canonical HTTP reference for the Agent Passport service.
 | [`/health/deep`](#get-healthdeep) | GET | — | no | — | [health](#health-readiness-metrics) |
 | [`/registry/status`](#get-registrystatus) | GET | — | no | — | [health](#health-readiness-metrics) |
 | [`/metrics`](#get-metrics) | GET | — | no | — | [health](#health-readiness-metrics) |
+| [`/`](#get-root) | GET | conditional | no | — | service descriptor |
+| [`/version`](#get-version) | GET | — | no | — | build metadata |
+| [`/openapi.json`](#get-openapijson) | GET | — | no | — | checked-in contract |
+| [`/dashboard`](#get-dashboard) | GET | — | no | — | legacy static dashboard |
+
+---
+
+## `GET /`
+
+Returns the service descriptor, route inventory, version, network, and feature
+flags. It is useful for confirming that a client is speaking to the expected
+service, not for health monitoring.
+
+## `GET /version`
+
+Returns build metadata including package version and build information. The
+value is generated from the checked-out build; do not hard-code it in clients.
+
+## `GET /openapi.json`
+
+Returns the checked-in OpenAPI contract served by the running API. Compare it
+with [`api/openapi.yaml`](api/openapi.yaml) during release verification.
+
+## `GET /dashboard`
+
+Legacy static dashboard endpoint. The maintained operator experience is the
+Next.js application in `frontend/`; this route remains for compatibility.
 
 ---
 
@@ -116,11 +145,11 @@ Estimate the credit capacity of a wallet.
 
 ## `GET /sybil-check`
 
-12-signal sybil risk score.
+Eleven-signal sybil risk score.
 
 Same query as `/score`. Response: `sybilRisk` (0–1), `riskLevel`,
-`confidence`, `signals` (12 fields — 7 wallet-history + 4 graph
-+ 1 sub-signal), `clusterSize`, `flaggedWallets[]`, `explanation[]`.
+`confidence`, eleven weighted `signals`, `clusterSize`, `flaggedWallets[]`,
+and `explanation[]`.
 
 ---
 
@@ -287,7 +316,7 @@ severely broken. Used as a Kubernetes `livenessProbe`.
 {
   "status": "ok",
   "service": "Agent Passport",
-  "version": "0.1.0",
+  "version": "<build version>",
   "network": "testnet",
   "x402": false,
   "timestamp": "2026-06-25T10:00:00.000Z"

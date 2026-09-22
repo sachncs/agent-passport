@@ -53,7 +53,7 @@ describe("VerdictCard", () => {
 describe("AuditStrip", () => {
   it("renders the default model / cache items and a network placeholder", () => {
     withQuery(<AuditStrip />)
-    expect(screen.getByText("v0.1")).toBeInTheDocument()
+    expect(screen.getByText("v1.0-rc")).toBeInTheDocument()
     expect(screen.getByText("60 s")).toBeInTheDocument()
     expect(screen.getAllByText("—").length).toBeGreaterThanOrEqual(1)
   })

@@ -16,6 +16,9 @@ an official passport document.
 - Use `assets/mark.svg` on dark or light surfaces where the accent signal is
   visible.
 - Use `assets/mark-mono.svg` for monochrome contexts, documents, and embossing.
+- Use `assets/wordmark.svg` for a compact product lockup.
+- Use `assets/lockup-dark.svg` or `assets/lockup-light.svg` for launch,
+  documentation, and social collateral.
 - Keep clear space equal to the width of the signal point on all sides.
 - Do not rotate, stretch, add gradients, or place the mark inside a literal
   passport/badge illustration.
@@ -23,4 +26,3 @@ an official passport document.
   **Evidence-led trust infrastructure for AI agents.**
 
 Minimum mark size: 16 px in product UI and 24 px in marketing/navigation.
-

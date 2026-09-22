@@ -36,15 +36,15 @@ reference, algorithms, operations, security boundaries, and contributing.
 - **Underwriting decisions** — credit capacity estimation, default
   propagation, $100k system exposure cap. See
   [docs/concepts.md#5-credit-underwriting](docs/concepts.md#5-credit-underwriting).
-- **Sybil detection** — 12 signals (clustering, timing, amount fingerprint,
-  funding correlation, balance similarity, interaction density, circular
-  activity, plus 4 graph-traversal signals). See
+- **Sybil detection** — 11 weighted signals (clustering, timing, amount
+  fingerprint, funding correlation, balance similarity, interaction density,
+  circular activity, and graph signals). See
   [docs/concepts.md#3-sybil-detection](docs/concepts.md#3-sybil-detection).
 - **On-chain reputation events** — `registry.teal` and `reputation.teal`
   Algorand contracts. See
   [docs/architecture.md#4-smart-contracts](docs/architecture.md#4-smart-contracts).
-- **Optional x402 micropayments** — pay-per-query in USDC, settled
-  on-chain, with replay protection.
+- **Optional x402 micropayments** — facilitator-backed pay-per-query in USDC.
+  Replay and settlement guarantees depend on that configured facilitator.
 - **Stateless service (for read endpoints)** — every request fetches
   from Algorand and caches in-memory for 60 s. No database, no
   message queue. The four state stores (idempotency, rate-limit,
@@ -566,7 +566,7 @@ Grafana dashboard JSON in `alerts/grafana-dashboard.json` (17 panels).
 
 ---
 
-## Roadmap
+## Release status and roadmap
 
 - **v0.1.0** (shipped) — stateless trust scoring, TypeScript + Python SDKs,
   on-chain delegation registry, x402 pay-per-query, Prometheus metrics +
@@ -574,12 +574,13 @@ Grafana dashboard JSON in `alerts/grafana-dashboard.json` (17 panels).
   deployment guide, idempotency middleware (24 h TTL, body-hash dedup,
   409 on mismatch), system exposure cap ($100k USDC, persisted),
   operator wallet + KMS guidance.
-- **v0.2.0** (next) — sanctions screening provider integration
-  (Chainalysis / Elliptic) — see
-  [docs/security.md](docs/security.md),
-  Redis-backed idempotency store for multi-replica deployments, webhook
-  subscriptions for reputation event consumers.
-- **Backlog** — gRPC interface alongside HTTP, multi-chain adapters
+- **v1.0 scope** — the supported OSS surface is the local/self-hosted Node
+  service, TypeScript and Python SDKs, static documentation site, and separate
+  Next.js console. Hosted accounts, billing, external sanctions adapters, and
+  managed multi-tenant operations are explicitly out of scope; see
+  [known limitations](docs/known-limitations.md).
+- **Backlog** — external sanctions adapters, Redis-backed idempotency for
+  multi-replica deployments, gRPC alongside HTTP, multi-chain adapters
   (Ethereum, Solana), public Bazaar listing & discoverability metadata,
   Helm chart for one-command Kubernetes deployment, OpenAPI → SDK code
   generation (release-please automation).

@@ -76,7 +76,9 @@ The base path is set to `/agent-passport` in `astro.config.mjs`, so all asset UR
 - **Mockups are stylized mock data**, not live API calls. The numbers come from the documented algorithm shapes in `../docs/concepts.md`.
 - **Theme is system-preference-driven** with a header toggle that persists to `localStorage`. The `prefers-color-scheme` media query respects the user's OS.
 - **Copy is written fresh from the docs**, not rendered from markdown. All external links go to GitHub, npm, or the docs tree.
-- **The developer console at `../frontend/`** is a separate app. The site links to it via the "Open Console" header CTA but does not embed it.
+- **The developer console at `../frontend/`** is a separate app. The public
+  site links to the local-first documentation and clearly labels the console
+  as a separately deployed surface.
 
 ## Adding a section
 

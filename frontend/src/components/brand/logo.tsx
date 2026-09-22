@@ -87,11 +87,10 @@ function Mark({
       className={cn("shrink-0 text-foreground", className)}
       {...props}
     >
-      <path d="M18 12h28a6 6 0 0 1 6 6v28a6 6 0 0 1-6 6H18a6 6 0 0 1-6-6V18a6 6 0 0 1 6-6Z" />
-      <path d="M12 28V18a6 6 0 0 1 6-6h10" />
-      <path d="M22 25h14M22 32h9M22 39h18" opacity=".58" />
-      <path d="M41 25v14" />
-      <circle cx="41" cy="43" r="4" fill="currentColor" stroke="none" />
+      <path d="M17 51V13h30v38" />
+      <path d="M24 43 32 20l8 23M27 35h10" />
+      <path d="M47 13h7v10" />
+      <circle cx="47" cy="13" r="4.5" fill="currentColor" stroke="none" />
     </svg>
   )
 }

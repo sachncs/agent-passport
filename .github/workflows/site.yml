@@ -47,8 +47,12 @@ jobs:
           test -f dist/docs/architecture/index.html
           test -f dist/docs/operations/index.html
           test -f dist/docs/security/index.html
+          test -f dist/docs/known-limitations/index.html
+          test -f dist/docs/support-policy/index.html
+          test -f dist/docs/release-checklist/index.html
           test -f dist/docs/openapi/index.html
           test -f dist/favicon.svg
+          test -f dist/social-preview.svg
           pages=$(find dist -name "*.html" | wc -l)
           echo "Built $pages HTML pages from Astro static output"
 

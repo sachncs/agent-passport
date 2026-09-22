@@ -1,7 +1,7 @@
 # docs/img/
 
-This directory will host the visual assets that back the README
-"Premium dark-first SaaS console" claim:
+This directory hosts optional visual assets for the developer and operations
+console:
 
 - `/dashboard` verdict-first report
 - `/endorse` developer surface
@@ -19,6 +19,6 @@ Regeneration procedure (once a hosted demo is live at
 4. Optimize with `npx squoosh-cli --webp docs/img/dashboard-dark.png` if
    any file exceeds 500 KB.
 
-Until the demo is hosted, the README shows an ASCII terminal
-capture of the same `/score` response so the claim is at least
-textually verifiable.
+The public marketing site is static and the console is a separate local or
+self-hosted application; screenshots should be regenerated from the same
+commit as the release notes that reference them.
