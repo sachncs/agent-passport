@@ -102,7 +102,15 @@ jobs:
           test "$code" = "200"
           grep -q '"status":"ok"' /tmp/health.json
           test "$(docker inspect -f '{{.Config.User}}' agent-passport-ci)" = "appuser"
-          test "$(docker inspect -f '{{.State.Health.Status}}' agent-passport-ci)" = "healthy"
+          health_status=starting
+          for i in {1..45}; do
+            health_status=$(docker inspect -f '{{.State.Health.Status}}' agent-passport-ci)
+            if [ "$health_status" = "healthy" ]; then
+              break
+            fi
+            sleep 1
+          done
+          test "$health_status" = "healthy"
 
   frontend:
     runs-on: ubuntu-latest
