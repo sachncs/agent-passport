@@ -162,7 +162,7 @@ export function computeTrustScore(breakdown: {
  *   0 days inactive   → 1.00 (no penalty)
  *   180 days inactive → 1.00 (end of grace)
  *   545 days inactive → 0.50 (1 year past grace)
- *   910 days inactive → 0.25 (2 years past grace, capped at floor)
+ *   910 days inactive → 0.30 (2 years past grace, capped at floor)
  */
 export function computeStalenessPenalty(daysSinceLastActivity: number): number {
   const STALENESS_GRACE_DAYS = 180;

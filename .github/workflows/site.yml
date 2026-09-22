@@ -62,6 +62,9 @@ jobs:
         working-directory: .
         run: node scripts/ci/check-site-content.mjs site/dist
 
+      - name: Verify decision documentation
+        run: node scripts/ci/check-decision-docs.mjs site/dist
+
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
         with:

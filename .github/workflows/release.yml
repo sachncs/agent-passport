@@ -55,6 +55,7 @@ jobs:
       - run: npm run check --prefix site
       - run: npm run build --prefix site
       - run: node scripts/ci/check-site-content.mjs site/dist
+      - run: npm run docs:decision-check -- site/dist
       - run: npm run site:inventory
       - name: Inspect npm package artifacts
         run: |

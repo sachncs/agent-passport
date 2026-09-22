@@ -18,23 +18,32 @@ creditworthiness, or regulatory compliance.
 
 The weighted result is clamped to `[0, 100]` and rounded to one decimal.
 
-Velocity is `100` at 1 transaction/day or less, then `80`, `60`, `40`, `20`,
-and `0` as the rate crosses `>1`, `>5`, `>20`, `>50`, and `>100` transactions
-per day. A zero-day account receives `0`.
+Velocity is calculated as `txns / max(1, days)`. The implementation returns `0`
+before that calculation when `days === 0`; otherwise it uses stepped thresholds:
+`100` at 1 transaction/day or less, then `80`, `60`, `40`, `20`, and `0` as the
+effective rate crosses `>1`, `>5`, `>20`, `>50`, and `>100` transactions per day.
+This is a stepped bot/spam signal, not a linear penalty.
 
 The account-state component is not a regulatory compliance check. Its balance
-penalty reaches 40 points below 1 ALGO; its transaction penalty starts at 50
-points for zero transactions and falls logarithmically toward zero.
+penalty is `round((1 - balanceAlgo) × 40)` below 1 ALGO, capped at 40 points.
+Its transaction penalty is 50 points at zero transactions and otherwise
+`round(max(0, 50 - log10(txns + 1) × 25))`, reaching zero at 99 or more
+transactions. The component is `clamp(0, 100, 100 - balancePenalty -
+transactionPenalty)`; penalties are rounded before the final clamp. With
+non-negative inputs, the lowest resulting score is 10.
 
 Stale activity applies a multiplier after 180 days of inactivity, using a
-365-day half-life and a floor of `0.30`. Accounts younger than 30 days are
-capped at a trust score of 30. Risk bands are low `≥70`, medium `≥45`, high
-`≥20`, and critical below 20. `approved` on the trust endpoint is score `≥40`;
-that is intentionally separate from the medium-risk boundary.
+365-day half-life and a floor of `0.30`; the staleness-adjusted score is rounded
+to one decimal before the fresh-wallet rule. Accounts with `accountAgeDays < 30`
+are capped at a trust score of 30, while exactly 30 days is not capped. Risk
+bands are low `≥70`, medium `≥45`, high `≥20`, and critical below 20.
+`approved` on the trust endpoint is score `≥40`; that is intentionally separate
+from the medium-risk boundary.
 
-The base recommended limit is `score / 100 × 500 × tier`, where tier is `1.5`
-at 80+, `1.2` at 60+, `1.0` at 40+, and `0.7` below 40. Underwriting applies
-its own capacity and exposure limits.
+The trust endpoint's `recommendedLimit` uses the final staleness-adjusted and
+fresh-wallet-capped score: `score / 100 × 500 × tier`, rounded to two decimals.
+The tier is `1.5` at 80+, `1.2` at 60+, `1.0` at 40+, and `0.7` below 40.
+This is separate from the credit capacity and underwriting exposure limits.
 
 ## 2. Delegation trust
 
@@ -104,6 +113,14 @@ ageBonus        = min(150, max(0, accountAgeDays / 365 × 150))
 riskPenalty     = velocity penalty + account-state penalty
 creditLimit     = clamp(0, 1350, balanceCapacity + activityBonus + ageBonus - riskPenalty)
 ```
+
+The standalone credit estimate does not directly apply the trust score's
+fresh-wallet cap. Its risk penalty is `round(velocityPenalty +
+compliancePenalty, 2)`: velocity contributes `round((40 - velocityScore) / 40
+× 50, 2)` only when velocity is below 40, and account-state/compliance
+contributes `round((60 - complianceScore) / 60 × 100, 2)` only when compliance
+is below 60. Delegation is used by underwriting, but is not collateral and is
+not added to the credit-capacity formula.
 
 Underwriting combines four factors: trust score 35%, delegation trust 25%,
 Sybil resistance `(1 - sybilRisk) × 100` at 20%, and reputation 20%.
