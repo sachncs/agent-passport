@@ -44,7 +44,7 @@ describe("DashboardClient", () => {
     withQueryClient(<DashboardClient />)
     expect(
       screen.getByRole("heading", {
-        name: /one wallet, every service/i,
+        name: /make an agent legible/i,
       }),
     ).toBeInTheDocument()
     expect(

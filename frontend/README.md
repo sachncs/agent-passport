@@ -74,10 +74,10 @@ npm run test:watch --workspace=@agent-passport/web
 npm run test:coverage --workspace=@agent-passport/web
 ```
 
-The dev server runs on port **3001**. It uses Next.js rewrites to proxy
-API calls to the backend at `localhost:3000` — i.e. when you visit
-`/score?wallet=...` in the browser, Next.js fetches it from the
-Express service transparently. No CORS issues, no env vars required.
+The dev server runs on port **3001**. It uses `/api/*` Next.js rewrites to
+proxy API calls to the backend at `localhost:3000`. UI routes such as
+`/score?wallet=...` remain Next pages, while client data requests use
+`/api/score?wallet=...`. No CORS issues, no env vars required.
 
 If you want a different port, set `PORT=<port>`. To point at a
 backend on a different host/port, set `BACKEND_URL`.
@@ -86,12 +86,12 @@ backend on a different host/port, set `BACKEND_URL`.
 
 | Variable                    | Default              | Purpose                                  |
 |-----------------------------|----------------------|------------------------------------------|
-| `PORT`                      | `3000`               | Port the Next.js dev/start server binds to |
+| `PORT`                      | `3001`               | Port the Next.js dev/start server binds to |
 | `BACKEND_URL`               | `http://localhost:3000` | Backend URL that API requests are rewritten to |
-| `NEXT_PUBLIC_API_BASE_URL`  | `""` (use rewrites)  | Client-side API base URL; leave empty for the same-origin proxy |
+| `NEXT_PUBLIC_API_BASE_URL`  | `""` (use `/api` rewrites)  | Client-side API base URL; leave empty for the same-origin proxy |
 
 By default, `NEXT_PUBLIC_API_BASE_URL` is empty, so the browser
-makes same-origin requests. The Next.js rewrites in
+makes same-origin requests under `/api`. The Next.js rewrites in
 `next.config.ts` then forward them to `BACKEND_URL` on the server
 side. This means:
 

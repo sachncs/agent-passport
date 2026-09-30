@@ -52,7 +52,7 @@ export function CommandSurface({
     >
       <div
         className={cn(
-          "flex flex-col gap-2 rounded-xl border border-border bg-surface-2/60 p-2 shadow-[var(--shadow-sm)] ring-1 ring-foreground/5 sm:flex-row sm:items-stretch sm:p-1.5",
+          "flex flex-col gap-2 rounded-2xl border border-border bg-surface-2/80 p-2 shadow-[var(--shadow-md)] ring-1 ring-foreground/5 sm:flex-row sm:items-stretch sm:p-2",
         )}
       >
         <div className="relative flex-1">
@@ -68,9 +68,9 @@ export function CommandSurface({
             aria-label="Algorand wallet address"
             aria-invalid={showError || undefined}
             className={cn(
-              "w-full rounded-lg border border-transparent bg-background/40 px-3 font-mono text-sm text-foreground placeholder:text-muted-fg/70",
+              "w-full rounded-xl border border-transparent bg-background/40 px-4 font-mono text-base text-foreground placeholder:text-muted-fg/70",
               "focus:border-info/40 focus:outline-none focus:ring-2 focus:ring-info/30",
-              "h-11",
+              "h-12",
             )}
           />
         </div>
@@ -78,7 +78,7 @@ export function CommandSurface({
           type="submit"
           size="lg"
           disabled={!isValidWallet(trimmed)}
-          className="h-11 px-5"
+          className="h-12 px-6 text-base"
         >
           {cta}
           <ArrowRight aria-hidden className="h-4 w-4" />
@@ -87,7 +87,7 @@ export function CommandSurface({
 
       <div
         className={cn(
-          "mt-2 flex items-center justify-between gap-3 text-xs",
+          "mt-3 flex items-center justify-between gap-3 text-sm",
           compact ? "min-h-[1.25rem]" : "min-h-[1.5rem]",
         )}
       >

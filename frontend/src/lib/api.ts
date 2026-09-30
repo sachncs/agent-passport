@@ -37,7 +37,9 @@ export class ApiError extends Error {
   }
 }
 
-const BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? ""
+// Keep browser API calls under /api so page routes such as /score and
+// /passport remain navigable. A direct backend URL is still supported.
+const BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "/api"
 
 function newRequestId(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {

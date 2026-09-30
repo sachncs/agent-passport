@@ -53,7 +53,7 @@ export default function RootLayout({
       suppressHydrationWarning
       className="font-sans"
     >
-      <body className="min-h-screen bg-background text-foreground antialiased">
+      <body className="console-shell min-h-screen bg-background text-foreground antialiased">
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
@@ -64,8 +64,8 @@ export default function RootLayout({
             <TooltipProvider delay={150}>
               <div className="flex min-h-screen flex-col">
                 <SiteHeader />
-                <main className="flex-1 px-4 py-10 md:px-8 md:py-14">
-                  <div className="mx-auto w-full max-w-5xl">{children}</div>
+                <main className="flex-1 px-4 py-10 md:px-8 md:py-16">
+                  <div className="mx-auto w-full max-w-6xl">{children}</div>
                 </main>
                 <SiteFooter />
               </div>

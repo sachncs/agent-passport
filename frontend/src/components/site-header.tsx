@@ -20,26 +20,26 @@ export function SiteHeader() {
   }, [])
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur">
-      <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 md:px-8">
+    <header className="sticky top-0 z-30 border-b border-border/80 bg-background/90 backdrop-blur-xl">
+      <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4 md:px-8">
         <Link
           href="/"
           className="flex items-center gap-2 font-semibold tracking-tight text-foreground transition-opacity hover:opacity-80"
           aria-label="Agent Passport — home"
         >
-          <Logo size={24} variant="wordmark" />
+          <Logo size={28} variant="wordmark" />
         </Link>
-        <nav className="ml-5 hidden items-center gap-4 text-xs text-muted-fg md:flex" aria-label="Product navigation">
+        <nav className="ml-5 hidden items-center gap-5 text-sm text-muted-fg md:flex" aria-label="Product navigation">
           <Link className="transition-colors hover:text-foreground" href="/dashboard">Overview</Link>
           <Link className="transition-colors hover:text-foreground" href="/score">Trust profile</Link>
           <Link className="transition-colors hover:text-foreground" href="/underwrite">Underwriting</Link>
           <Link className="transition-colors hover:text-foreground" href="/monitor">Operations</Link>
         </nav>
         <div className="ml-auto flex items-center gap-2">
-          <Link href="/discovery" className="hidden items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs text-muted-fg transition-colors hover:bg-muted hover:text-foreground sm:inline-flex">
+          <Link href="/discovery" className="hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-muted-fg transition-colors hover:bg-muted hover:text-foreground sm:inline-flex">
             <Terminal className="h-3.5 w-3.5" aria-hidden="true" /> Developer tools
           </Link>
-          <Link href="https://sachncs.github.io/agent-passport/docs/" className="hidden items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs text-muted-fg transition-colors hover:bg-muted hover:text-foreground lg:inline-flex">
+          <Link href="https://sachncs.github.io/agent-passport/docs/" className="hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-muted-fg transition-colors hover:bg-muted hover:text-foreground lg:inline-flex">
             <BookOpen className="h-3.5 w-3.5" aria-hidden="true" /> Docs
           </Link>
           <StatusPill />

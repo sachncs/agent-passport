@@ -5,17 +5,17 @@ import Link from "next/link"
 import { useNetwork } from "@/components/use-network"
 
 const UTILITY_LINKS = [
-  { href: "/openapi.json", label: "OpenAPI" },
-  { href: "/health", label: "/health" },
-  { href: "/metrics", label: "/metrics" },
-  { href: "/version", label: "/version" },
+  { href: "/api/openapi.json", label: "OpenAPI" },
+  { href: "/api/health", label: "/health" },
+  { href: "/api/metrics", label: "/metrics" },
+  { href: "/api/version", label: "/version" },
 ] as const
 
 export function SiteFooter() {
   const network = useNetwork()
 
   return (
-    <footer className="border-t border-border/60 px-4 py-6 text-xs text-muted-fg md:px-8">
+    <footer className="border-t border-border/80 px-4 py-8 text-sm text-muted-fg md:px-8">
       <div className="mx-auto flex max-w-5xl flex-col gap-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <span>
