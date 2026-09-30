@@ -1,0 +1,21 @@
+---
+interface ChecklistGroup { title: string; items: string[] }
+interface Props { source: string }
+
+const { source } = Astro.props;
+const groups: ChecklistGroup[] = [];
+let current: ChecklistGroup | null = null;
+let lastItem: string | null = null;
+for (const line of source.split(/\r?\n/)) {
+  const heading = line.match(/^##\s+(.+)$/);
+  const item = line.match(/^[-*]\s+\[ \]\s+(.+)$/);
+  if (heading) { current = { title: heading[1], items: [] }; groups.push(current); lastItem = null; }
+  else if (item && current) { lastItem = item[1].replaceAll("`", ""); current.items.push(lastItem); }
+  else if (current && lastItem && /^\s{2,}\S/.test(line)) { current.items[current.items.length - 1] += ` ${line.trim().replaceAll("`", "")}`; }
+}
+---
+
+<section class="release-checklist" aria-labelledby="release-checklist-title">
+  <div class="release-intro"><div><div class="docs-diagram-kicker">Release gate</div><h1 id="release-checklist-title">v1.0 release checklist</h1><p>Use this gate against the exact commit being released. Each section covers a different failure mode: product quality, contract drift, operational safety, and OSS publishing.</p></div><div class="release-score"><strong>{groups.reduce((count, group) => count + group.items.length, 0)}</strong><span>checks to review</span></div></div>
+  <div class="release-groups">{groups.map((group, index) => <section class="release-group"><div class="release-group-heading"><span>0{index + 1}</span><h2>{group.title}</h2></div><ul>{group.items.map((item) => <li><span class="release-check" aria-hidden="true"></span><span>{item}</span></li>)}</ul></section>)}</div>
+</section>

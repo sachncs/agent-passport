@@ -4,8 +4,8 @@ Agent Passport is maintained as an open-source project.
 
 - Use GitHub Issues for reproducible bugs and feature proposals.
 - Use GitHub Discussions or a question issue for usage questions.
-- Follow the [security disclosure policy](../SECURITY.md) for vulnerabilities; do not disclose
-  security issues in public issue trackers.
+- Follow the [`SECURITY.md` vulnerability disclosure policy](https://github.com/sachncs/agent-passport/blob/master/SECURITY.md)
+  for vulnerabilities; do not disclose security issues in public issue trackers.
 - Maintainers prioritize correctness, security, documentation, and regressions
   in the latest v1 release line.
 - Breaking changes are announced in the changelog and migration notes.

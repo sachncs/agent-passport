@@ -1,0 +1,59 @@
+---
+import type { OpenApiRoute } from "../../lib/openapi";
+
+interface Props {
+  routes: OpenApiRoute[];
+  rawSourceUrl: string;
+}
+
+const { routes, rawSourceUrl } = Astro.props;
+const groups = [...new Set(routes.map((route) => route.tag))];
+---
+
+<section class="openapi-explorer" aria-labelledby="openapi-explorer-title">
+  <div class="openapi-intro">
+    <div>
+      <div class="docs-diagram-kicker">Contract explorer</div>
+      <h1 id="openapi-explorer-title">OpenAPI explorer</h1>
+      <p>Browse the v1.0 contract by capability. Every route below is generated from the checked-in specification used for client generation and release checks.</p>
+    </div>
+    <a class="openapi-raw-link" href={rawSourceUrl} target="_blank" rel="noopener noreferrer">View raw contract ↗</a>
+  </div>
+  <div class="openapi-toolbar">
+    <label class="openapi-search"><span class="sr-only">Filter endpoints</span><input type="search" placeholder="Filter routes, methods, or capabilities" data-openapi-search /></label>
+    <div class="openapi-filter" role="list" aria-label="Filter by capability">
+      <button type="button" class="is-active" data-openapi-filter="all">All <span>{routes.length}</span></button>
+      {groups.map((group) => <button type="button" data-openapi-filter={group}>{group} <span>{routes.filter((route) => route.tag === group).length}</span></button>)}
+    </div>
+  </div>
+  <div class="openapi-list">
+    {routes.map((route) => <article class="openapi-card" data-openapi-card data-tag={route.tag} data-search={`${route.method} ${route.path} ${route.summary} ${route.tag}`.toLowerCase()}>
+      <div class="openapi-card-main"><div class="openapi-card-top"><span class={`openapi-method openapi-method--${route.method.toLowerCase()}`}>{route.method}</span><code>{route.path}</code><span class="openapi-tag">{route.tag}</span></div><h2>{route.summary || "Service endpoint"}</h2><p class="openapi-operation">{route.operationId}</p></div>
+      <div class="openapi-card-meta"><div><span>Parameters</span><strong>{route.parameters.length ? route.parameters.join(", ") : "None"}</strong></div><div><span>Responses</span><strong>{route.responses.length ? route.responses.join(" · ") : "Defined by schema"}</strong></div></div>
+    </article>)}
+  </div>
+  <p class="openapi-empty" data-openapi-empty hidden>No endpoints match that filter.</p>
+</section>
+
+<script>
+  const cards = [...document.querySelectorAll("[data-openapi-card]")];
+  const search = document.querySelector("[data-openapi-search]");
+  const empty = document.querySelector("[data-openapi-empty]");
+  let active = "all";
+  const update = () => {
+    const query = search instanceof HTMLInputElement ? search.value.toLowerCase().trim() : "";
+    let visible = 0;
+    cards.forEach((card) => {
+      const match = (active === "all" || card.getAttribute("data-tag") === active) && (!query || card.getAttribute("data-search")?.includes(query));
+      card.toggleAttribute("hidden", !match);
+      if (match) visible += 1;
+    });
+    if (empty) empty.toggleAttribute("hidden", visible !== 0);
+  };
+  search?.addEventListener("input", update);
+  document.querySelectorAll("[data-openapi-filter]").forEach((button) => button.addEventListener("click", () => {
+    active = button.getAttribute("data-openapi-filter") || "all";
+    document.querySelectorAll("[data-openapi-filter]").forEach((item) => item.classList.toggle("is-active", item === button));
+    update();
+  }));
+</script>

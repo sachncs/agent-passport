@@ -53,6 +53,15 @@ if (staleDocMatches.length) {
 if (!text.includes('/docs/openapi/')) {
   throw new Error("Built site is missing the published OpenAPI documentation route");
 }
+if (!text.includes('class="openapi-explorer"') || !text.includes('data-openapi-search')) {
+  throw new Error("Built site is missing the interactive OpenAPI explorer");
+}
+if (!text.includes('class="release-checklist"') || !text.includes('class="release-group"')) {
+  throw new Error("Built site is missing the structured release checklist");
+}
+if (!text.includes('class="docs-code-block"') || !text.includes('data-copy-code')) {
+  throw new Error("Built site is missing labeled, copyable code examples");
+}
 if (!text.includes("Unknown agent") || !text.includes("Operational action")) {
   throw new Error("Built site is missing the four-stage product journey");
 }

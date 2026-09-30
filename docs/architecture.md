@@ -12,16 +12,7 @@ Read endpoints return trust, delegation, Sybil, reputation, credit, and
 underwriting evidence. Mutating delegation and reputation routes can write to
 the configured Algorand applications when an operator wallet is enabled.
 
-```
-┌──────────────┐     ┌────────────────────────────────────────┐     ┌─────────────────────┐
-│              │     │  Express on Node 22+ (port 3000)      │     │                     │
-│  Client /    │────▶│   - Helmet, CORS, requestId           │────▶│  Algorand           │
-│  Agent       │     │   - Rate limit (600/min/IP)           │     │  (algod + indexer)  │
-│              │     │   - Metrics, x402, idempotency        │     │                     │
-│  SDK (TS)    │     │   - LRU response cache (60s TTL)      │     │  + optional         │
-│  SDK (Py)    │     │   - In-memory idempotency store (24h) │     │    registry.teal    │
-│              │     │   - HMAC auth (state-changing)        │     │    reputation.teal  │
-└──────────────┘     └────────────────────────────────────────┘     └─────────────────────┘
+```diagram-system
 ```
 
 Read endpoints do not require an application database: they fetch from the
@@ -147,18 +138,7 @@ on-chain permission.
 
 ## 5. Data flow (request → Algorand → response)
 
-```
-client            service                 algod     indexer      contract
-  │                  │                       │           │            │
-  │─GET /score──▶    │                       │           │            │
-  │                  │─status()───────────▶ │           │            │
-  │                  │◀─────lastRound───────│           │            │
-  │                  │─accountInformation(w)─▶│           │            │
-  │                  │◀─────info─────────────│           │            │
-  │                  │─────────────────────  │           │            │
-  │                  │ (5 sub-scores, parallel calls)    │            │
-  │                  │                       │           │            │
-  │◀────200 JSON─────│                       │           │            │
+```diagram-flow
 ```
 
 Trust-score generation fans out 5 sub-score calls (age, activity,

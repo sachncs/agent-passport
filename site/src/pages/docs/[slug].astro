@@ -4,8 +4,11 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import Header from "../../components/layout/Header.astro";
 import Footer from "../../components/layout/Footer.astro";
 import Container from "../../components/layout/Container.astro";
+import OpenApiExplorer from "../../components/docs/OpenApiExplorer.astro";
+import ReleaseChecklist from "../../components/docs/ReleaseChecklist.astro";
 import { renderMarkdown } from "../../lib/markdown";
 import { docsPages } from "../../lib/docs";
+import { parseOpenApiRoutes } from "../../lib/openapi";
 
 export function getStaticPaths() {
   return docsPages.map((page) => ({ params: { slug: page.slug }, props: { page } }));
@@ -14,9 +17,11 @@ export function getStaticPaths() {
 const { page } = Astro.props;
 const baseUrl = import.meta.env.BASE_URL.replace(/\/$/, "");
 const source = readFileSync(new URL(`../../../../docs/${page.file}`, import.meta.url), "utf8");
-const content = page.code
-  ? `<pre><code class="language-yaml">${source.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")}</code></pre>`
-  : renderMarkdown(source, baseUrl);
+const content = renderMarkdown(source, baseUrl);
+const isOpenApi = page.slug === "openapi";
+const isReleaseChecklist = page.slug === "release-checklist";
+const rawOpenApiUrl = "https://github.com/sachncs/agent-passport/blob/master/docs/api/openapi.yaml";
+const openApiRoutes = isOpenApi ? parseOpenApiRoutes(source) : [];
 const currentIndex = docsPages.findIndex((item) => item.slug === page.slug);
 const previous = docsPages[currentIndex - 1];
 const next = docsPages[currentIndex + 1];
@@ -36,8 +41,7 @@ const next = docsPages[currentIndex + 1];
       </div>
       <div class="grid gap-12 lg:grid-cols-[minmax(0,1fr)_220px] lg:gap-20">
         <div class="min-w-0">
-          {page.code && <div class="docs-prose"><h1>{page.label}</h1><p>{page.summary}</p></div>}
-          <article class="docs-prose" set:html={content}></article>
+          {isOpenApi ? <OpenApiExplorer routes={openApiRoutes} rawSourceUrl={rawOpenApiUrl} /> : isReleaseChecklist ? <ReleaseChecklist source={source} /> : <article class="docs-prose" set:html={content}></article>}
         </div>
         <aside class="order-last lg:order-none">
           <div class="sticky top-24 rounded-2xl border border-line bg-surface-1 p-5">
@@ -57,3 +61,20 @@ const next = docsPages[currentIndex + 1];
   </main>
   <Footer />
 </BaseLayout>
+
+<script is:inline>
+  document.querySelectorAll("[data-copy-code]").forEach((button) => button.addEventListener("click", async () => {
+    const id = button.getAttribute("data-copy-code");
+    const code = id ? document.querySelector(`#${id} code`)?.textContent : "";
+    const status = id ? document.querySelector(`[data-copy-status="${id}"]`) : null;
+    if (!code) return;
+    try {
+      await navigator.clipboard.writeText(code);
+      button.textContent = "Copied";
+      if (status) status.textContent = "Example copied to clipboard";
+      window.setTimeout(() => { button.textContent = "Copy"; }, 1600);
+    } catch {
+      if (status) status.textContent = "Copy unavailable; select the example manually";
+    }
+  }));
+</script>

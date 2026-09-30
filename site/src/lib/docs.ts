@@ -11,5 +11,5 @@ export const docsPages = [
   { slug: "known-limitations", file: "known-limitations.md", label: "Known limitations", summary: "The public boundaries of scores, state, payments, and hosted-service claims.", code: false },
   { slug: "support-policy", file: "support-policy.md", label: "Support policy", summary: "Community support, compatibility, and vulnerability-reporting paths.", code: false },
   { slug: "release-checklist", file: "release-checklist.md", label: "Release checklist", summary: "The v1.0 verification gate for maintainers and contributors.", code: false },
-  { slug: "openapi", file: "api/openapi.yaml", label: "OpenAPI", summary: "The checked-in OpenAPI contract for generating clients.", code: true },
+  { slug: "openapi", file: "api/openapi.yaml", label: "OpenAPI explorer", summary: "Browse the checked-in API contract by capability, method, and response.", code: false },
 ] as const;

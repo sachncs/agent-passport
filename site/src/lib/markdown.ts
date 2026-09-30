@@ -21,6 +21,36 @@ function escapeHtml(value: string): string {
     .replaceAll('"', "&quot;");
 }
 
+function renderDiagram(language: string): string | null {
+  if (language === "diagram-system") {
+    return `<figure class="docs-diagram docs-system-diagram" aria-labelledby="system-diagram-title">
+      <figcaption id="system-diagram-title" class="docs-diagram-caption"><span class="docs-diagram-kicker">System boundary</span><span>Evidence moves through one clear evaluation surface</span></figcaption>
+      <div class="docs-diagram-flow docs-system-flow">
+        <section class="docs-diagram-node docs-diagram-node--client"><div class="docs-node-index">01</div><h3>Client / agent</h3><p>HTTP, TypeScript, or Python SDK</p><div class="docs-node-tags"><span>GET /score</span><span>POST /delegate</span></div></section>
+        <div class="docs-diagram-connector" aria-hidden="true"><span>request</span><i></i></div>
+        <section class="docs-diagram-node docs-diagram-node--service"><div class="docs-node-index">02</div><h3>Agent Passport API</h3><p>Validates, authenticates, scores, and explains.</p><div class="docs-node-grid"><span>Rate limits</span><span>HMAC / x402</span><span>Metrics</span><span>60s cache</span></div></section>
+        <div class="docs-diagram-connector" aria-hidden="true"><span>evidence</span><i></i></div>
+        <section class="docs-diagram-node docs-diagram-node--chain"><div class="docs-node-index">03</div><h3>Algorand</h3><p>algod, indexer, and optional applications.</p><div class="docs-node-tags"><span>registry.teal</span><span>reputation.teal</span></div></section>
+      </div>
+      <div class="docs-diagram-note"><span class="docs-note-dot"></span><span>Read paths remain self-hosted and application-database independent; stateful stores need shared infrastructure when replicas scale out.</span></div>
+    </figure>`;
+  }
+  if (language === "diagram-flow") {
+    return `<figure class="docs-diagram docs-request-diagram" aria-labelledby="request-diagram-title">
+      <figcaption id="request-diagram-title" class="docs-diagram-caption"><span class="docs-diagram-kicker">Request lifecycle</span><span>One request, parallel chain evidence, explainable response</span></figcaption>
+      <ol class="docs-request-flow">
+        <li class="docs-request-step"><span class="docs-step-number">01</span><div><strong>Request</strong><p><code>GET /score?wallet=…</code></p></div></li>
+        <li class="docs-request-step"><span class="docs-step-number">02</span><div><strong>Gateway</strong><p>Validate, identify, rate-limit</p></div></li>
+        <li class="docs-request-step"><span class="docs-step-number">03</span><div><strong>Chain evidence</strong><p>Round, account, transactions</p></div></li>
+        <li class="docs-request-step"><span class="docs-step-number">04</span><div><strong>Decision</strong><p>Five signals computed in process</p></div></li>
+        <li class="docs-request-step docs-request-step--result"><span class="docs-step-number">05</span><div><strong>Response</strong><p>Score, risk, evidence, checksum</p></div></li>
+      </ol>
+      <div class="docs-diagram-foot"><span>parallel reads</span><span>1 status + 1 account lookup + optional transaction reads</span><span>200 JSON</span></div>
+    </figure>`;
+  }
+  return null;
+}
+
 function inlineMarkdown(value: string, baseUrl: string): string {
   let output = escapeHtml(value);
   const codeSpans: string[] = [];
@@ -104,7 +134,13 @@ export function renderMarkdown(source: string, baseUrl: string): string {
         code.push(lines[index]);
         index += 1;
       }
-      html.push(`<pre><code class="language-${escapeHtml(language || "text")}">${escapeHtml(code.join("\n"))}</code></pre>`);
+      const diagram = renderDiagram(language);
+      if (diagram) html.push(diagram);
+      else {
+        const codeId = `docs-code-${html.length}`;
+        const languageLabel = language === "bash" ? "Shell" : language === "typescript" ? "TypeScript" : language === "json" ? "JSON" : language === "yaml" ? "YAML" : language || "Text";
+        html.push(`<div class="docs-code-block"><div class="docs-code-header"><span>${languageLabel} example</span><button type="button" data-copy-code="${codeId}" aria-label="Copy ${languageLabel} example">Copy</button></div><pre id="${codeId}"><code class="language-${escapeHtml(language || "text")}">${escapeHtml(code.join("\n"))}</code></pre><span class="sr-only" data-copy-status="${codeId}" role="status" aria-live="polite"></span></div>`);
+      }
       index += 1;
       continue;
     }
