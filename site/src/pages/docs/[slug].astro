@@ -35,11 +35,11 @@ const next = docsPages[currentIndex + 1];
         <span class="text-ink-1">{page.label}</span>
       </div>
       <div class="grid gap-12 lg:grid-cols-[minmax(0,1fr)_220px] lg:gap-20">
-        <div>
+        <div class="min-w-0">
           {page.code && <div class="docs-prose"><h1>{page.label}</h1><p>{page.summary}</p></div>}
           <article class="docs-prose" set:html={content}></article>
         </div>
-        <aside class="order-first lg:order-none">
+        <aside class="order-last lg:order-none">
           <div class="sticky top-24 rounded-2xl border border-line bg-surface-1 p-5">
             <div class="font-mono text-[10px] uppercase tracking-[0.16em] text-accent">On this page</div>
             <nav class="mt-4 space-y-2 text-[13px]" aria-label="Documentation pages">

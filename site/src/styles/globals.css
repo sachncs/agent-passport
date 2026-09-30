@@ -108,9 +108,11 @@ body {
 /* ── First-party documentation ───────────────────────────────────── */
 .docs-prose {
   max-width: 860px;
+  min-width: 0;
   color: var(--color-ink-2);
   font-size: 16px;
   line-height: 1.7;
+  overflow-wrap: anywhere;
 }
 .docs-prose h1,
 .docs-prose h2,
@@ -140,7 +142,7 @@ body {
 .docs-prose a:hover { text-decoration-color: var(--color-accent); }
 .docs-prose strong { color: var(--color-ink-1); font-weight: 650; }
 .docs-prose code { border: 1px solid var(--color-line); border-radius: 0.35rem; background: var(--color-surface-2); padding: 0.12rem 0.35rem; font-family: var(--font-mono); font-size: 0.82em; color: var(--color-ink-1); }
-.docs-prose pre { overflow-x: auto; margin: 1.5rem 0; border: 1px solid var(--color-line); border-radius: 1rem; background: var(--color-surface-2); padding: 1rem 1.15rem; color: var(--color-ink-1); font-family: var(--font-mono); font-size: 0.78rem; line-height: 1.65; }
+.docs-prose pre { max-width: 100%; overflow-x: auto; margin: 1.5rem 0; border: 1px solid var(--color-line); border-radius: 1rem; background: var(--color-surface-2); padding: 1rem 1.15rem; color: var(--color-ink-1); font-family: var(--font-mono); font-size: 0.78rem; line-height: 1.65; }
 .docs-prose pre code { border: 0; padding: 0; background: transparent; font-size: inherit; }
 .docs-prose blockquote { margin: 1.5rem 0; border-left: 3px solid var(--color-accent); padding: 0.15rem 0 0.15rem 1rem; color: var(--color-ink-2); }
 .docs-prose hr { margin: 2.5rem 0; border: 0; border-top: 1px solid var(--color-line); }
