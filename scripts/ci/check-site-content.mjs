@@ -40,4 +40,13 @@ if (text.match(/href="(?!https?:\/\/)[^"]*\.md(?:[#"])/i)) {
 if (!text.includes("Unknown agent") || !text.includes("Operational action")) {
   throw new Error("Built site is missing the four-stage product journey");
 }
+if (text.includes(">additional level.</p>") || text.includes(">endorsement chains.</p>")) {
+  throw new Error("Built site contains detached Markdown list continuations");
+}
+if (!text.includes("Swipe horizontally to view more") || !text.includes('aria-label="Scrollable table"')) {
+  throw new Error("Built site is missing accessible table overflow guidance");
+}
+if (!text.includes('id="copy-code-example"') || !text.includes('role="tabpanel"')) {
+  throw new Error("Built site is missing the accessible code example interaction");
+}
 console.log(`Site content gate passed: ${html.length} HTML pages checked`);

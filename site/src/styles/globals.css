@@ -147,12 +147,20 @@ body {
 .docs-prose blockquote { margin: 1.5rem 0; border-left: 3px solid var(--color-accent); padding: 0.15rem 0 0.15rem 1rem; color: var(--color-ink-2); }
 .docs-prose hr { margin: 2.5rem 0; border: 0; border-top: 1px solid var(--color-line); }
 .table-wrap { overflow-x: auto; margin: 1.5rem 0; border: 1px solid var(--color-line); border-radius: 1rem; }
+.table-scroll-hint { display: none; }
 .docs-prose table { width: 100%; min-width: 620px; border-collapse: collapse; font-size: 0.88rem; }
 .docs-prose th,
 .docs-prose td { border-bottom: 1px solid var(--color-line); padding: 0.7rem 0.85rem; text-align: left; vertical-align: top; }
 .docs-prose th { color: var(--color-ink-1); background: var(--color-surface-2); font-weight: 600; }
 .docs-prose tr:last-child td { border-bottom: 0; }
 .docs-prose img { max-width: 100%; border-radius: 0.75rem; }
+
+.capability-card[data-capability="graph"] { background: linear-gradient(145deg, var(--color-surface-1), color-mix(in oklab, var(--color-accent-soft) 35%, var(--color-surface-1))); }
+.capability-card[data-capability="decision"] { border-color: color-mix(in oklab, var(--color-accent) 32%, var(--color-line)); }
+
+@media (max-width: 640px) {
+  .table-scroll-hint { display: flex; justify-content: flex-end; padding: 0.55rem 0.75rem 0; color: var(--color-ink-2); font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: -0.02em; }
+}
 
 .font-serif-italic {
   font-family: var(--font-serif);

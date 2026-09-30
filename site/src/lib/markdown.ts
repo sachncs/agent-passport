@@ -143,7 +143,7 @@ export function renderMarkdown(source: string, baseUrl: string): string {
         rows.push(tableRow(lines[index]));
         index += 1;
       }
-      html.push(`<div class="table-wrap"><table><thead><tr>${headers.map((cell) => `<th>${inlineMarkdown(cell, baseUrl)}</th>`).join("")}</tr></thead><tbody>${rows.map((row) => `<tr>${row.map((cell) => `<td>${inlineMarkdown(cell, baseUrl)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`);
+      html.push(`<div class="table-wrap" role="region" tabindex="0" aria-label="Scrollable table"><div class="table-scroll-hint" aria-hidden="true">Swipe horizontally to view more</div><table><thead><tr>${headers.map((cell) => `<th>${inlineMarkdown(cell, baseUrl)}</th>`).join("")}</tr></thead><tbody>${rows.map((row) => `<tr>${row.map((cell) => `<td>${inlineMarkdown(cell, baseUrl)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`);
       continue;
     }
     const listItem = line.match(/^\s*([-*+] |\d+\. )(.+)$/);
@@ -155,6 +155,11 @@ export function renderMarkdown(source: string, baseUrl: string): string {
         list = { ordered, items: [] };
       }
       list.items.push(listItem[2]);
+      index += 1;
+      continue;
+    }
+    if (list && list.items.length && /^(?:\t+|\s{2,})\S/.test(line)) {
+      list.items[list.items.length - 1] += ` ${line.trim()}`;
       index += 1;
       continue;
     }

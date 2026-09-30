@@ -29,7 +29,7 @@ const next = docsPages[currentIndex + 1];
   <Header />
   <main id="main" class="bg-stage">
     <Container class="pb-24 pt-12 md:pb-32 md:pt-20">
-      <div class="mb-10 flex flex-wrap items-center gap-2 text-[12px] text-ink-3">
+      <div class="mb-10 flex flex-wrap items-center gap-2 text-[12px] text-ink-2">
         <a href={`${baseUrl}/docs/`} class="hover:text-ink-1">Docs</a>
         <span aria-hidden="true">/</span>
         <span class="text-ink-1">{page.label}</span>
@@ -43,9 +43,9 @@ const next = docsPages[currentIndex + 1];
           <div class="sticky top-24 rounded-2xl border border-line bg-surface-1 p-5">
             <div class="font-mono text-[10px] uppercase tracking-[0.16em] text-accent">On this page</div>
             <nav class="mt-4 space-y-2 text-[13px]" aria-label="Documentation pages">
-              {docsPages.map((item) => <a href={`${baseUrl}/docs/${item.slug}/`} class={`block rounded-md px-2 py-1.5 ${item.slug === page.slug ? "bg-accent/10 font-medium text-accent" : "text-ink-2 hover:text-ink-1"}`}>{item.label}</a>)}
+              {docsPages.map((item) => <a href={`${baseUrl}/docs/${item.slug}/`} aria-current={item.slug === page.slug ? "page" : undefined} class={`block rounded-md px-2 py-1.5 ${item.slug === page.slug ? "bg-accent/10 font-medium text-accent" : "text-ink-2 hover:text-ink-1"}`}>{item.label}</a>)}
             </nav>
-            <a href="https://github.com/sachncs/agent-passport" target="_blank" rel="noopener noreferrer" class="mt-5 block border-t border-line pt-4 text-[12px] text-ink-3 hover:text-ink-1">View source on GitHub ↗</a>
+            <a href="https://github.com/sachncs/agent-passport" target="_blank" rel="noopener noreferrer" class="mt-5 block border-t border-line pt-4 text-[12px] text-ink-2 hover:text-ink-1">View source on GitHub ↗</a>
           </div>
         </aside>
       </div>

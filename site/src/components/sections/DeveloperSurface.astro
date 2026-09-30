@@ -8,23 +8,54 @@ const examples = {
 };
 const docsHref = `${import.meta.env.BASE_URL.replace(/\/$/, "")}/docs/`;
 ---
-<section id="developers" class="py-24 md:py-32"><Container><div class="grid items-center gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-24"><div><Eyebrow icon>For developers</Eyebrow><h2 class="mt-4 text-[38px] font-semibold leading-[1.04] tracking-[-0.04em] text-ink-1 md:text-[54px]">From agent ID to trust verdict in one request.</h2><p class="mt-5 max-w-md text-[16px] leading-relaxed text-ink-2">Use HTTP, TypeScript, or Python. Start locally, inspect the response, and keep the decision in your own system.</p><a href={docsHref} class="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-accent hover:text-ink-1">Read the docs <span aria-hidden="true">→</span></a></div><div class="overflow-hidden rounded-[24px] border border-line bg-surface-1 shadow-card"><div class="flex gap-5 border-b border-line px-5 pt-3" role="tablist" aria-label="Code examples">{Object.keys(examples).map((name, index) => <button type="button" role="tab" aria-selected={index === 0 ? "true" : "false"} data-code-tab={name} class={`border-b-2 pb-3 pt-1 text-[12px] font-medium ${index === 0 ? "border-accent text-ink-1" : "border-transparent text-ink-3"}`}>{name}</button>)}</div><div class="grid gap-6 p-6 md:grid-cols-[1fr_auto_1fr] md:items-center md:p-8"><pre class="overflow-x-auto font-mono text-[12px] leading-relaxed text-ink-1"><code id="code-example">{examples.TypeScript}</code></pre><div class="text-center text-2xl text-accent">→</div><div class="rounded-xl border border-line bg-surface-2 p-4"><div class="font-mono text-[10px] text-ink-3">structured response</div><div class="mt-4 flex items-end justify-between"><span class="font-serif-italic text-4xl text-ink-1">78</span><span class="rounded-full bg-accent/10 px-2 py-1 text-[10px] text-accent">low risk</span></div><div class="mt-4 space-y-2 font-mono text-[10px] text-ink-3"><div class="flex justify-between"><span>explanation</span><span class="text-ink-1">attached</span></div><div class="flex justify-between"><span>checksum</span><span class="text-ink-1">sha256…</span></div></div></div></div></div></div></Container></section>
+<section id="developers" class="py-24 md:py-32"><Container><div class="grid items-center gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-24"><div><Eyebrow icon>For developers</Eyebrow><h2 class="mt-4 text-[38px] font-semibold leading-[1.04] tracking-[-0.04em] text-ink-1 md:text-[54px]">From agent ID to trust verdict in one request.</h2><p class="mt-5 max-w-md text-[16px] leading-relaxed text-ink-2">Use HTTP, TypeScript, or Python. Start locally, inspect the response, and keep the decision in your own system.</p><a href={docsHref} class="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-accent hover:text-ink-1">Read the docs <span aria-hidden="true">→</span></a></div><div class="overflow-hidden rounded-[24px] border border-line bg-surface-1 shadow-card"><div class="flex gap-5 border-b border-line px-5 pt-3" role="tablist" aria-label="Code examples">{Object.keys(examples).map((name, index) => <button id={`code-tab-${name}`} type="button" role="tab" aria-controls="code-example-panel" aria-selected={index === 0 ? "true" : "false"} tabindex={index === 0 ? 0 : -1} data-code-tab={name} class={`min-h-11 border-b-2 pb-3 pt-1 text-[12px] font-medium ${index === 0 ? "border-accent text-ink-1" : "border-transparent text-ink-3"}`}>{name}</button>)}</div><div id="code-example-panel" role="tabpanel" aria-labelledby="code-tab-TypeScript" tabindex="0" class="grid gap-6 p-6 md:grid-cols-[1fr_auto_1fr] md:items-center md:p-8"><div class="relative min-w-0"><button id="copy-code-example" type="button" class="absolute right-0 top-0 inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-line bg-surface-2 px-3 text-[11px] font-semibold text-ink-2 transition-colors hover:border-line-strong hover:text-ink-1" aria-label="Copy code example">Copy</button><pre class="overflow-x-auto pr-16 font-mono text-[12px] leading-relaxed text-ink-1"><code id="code-example">{examples.TypeScript}</code></pre><span id="copy-code-status" class="sr-only" role="status" aria-live="polite"></span></div><div class="text-center text-2xl text-accent">→</div><div class="rounded-xl border border-line bg-surface-2 p-4"><div class="font-mono text-[10px] text-ink-2">structured response</div><div class="mt-4 flex items-end justify-between"><span class="font-serif-italic text-4xl text-ink-1">78</span><span class="rounded-full bg-accent/10 px-2 py-1 text-[10px] text-accent">low risk</span></div><div class="mt-4 space-y-2 font-mono text-[10px] text-ink-2"><div class="flex justify-between"><span>explanation</span><span class="text-ink-1">attached</span></div><div class="flex justify-between"><span>checksum</span><span class="text-ink-1">sha256…</span></div></div></div></div></div></div></Container></section>
 
 <script is:inline define:vars={{ examples }}>
   const output = document.querySelector("#code-example");
-  document.querySelectorAll("[data-code-tab]").forEach((tab) => {
-    tab.addEventListener("click", () => {
-      const key = tab.dataset.codeTab;
-      if (!output || !key) return;
-      output.textContent = examples[key] || examples.TypeScript;
-      document.querySelectorAll("[data-code-tab]").forEach((item) => {
-        const active = item === tab;
-        item.setAttribute("aria-selected", String(active));
-        item.classList.toggle("border-accent", active);
-        item.classList.toggle("text-ink-1", active);
-        item.classList.toggle("border-transparent", !active);
-        item.classList.toggle("text-ink-3", !active);
-      });
+  const panel = document.querySelector("#code-example-panel");
+  const copyButton = document.querySelector("#copy-code-example");
+  const copyStatus = document.querySelector("#copy-code-status");
+  const tabs = [...document.querySelectorAll("[data-code-tab]")];
+  const setActiveTab = (tab) => {
+    const key = tab.dataset.codeTab;
+    if (!output || !key) return;
+    output.textContent = examples[key] || examples.TypeScript;
+    panel?.setAttribute("aria-labelledby", tab.id);
+    tabs.forEach((item) => {
+      const active = item === tab;
+      item.setAttribute("aria-selected", String(active));
+      item.setAttribute("tabindex", active ? "0" : "-1");
+      item.classList.toggle("border-accent", active);
+      item.classList.toggle("text-ink-1", active);
+      item.classList.toggle("border-transparent", !active);
+      item.classList.toggle("text-ink-3", !active);
     });
+  };
+  tabs.forEach((tab, index) => {
+    tab.addEventListener("click", () => {
+      setActiveTab(tab);
+    });
+    tab.addEventListener("keydown", (event) => {
+      if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+      event.preventDefault();
+      const nextIndex = event.key === "ArrowRight"
+        ? (index + 1) % tabs.length
+        : (index - 1 + tabs.length) % tabs.length;
+      tabs[nextIndex].focus();
+      setActiveTab(tabs[nextIndex]);
+    });
+  });
+  copyButton?.addEventListener("click", async () => {
+    const text = output?.textContent ?? "";
+    try {
+      await navigator.clipboard.writeText(text);
+      copyButton.textContent = "Copied";
+      if (copyStatus) copyStatus.textContent = "Code example copied to clipboard";
+    } catch {
+      if (copyStatus) copyStatus.textContent = "Copy is unavailable in this browser";
+    }
+    window.setTimeout(() => {
+      copyButton.textContent = "Copy";
+    }, 1800);
   });
 </script>
