@@ -54,7 +54,7 @@ BCC), or your own node. See § 4 for latency trade-offs.
 | `OPERATOR_MNEMONIC` | string | — | 25-word Algorand mnemonic for the runtime operator wallet |
 | `DEPLOYER_MNEMONIC` | string | — | 25-word mnemonic used only by the deploy scripts |
 
-See [security.md](security.md#14-operator-wallet) for the operator
+See the [operator-wallet security guide](security.md#14-operator-wallet) for the operator
 mnemonic handling and KMS guidance.
 
 ### x402
@@ -319,7 +319,7 @@ OPERATOR_MNEMONIC="word1 word2 ... word25"
 ```
 
 Or load from a secret manager at startup. See
-[security.md](security.md#14-operator-wallet) for KMS guidance.
+the [operator-wallet security guide](security.md#14-operator-wallet) for KMS guidance.
 
 #### 4. Set `HMAC_SECRET` (recommended for production)
 
@@ -330,7 +330,7 @@ HMAC_SECRET="$(openssl rand -hex 32)"   # 64 hex chars = 256 bits
 Any state-changing endpoint will then require HMAC-SHA256
 authentication. Public reads and the operational endpoints
 remain unauthenticated in development. Production requires HMAC. See
-[security.md](security.md#9-hmac-auth).
+the [HMAC authentication guide](security.md#9-hmac-auth).
 
 #### 5. Build the Docker image
 

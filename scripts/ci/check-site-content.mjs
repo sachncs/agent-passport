@@ -37,6 +37,22 @@ if (!text.includes('property="og:image"') || !text.includes('name="twitter:card"
 if (text.match(/href="(?!https?:\/\/)[^"]*\.md(?:[#"])/i)) {
   throw new Error("Built site contains an unresolved Markdown documentation link");
 }
+if (text.match(/href="https:\/\/github\.com\/sachncs\/agent-passport\/blob\/master\/docs\/[^\"]+\.md(?:[#"])/i)) {
+  throw new Error("Built site exposes a docs repository Markdown page instead of a published documentation route");
+}
+const staleDocLanguage = [
+  "missing from operations.md",
+  "missing from api.md",
+  "missing from concepts.md",
+  ">../LICENSE</a>",
+];
+const staleDocMatches = staleDocLanguage.filter((phrase) => text.includes(phrase));
+if (staleDocMatches.length) {
+  throw new Error(`Built site contains repository-oriented documentation language: ${staleDocMatches.join(", ")}`);
+}
+if (!text.includes('/docs/openapi/')) {
+  throw new Error("Built site is missing the published OpenAPI documentation route");
+}
 if (!text.includes("Unknown agent") || !text.includes("Operational action")) {
   throw new Error("Built site is missing the four-stage product journey");
 }

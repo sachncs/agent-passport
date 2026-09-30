@@ -160,5 +160,5 @@ does not prove wallet ownership.
 Use the breakdown and explanation fields to understand why a result was
 returned. Treat missing or stale upstream data as uncertainty. Combine these
 signals with your own authorization, sanctions, fraud, identity, and credit
-controls. See [known limitations](known-limitations.md) and [security](security.md)
+controls. See the [known limitations](known-limitations.md) and [security guide](security.md)
 for the deployment boundary.

@@ -2,7 +2,8 @@
 
 The canonical threat model and security guidance for Agent
 Passport. The vulnerability-disclosure policy is at
-[`../SECURITY.md`](../SECURITY.md) (root, kept for GitHub UI).
+the [security disclosure policy](../SECURITY.md) (the root policy is kept for
+GitHub's security UI).
 
 ## 1. Trust assumptions
 
@@ -74,7 +75,7 @@ keys return `400`. The middleware hashes the body and returns
 - 429 on overflow
 
 For the full design including the persistence format and the
-write-queue mutex, see [operations.md](operations.md#rate-limiting).
+write-queue mutex, see the [rate-limiting operations guide](operations.md#rate-limiting).
 
 ## 5. Idempotency
 
@@ -83,7 +84,7 @@ write-queue mutex, see [operations.md](operations.md#rate-limiting).
 - Same key + different body → 409
 - Multi-replica deployments need Redis
 
-For the full design, see [operations.md](operations.md#idempotency).
+For the full design, see the [idempotency operations guide](operations.md#idempotency).
 
 ## 6. x402 payment verification
 

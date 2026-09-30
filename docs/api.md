@@ -87,7 +87,7 @@ Composite trust score (0–100) with five sub-scores.
 | `wallet` | string | yes | Algorand address, 58-char base32 |
 
 **Response 200** — see `TrustScoreResponse` (the algorithm is in
-[concepts.md](concepts.md)). Includes `trustScore`, `riskLevel`,
+[the algorithm and scoring reference](concepts.md)). Includes `trustScore`, `riskLevel`,
 `breakdown`, `onChain`, `explanation`.
 
 **Status codes:** 200, 400, 402, 404, 429, 500
@@ -365,7 +365,7 @@ Prometheus-format metrics. Exempt from rate limiting. Returns
 `Content-Type: text/plain; version=0.0.4` per the Prometheus spec.
 
 The full inventory of metrics is documented in
-[operations.md](operations.md#metrics). The three families most
+[the observability guide](operations.md#metrics). The three families most
 operators look at first:
 
 | Metric | What it tells you |
@@ -429,7 +429,7 @@ missing, malformed, or out of range.
 
 ### `401 Unauthorized`
 
-HMAC auth failed or missing. See [security.md](security.md#9-hmac-auth).
+HMAC auth failed or missing. See the [HMAC authentication guide](security.md#9-hmac-auth).
 
 ### `402 Payment Required`
 

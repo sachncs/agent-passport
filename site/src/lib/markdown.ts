@@ -35,8 +35,18 @@ function inlineMarkdown(value: string, baseUrl: string): string {
     const anchor = fragment ? `#${fragment}` : "";
     const localSlug = href.startsWith("../") ? undefined : docsSlugs[markdownFile];
     const rootFile = href.startsWith("../") ? path.slice(3) : "";
+    const rootSlug = rootFile === "README.md"
+      ? "overview"
+      : rootFile === "sdk/README.md" || rootFile === "sdk/python/README.md"
+        ? "sdk"
+        : undefined;
+    const docsAssetSlug = href === "api/openapi.yaml" ? "openapi" : undefined;
     const target = localSlug
       ? `${baseUrl}/docs/${localSlug}/${anchor}`
+      : rootSlug
+        ? `${baseUrl}/docs/${rootSlug}/${anchor}`
+      : docsAssetSlug
+        ? `${baseUrl}/docs/${docsAssetSlug}/${anchor}`
       : rootFile
         ? `https://github.com/sachncs/agent-passport/blob/master/${rootFile}${anchor}`
         : href;

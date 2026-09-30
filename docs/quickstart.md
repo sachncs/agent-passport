@@ -41,7 +41,7 @@ curl -s \
   | jq '{wallet, trustScore, riskLevel, explanation}'
 ```
 
-The result is evidence, not identity proof. Read [known limitations](known-limitations.md)
+The result is evidence, not identity proof. Read the [known limitations](known-limitations.md)
 before using a score to gate money, access, or delegation.
 
 ## Run the console locally

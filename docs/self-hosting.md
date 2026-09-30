@@ -37,4 +37,4 @@ Set `REPLICA_COUNT=1` unless you provide a shared implementation for those
 stores; the service emits a boot warning when replicas exceed one.
 
 For the full environment matrix, alert rules, shutdown behavior, and SLO
-profiles, see [Operations](operations.md) and [Architecture](architecture.md).
+profiles, see the [operations guide](operations.md) and [architecture guide](architecture.md).

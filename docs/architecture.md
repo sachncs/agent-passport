@@ -1,16 +1,16 @@
 # Architecture
 
-System design, middleware stack, request lifecycle, smart contracts,
-caching, data flow, and scaling characteristics. The single source
-of truth for "how does the service fit together" — the algorithm
-details live in [concepts.md](concepts.md).
+This guide explains how Agent Passport turns a wallet request into an
+explainable decision: the service boundary, request lifecycle, Algorand data
+flow, contracts, caching, persistence, and scaling model. For the scoring
+rules themselves, see the [algorithm and scoring reference](concepts.md).
 
 ## 1. System overview
 
-Agent Passport is a **stateless HTTP API** that scores Algorand
-wallets for trust, delegation trust, sybil risk, reputation, and
-creditworthiness, and exposes two on-chain mutating endpoints
-(`/delegate`, `/revoke`) backed by a TEAL stateful contract.
+Agent Passport is a **self-hosted HTTP API** for evaluating Algorand agents.
+Read endpoints return trust, delegation, Sybil, reputation, credit, and
+underwriting evidence. Mutating delegation and reputation routes can write to
+the configured Algorand applications when an operator wallet is enabled.
 
 ```
 ┌──────────────┐     ┌────────────────────────────────────────┐     ┌─────────────────────┐
@@ -24,9 +24,10 @@ creditworthiness, and exposes two on-chain mutating endpoints
 └──────────────┘     └────────────────────────────────────────┘     └─────────────────────┘
 ```
 
-**Stateless** for read endpoints — every request fetches data from
-Algorand and caches in-memory for 60 s. No database, no Redis, no
-message queue.
+Read endpoints do not require an application database: they fetch from the
+configured Algorand algod and indexer services and use a 60-second in-memory
+response cache. The service does not silently provision hosted storage,
+queues, billing, or identity infrastructure.
 
 For stateful endpoints, **four per-process stores are NOT shared
 across pods** and must be backed by Redis (or equivalent) when
@@ -50,11 +51,12 @@ at this boundary, call a domain function, and then map its result to HTTP.
 
 ## 2. Request lifecycle
 
-A request flows through twelve ordered middlewares plus the route
-handler. Middleware and domain capability handlers are composed in
-`src/app.ts`; framework-facing operational routes are registered through
-`src/http/routes/system.ts` so probes, metadata, and static delivery remain
-isolated from business logic.
+A request passes through ordered platform and security stages before its route
+handler. The stack validates input, assigns a request ID, applies CORS and
+rate limits, enforces deadlines and optional payment/authentication, and then
+dispatches to the capability. Operational routes are kept separate from
+business logic so health, readiness, metrics, and version metadata remain
+safe to expose to deployment tooling.
 
 | # | Middleware | Purpose | Headers added |
 |---|------------|---------|---------------|
