@@ -59,6 +59,21 @@ npm run preview    # serve dist/ locally
 npm run check      # astro check (types + a11y)
 ```
 
+## Live testnet demo
+
+The homepage demo can call a real Agent Passport API deployment when the site
+is built with `PUBLIC_API_BASE_URL`:
+
+```bash
+PUBLIC_API_BASE_URL=http://localhost:3000 npm run build
+```
+
+The API must use an explicit production `CORS_ALLOWED_ORIGINS` value containing
+the site origin. The demo calls `GET /score`, labels live results separately
+from the illustrative fallback, and shows a clear unavailable state when the
+API cannot be reached. The published GitHub Pages build leaves this variable
+unset until a public API deployment exists, so it does not imply hosted SaaS.
+
 ## Deployment
 
 Pushed to `master` → `.github/workflows/site.yml` runs:
@@ -73,7 +88,7 @@ The base path is set to `/agent-passport` in `astro.config.mjs`, so all asset UR
 ## Conventions
 
 - **Components are `.astro` files** with a TypeScript frontmatter section and an HTML template. No React, no client-side JS by default.
-- **Mockups are stylized mock data**, not live API calls. The numbers come from the documented algorithm shapes in `../docs/concepts.md`.
+- **Mockups are stylized mock data**, while the homepage trust profile can use a live `/score` response when `PUBLIC_API_BASE_URL` is configured. Other mockups remain illustrative.
 - **Theme is system-preference-driven** with a header toggle that persists to `localStorage`. The `prefers-color-scheme` media query respects the user's OS.
 - **Copy is written fresh from the docs**, not rendered from markdown. All external links go to GitHub, npm, or the docs tree.
 - **The developer console at `../frontend/`** is a separate app. The public

@@ -4,11 +4,13 @@ import Button from "../ui/Button.astro";
 
 const wallet = "GD64YIY3…BHU5A";
 const docsHref = `${import.meta.env.BASE_URL.replace(/\/$/, "")}/docs/`;
+const apiBase = import.meta.env.PUBLIC_API_BASE_URL?.replace(/\/$/, "") ?? "";
 const factors = [
   ["Longevity", "82", "Established history"],
   ["Activity", "74", "Consistent use"],
+  ["Volume", "91", "Established balance"],
   ["Velocity", "86", "No burst pattern"],
-  ["Network", "69", "Limited delegation"],
+  ["Compliance", "92", "No compliance flags"],
 ];
 ---
 
@@ -25,25 +27,79 @@ const factors = [
       </div>
 
       <div id="check-agent" class="relative mx-auto w-full max-w-[600px] scroll-mt-28"><div class="absolute -inset-8 rounded-full bg-accent/[0.07] blur-3xl"></div><div class="relative overflow-hidden rounded-[28px] border border-line bg-surface-1 shadow-card">
-        <div class="flex items-center justify-between border-b border-line px-5 py-4"><div><div class="text-[11px] font-semibold text-ink-1">Agent trust profile</div><div class="mt-1 font-mono text-[11px] text-ink-2">Illustrative response · demo data</div></div><span class="rounded-full border border-accent/25 bg-accent/10 px-2.5 py-1 text-[10px] font-medium text-accent">GET /score</span></div>
-        <form id="trust-preview-form" class="flex flex-col gap-2 border-b border-line bg-surface-2/35 px-5 py-4 sm:flex-row sm:items-end" novalidate><label class="min-w-0 flex-1"><span class="mb-1 block text-[10px] font-medium text-ink-3">Agent wallet / identity</span><input id="trust-preview-input" value={wallet} autocomplete="off" spellcheck="false" class="h-11 w-full rounded-lg border border-line-strong bg-surface-1 px-3 font-mono text-[11px] text-ink-1 outline-none placeholder:text-ink-3 focus:border-accent" /></label><button type="submit" class="h-11 rounded-lg bg-ink-1 px-3 text-[11px] font-semibold text-canvas transition-colors hover:bg-ink-2">Preview profile</button><span id="trust-preview-status" class="sr-only" role="status" aria-live="polite">Demo profile ready</span></form>
-        <div class="grid gap-8 p-6 sm:grid-cols-[0.85fr_1.15fr] sm:p-8"><div><div class="text-[11px] text-ink-3">Agent identity</div><div id="trust-preview-identity" class="mt-2 font-mono text-[12px] text-ink-1">{wallet}</div><div class="mt-7 flex items-end gap-2"><span class="font-serif-italic text-[76px] leading-none text-ink-1">78</span><span class="pb-2 text-sm text-ink-3">/ 100</span></div><div class="mt-3 inline-flex items-center gap-2 rounded-full border border-accent/25 bg-accent/10 px-3 py-1.5 text-[12px] font-medium text-accent"><span class="h-1.5 w-1.5 rounded-full bg-accent"></span>Low risk</div><div class="mt-5 font-mono text-[10px] text-ink-3">confidence <span class="text-ink-1">0.84</span></div></div><div><div class="flex items-center justify-between"><span class="text-[11px] font-medium text-ink-2">Why this score?</span><span class="font-mono text-[10px] text-ink-3">5 inputs</span></div><div class="mt-4 space-y-4">{factors.map(([label, value, reason]) => <div><div class="flex items-center justify-between text-[11px]"><span class="text-ink-2">{label}</span><span class="font-mono text-ink-3">{value}</span></div><div class="mt-1.5 h-1.5 rounded-full bg-surface-3"><div class="h-full rounded-full bg-accent" style={`width:${value}%;`}></div></div><div class="mt-1 text-[10px] text-ink-3">{reason}</div></div>)}</div></div></div>
-        <div class="flex flex-wrap items-center justify-between gap-3 border-t border-line bg-surface-2/40 px-6 py-4 text-[11px] text-ink-2 sm:px-8"><span class="font-mono">riskLevel: low</span><span class="font-mono">evidence: 2 peers · 6 edges</span><span class="font-mono">checksum: sha256…</span><span class="text-accent">Inspectable output</span></div>
+        <div class="flex items-center justify-between border-b border-line px-5 py-4"><div><div class="text-[11px] font-semibold text-ink-1">Agent trust profile</div><div id="trust-preview-source" class="mt-1 font-mono text-[11px] text-ink-2">{apiBase ? "Live testnet API · GET /score" : "Illustrative response · demo data"}</div></div><span class="rounded-full border border-accent/25 bg-accent/10 px-2.5 py-1 text-[10px] font-medium text-accent">GET /score</span></div>
+        <form id="trust-preview-form" class="flex flex-col gap-2 border-b border-line bg-surface-2/35 px-5 py-4 sm:flex-row sm:items-end" novalidate><label class="min-w-0 flex-1"><span class="mb-1 block text-[10px] font-medium text-ink-3">Agent wallet / identity</span><input id="trust-preview-input" value={wallet} autocomplete="off" spellcheck="false" class="h-11 w-full rounded-lg border border-line-strong bg-surface-1 px-3 font-mono text-[11px] text-ink-1 outline-none placeholder:text-ink-3 focus:border-accent" /></label><button id="trust-preview-submit" type="submit" class="h-11 rounded-lg bg-ink-1 px-3 text-[11px] font-semibold text-canvas transition-colors hover:bg-ink-2">{apiBase ? "Check live profile" : "Preview profile"}</button><span id="trust-preview-status" class="sr-only" role="status" aria-live="polite">{apiBase ? "Live testnet profile ready" : "Demo profile ready"}</span></form>
+        <div class="grid gap-8 p-6 sm:grid-cols-[0.85fr_1.15fr] sm:p-8"><div><div class="text-[11px] text-ink-3">Agent identity</div><div id="trust-preview-identity" class="mt-2 font-mono text-[12px] text-ink-1">{wallet}</div><div class="mt-7 flex items-end gap-2"><span id="trust-preview-score" class="font-serif-italic text-[76px] leading-none text-ink-1">78</span><span class="pb-2 text-sm text-ink-3">/ 100</span></div><div id="trust-preview-risk" class="mt-3 inline-flex items-center gap-2 rounded-full border border-accent/25 bg-accent/10 px-3 py-1.5 text-[12px] font-medium text-accent"><span class="h-1.5 w-1.5 rounded-full bg-accent"></span>Low risk</div><div class="mt-5 font-mono text-[10px] text-ink-3">confidence <span id="trust-preview-confidence" class="text-ink-1">0.84</span></div></div><div><div class="flex items-center justify-between"><span class="text-[11px] font-medium text-ink-2">Why this score?</span><span class="font-mono text-[10px] text-ink-3">5 inputs</span></div><div id="trust-preview-factors" class="mt-4 space-y-4">{factors.map(([label, value, reason]) => <div data-factor={label.toLowerCase()}><div class="flex items-center justify-between text-[11px]"><span class="text-ink-2">{label}</span><span class="font-mono text-ink-3" data-factor-value>{value}</span></div><div class="mt-1.5 h-1.5 rounded-full bg-surface-3"><div data-factor-bar class="h-full rounded-full bg-accent" style={`width:${value}%;`}></div></div><div class="mt-1 text-[10px] text-ink-3" data-factor-reason>{reason}</div></div>)}</div></div></div>
+        <div class="flex flex-wrap items-center justify-between gap-3 border-t border-line bg-surface-2/40 px-6 py-4 text-[11px] text-ink-2 sm:px-8"><span id="trust-preview-level" class="font-mono">riskLevel: low</span><span id="trust-preview-evidence" class="font-mono">evidence: 2 peers · 6 edges</span><span id="trust-preview-checksum" class="font-mono">checksum: sha256…</span><span id="trust-preview-output" class="text-accent">{apiBase ? "Live output" : "Inspectable output"}</span></div>
       </div></div>
     </div>
   </Container>
 </section>
 
-<script is:inline>
+<script is:inline define:vars={{ apiBase }}>
   const previewForm = document.querySelector("#trust-preview-form");
   const previewInput = document.querySelector("#trust-preview-input");
   const previewIdentity = document.querySelector("#trust-preview-identity");
   const previewStatus = document.querySelector("#trust-preview-status");
-  previewForm?.addEventListener("submit", (event) => {
+  const previewSubmit = document.querySelector("#trust-preview-submit");
+  const previewSource = document.querySelector("#trust-preview-source");
+  const previewScore = document.querySelector("#trust-preview-score");
+  const previewRisk = document.querySelector("#trust-preview-risk");
+  const previewConfidence = document.querySelector("#trust-preview-confidence");
+  const previewLevel = document.querySelector("#trust-preview-level");
+  const previewEvidence = document.querySelector("#trust-preview-evidence");
+  const previewChecksum = document.querySelector("#trust-preview-checksum");
+  const previewOutput = document.querySelector("#trust-preview-output");
+  const setDemoIdentity = (value) => {
+    if (previewIdentity) previewIdentity.textContent = value.length > 14 ? `${value.slice(0, 8)}…${value.slice(-5)}` : value;
+  };
+  previewForm?.addEventListener("submit", async (event) => {
     event.preventDefault();
     const value = previewInput?.value.trim();
     if (!value || !previewIdentity || !previewStatus) return;
-    previewIdentity.textContent = value.length > 14 ? `${value.slice(0, 8)}…${value.slice(-5)}` : value;
-    previewStatus.textContent = "Illustrative demo profile refreshed";
+    setDemoIdentity(value);
+    if (!apiBase) {
+      previewStatus.textContent = "Illustrative demo profile refreshed";
+      return;
+    }
+    previewSubmit?.setAttribute("disabled", "true");
+    if (previewSubmit) previewSubmit.textContent = "Checking…";
+    previewStatus.textContent = "Loading live testnet profile";
+    try {
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 10000);
+      const response = await fetch(`${apiBase}/score?wallet=${encodeURIComponent(value)}`, { signal: controller.signal, headers: { Accept: "application/json" } });
+      window.clearTimeout(timeout);
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || `Request failed (${response.status})`);
+      const score = Number(result.trustScore ?? 0);
+      const risk = String(result.riskLevel ?? "unknown");
+      if (previewScore) previewScore.textContent = String(score);
+      if (previewRisk) previewRisk.lastChild.textContent = ` ${risk.charAt(0).toUpperCase()}${risk.slice(1)} risk`;
+      if (previewConfidence) previewConfidence.textContent = result.confidence == null ? "—" : String(result.confidence);
+      if (previewLevel) previewLevel.textContent = `riskLevel: ${risk}`;
+      if (previewEvidence) previewEvidence.textContent = `evidence: ${result.onChain?.totalTxns ?? 0} txns · ${result.onChain?.assetCount ?? 0} assets`;
+      if (previewChecksum) previewChecksum.textContent = result.checksum ? `checksum: ${String(result.checksum).slice(0, 16)}…` : "checksum: response field unavailable";
+      if (previewSource) previewSource.textContent = "Live testnet API · GET /score";
+      if (previewOutput) previewOutput.textContent = "Live output";
+      const breakdown = result.breakdown ?? {};
+      document.querySelectorAll("[data-factor]").forEach((factor) => {
+        const key = factor.getAttribute("data-factor");
+        const mapping = { longevity: "ageScore", activity: "activityScore", volume: "volumeScore", velocity: "velocityScore", compliance: "complianceScore" };
+        const scoreValue = mapping[key] ? breakdown[mapping[key]] : undefined;
+        if (scoreValue == null) return;
+        factor.querySelector("[data-factor-value]").textContent = String(scoreValue);
+        factor.querySelector("[data-factor-bar]").style.width = `${Math.max(0, Math.min(100, Number(scoreValue)))}%`;
+        factor.querySelector("[data-factor-reason]").textContent = "Live API component";
+      });
+      previewStatus.textContent = "Live testnet profile loaded";
+    } catch (error) {
+      previewStatus.textContent = `Live profile unavailable: ${error instanceof Error ? error.message : "request failed"}`;
+      if (previewSource) previewSource.textContent = "Live API unavailable · showing demo data";
+      if (previewOutput) previewOutput.textContent = "Fallback output";
+    } finally {
+      previewSubmit?.removeAttribute("disabled");
+      if (previewSubmit) previewSubmit.textContent = "Check live profile";
+    }
   });
 </script>
