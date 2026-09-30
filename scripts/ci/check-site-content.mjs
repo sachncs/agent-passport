@@ -34,6 +34,9 @@ for (const relative of required) {
 if (!text.includes('property="og:image"') || !text.includes('name="twitter:card"')) {
   throw new Error("Built site is missing social metadata");
 }
+if (text.match(/href="(?!https?:\/\/)[^"]*\.md(?:[#"])/i)) {
+  throw new Error("Built site contains an unresolved Markdown documentation link");
+}
 if (!text.includes("Unknown agent") || !text.includes("Operational action")) {
   throw new Error("Built site is missing the four-stage product journey");
 }

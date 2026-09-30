@@ -1,10 +1,16 @@
 const docsSlugs: Record<string, string> = {
   "README.md": "overview",
+  "quickstart.md": "quickstart",
+  "sdk.md": "sdk",
+  "self-hosting.md": "self-hosting",
   "concepts.md": "concepts",
   "api.md": "api",
   "architecture.md": "architecture",
   "operations.md": "operations",
   "security.md": "security",
+  "known-limitations.md": "known-limitations",
+  "support-policy.md": "support-policy",
+  "release-checklist.md": "release-checklist",
 };
 
 function escapeHtml(value: string): string {
@@ -24,10 +30,11 @@ function inlineMarkdown(value: string, baseUrl: string): string {
   });
   output = output.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" />');
   output = output.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label: string, href: string) => {
-    const markdownFile = href.split("#")[0].split("/").pop() ?? "";
-    const anchor = href.includes("#") ? `#${href.split("#")[1]}` : "";
+    const [path, fragment] = href.split("#", 2);
+    const markdownFile = path.split("/").pop() ?? "";
+    const anchor = fragment ? `#${fragment}` : "";
     const localSlug = href.startsWith("../") ? undefined : docsSlugs[markdownFile];
-    const rootFile = href.startsWith("../") ? href.slice(3) : "";
+    const rootFile = href.startsWith("../") ? path.slice(3) : "";
     const target = localSlug
       ? `${baseUrl}/docs/${localSlug}/${anchor}`
       : rootFile
