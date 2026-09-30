@@ -27,6 +27,7 @@ const API_PATHS = [
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  allowedDevOrigins: ["127.0.0.1", "localhost"],
   async rewrites() {
     return {
       // Keep backend traffic under /api so it cannot shadow console pages
